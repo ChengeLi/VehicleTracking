@@ -144,7 +144,7 @@ if __name__ == '__main__':
 #    """With constructed adjacency matrix """
 
     inifilename = 'HR'
-    matfiles = sorted(glob.glob('./mat/adj/'+inifilename+'*.mat'))
+    matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'*.mat'))
 
     for matidx,matfile in enumerate(matfiles):
 
@@ -186,7 +186,7 @@ if __name__ == '__main__':
         labelsave ={}
         labelsave['label']=labels
         labelsave['mask']=mask
-        savename = './mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
+        savename = './mat/20150222_Mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
 
         savemat(savename,labelsave)
 

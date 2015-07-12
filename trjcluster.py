@@ -6,7 +6,7 @@ import pdb,glob
 
 
 inifilename = 'HR'
-matfiles = sorted(glob.glob('./mat/'+inifilename+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
 
 for matidx,matfile in enumerate(matfiles):
 
@@ -92,6 +92,6 @@ for matidx,matfile in enumerate(matfiles):
     result['c']   = c
     result['mask']= mask
 
-    savename = './mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
+    savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
     savemat(savename,result)
 

@@ -8,10 +8,10 @@ trunclen = 600
 
 inifilename = 'HR'
 
-lrsl = './mat/finalresult/'+inifilename
+lrsl = './mat/20150222_Mat/finalresult/'+inifilename
 mask = loadmat(lrsl)['mask'][0]
 labels = loadmat(lrsl)['label'][0]
-matfiles = sorted(glob.glob('./mat/'+inifilename+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
 ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max label number
 ptsidx = ptstrj['idxtable'][0]
 
@@ -90,7 +90,7 @@ while (frame_idx < framenum):
 
             ## get the time T (where the pt appears and disappears)
             
-            havePt    = find(xtrj[i,:]>0)
+            havePt  = find(xtrj[i,:]>0)
             if havePt!=[]:
                 startT[i] = min(havePt)+(frame_idx/trunclen*trunclen) 
                 endT[i]   = max(havePt)+(frame_idx/trunclen*trunclen) 
@@ -187,18 +187,51 @@ for key, value in vctime.items():
 
 
 
-# import pickle
+import pickle
 
-# with open('vcxtrj.pickle', 'wb') as writehandle: ## not working fine
-#   pickle.dump(vcxtrj, writehandle)
+with open('vcxtrj.pickle', 'wb') as writehandle: ## not working fine
+  pickle.dump(vcxtrj, writehandle)
 
-# with open('vcxtrj.pickle', 'rb') as readhandle:
-#   b = pickle.load(readhandle)
-
-
+with open('vcxtrj.pickle', 'rb') as readhandle:
+  b = pickle.load(readhandle)
 
 
 
+
+
+import pickle
+#classes defined by Andy
+class Objects():
+    def __init__(self):
+        self.ptsTrj= {}
+        self.pts = []
+        self.Trj = [] #[x,y]
+        self.xTrj = [] # x
+        self.yTrj = [] #y
+        self.frame = [] #current frm number
+        self.vel = [] 
+        self.pos = [] 
+        self.status = 1   # 1: alive  2: dead
+        
+
+
+
+
+
+
+
+
+
+test = pickle.loads('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl')
+
+pkl_file = open('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl', 'rb')
+data1 = pickle.load(pkl_file)
+pprint.pprint(data1)
+
+
+
+my_pat = pickle.load(open('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl','rb'))
+print my_pat.data
 
 
 

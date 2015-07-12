@@ -6,7 +6,7 @@ flab = []  #final labels
 fmask = [] #final mask
 
 inifilename = 'HR'
-matfiles = sorted(glob.glob('./mat/labels/'+inifilename+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))
 
 #pdb.set_trace()
 
@@ -100,7 +100,7 @@ for k in dpidx[::-1]:
 result = {}
 result['label']   = labels
 result['mask']= mask
-savename = './mat/finalresult/'+inifilename
+savename = './mat/20150222_Mat/finalresult/'+inifilename
 savemat(savename,result)
 
 

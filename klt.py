@@ -24,6 +24,9 @@ from time import clock
 from scipy.io import savemat
 from scipy.sparse import csr_matrix
 
+from glob import glob
+import os
+
 
 lk_params = dict( winSize  = (15, 15),
                   maxLevel = 2,
@@ -44,24 +47,42 @@ dicidx =0
 
 #video_src = '/home/andyc/Videos/jayst.mp4'                                                                                         
 # video_src = '/home/andyc/Videos/video0222.mp4'
-video_src = '../VideoData/video0222.mp4'
+# video_src = '../VideoData/video0222.mp4'
+# cam = cv2.VideoCapture(video_src)
+# nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+# ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+# nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+# change from reading video to reading images
+# image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
+image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
+firstfrm=cv2.imread(image_listing[0])
+
+nrows = int(size(firstfrm,0))
+ncols = int(size(firstfrm,1))
+nframe = int(len(image_listing))
+
+
 
 track_len = 10
 detect_interval = 5
 #tracks = []
 tracksdic = {} 
 Ttracks = []
-cam = cv2.VideoCapture(video_src)
-nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+
+
 frame_idx = 0
 pregood = []
 trunclen = 600
 lenoffset = 0
         
-while (frame_idx <nframe):
-    ret, frame = cam.read()
+
+
+while (frame_idx < nframe):
+    # ret, frame = cam.read()   #change from reading video to reading images
+    tmpName= image_listing[frame_idx]
+    frame=cv2.imread(tmpName)
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
     vis = frame.copy()
     
@@ -197,7 +218,7 @@ while (frame_idx <nframe):
         trk['xtracks'] = csr_matrix(Xtracks)
         trk['ytracks'] = csr_matrix(Ytracks)
         trk['idxtable'] = tracksdic.keys()
-        savename = './mat/HR'+str(frame_idx/trunclen).zfill(3)
+        savename = './mat/20150220_Mat/HR'+str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
         #===== release memory =====
