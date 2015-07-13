@@ -36,6 +36,8 @@ cam = cv2.VideoCapture(video_src)
 nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 framenum  = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
 frame_idx = 0
 
 plt.figure(1,figsize=[10,12])
@@ -67,7 +69,7 @@ def Virctr(x,y):
     return vcx,vcy
 
 
-while (frame_idx < framenum):
+while (frame_idx < 3000): #framenum):
 
     if (frame_idx % trunclen == 0):
         
@@ -163,6 +165,14 @@ while (frame_idx < framenum):
     #pdb.set_trace()
 
 
+
+
+
+
+
+# save the tracks
+
+
 # savename = './mat/'+'vcxtrj'  ## mat not working??
 # savemat(savename,vcxtrj)
 
@@ -173,46 +183,151 @@ while (frame_idx < framenum):
 
 
 import csv
-writer = csv.writer(open('./vcxtrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/vcxtrj.csv', 'wb'))
 for key, value in vcxtrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./vcytrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/vcytrj.csv', 'wb'))
 for key, value in vcytrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./vctime.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/vctime.csv', 'wb'))
 for key, value in vctime.items():
    writer.writerow([key,value])
 
 
 
-import pickle
+import cPickle as pickle
+import pprint
 
-with open('vcxtrj.pickle', 'wb') as writehandle: ## not working fine
-  pickle.dump(vcxtrj, writehandle)
-
-with open('vcxtrj.pickle', 'rb') as readhandle:
-  b = pickle.load(readhandle)
-
-
+ # Save a dictionary into a pickle file.
+pickle.dump( vctime, open( "./mat/20150222_Mat/vctime.p", "wb" ) )
+pickle.dump( vcxtrj, open( "./mat/20150222_Mat/vcxtrj.p", "wb" ) )
+pickle.dump( vcytrj, open( "./mat/20150222_Mat/vcytrj.p", "wb" ) )
 
 
 
-import pickle
-#classes defined by Andy
+# load and check
+test_vctime = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vctime.p", "rb" ) )
+print test_vctime == vctime  # true
+
+test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vcxtrj.p", "rb" ) )
+print test_vcxtrj == vcxtrj   
+
+test_vcytrj = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vcytrj.p", "rb" ) )
+print test_vcytrj == vcytrj  
+
+# for key, value in test_vcxtrj.iteritems():
+#     pprint.pprint(key)
+#     print vcxtrj[key] == test_vcxtrj[key]
+
+
+
+
+# consider the pair-wise relationship between each two cars
+# 1. At each center, get the intersection of the frames
+
+# ------#--------#--------#--------#----> frame number
+
+
+
 class Objects():
-    def __init__(self):
+    def __init__(self,vcxtrj,vcytrj,vctime):
         self.ptsTrj= {}
         self.pts = []
         self.Trj = [] #[x,y]
-        self.xTrj = [] # x
-        self.yTrj = [] #y
-        self.frame = [] #current frm number
+        self.Trj_with_ID = [] # [ID,x,y]
+        self.xTrj = vcxtrj # x
+        self.yTrj = vcytrj  #y
+        self.frame = vctime #current frm number
         self.vel = [] 
         self.pos = [] 
         self.status = 1   # 1: alive  2: dead
-        
+        self.globalID = sorted(vctime.keys())
+
+        for key, value in vcxtrj.iteritems():
+            x_location = vcxtrj[key]
+            y_location = vcytrj[key]
+            for ii in range(size(value)):
+                self.Trj.append([x_location[ii],y_location[ii]]) 
+                self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
+
+
+
+obj_pair = Objects(test_vcxtrj,test_vcytrj,test_vctime)
+pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
+# test_obj = pickle.load(open("./mat/20150222_Mat/obj_pair.p", "rb" ))
+
+
+chunk_len = framerate*40 # 40s
+chunk_center = range(1/2*chunk_len,3000,chunk_len)  #change 1000 to the Framenumber
+chunk_center = chunk_center [1:]
+
+temp_vcxtrj = {}
+temp_vcytrj = {}
+temp_vctime = {}
+for ii in obj_pair.globalID[0:400]:  
+    temp_vcxtrj[ii] = test_vcxtrj[ii]
+    temp_vcytrj[ii] = test_vcytrj[ii]
+    temp_vctime[ii] = test_vctime[ii]
+
+potential_key = []
+
+for ii in range(size(chunk_center,0)):
+
+
+    for key, value in temp_vctime.iteritems():
+        if value!=[]:
+            startF = value[0]
+            endF = value[1]
+            if not(startF >= chunk_center[ii]+1/2*chunk_len or endF < chunk_center[ii]-1/2*chunk_len):
+                potential_key.append(int(key))
+
+
+potential_x = []
+potential_y = []
+
+set_x = []
+set_y = []
+set_frm = []
+# get intersection for those IDs
+for kk in range(len(potential_key)):
+    potential_frm = temp_vctime[potential_key[kk]]
+    set_frm.append(set(range(potential_frm[0],potential_frm[1],1)))
+
+
+    potential_x = temp_vcxtrj[potential_key[kk]]
+    set_x.append(set(potential_x))
+
+    potential_y = temp_vcytrj[potential_key[kk]]
+    set_y.append(set(potential_y))
+
+
+parallel_vehicle_ID = []
+parallel_vehicle_common = []
+parallel_vehicle_x1 = []
+parallel_vehicle_x2 = []
+parallel_vehicle_y1 = []
+parallel_vehicle_y2 = []
+
+
+
+for ff in range (size(set_frm)-1):
+    z = set_frm[ff]
+    for ff2 in range(ff+1, size(set_frm)):
+        common_frm = z.intersection(set_frm[ff2])
+        if len(common_frm) >= 10:
+            common_frm = list(common_frm)
+            parallel_vehicle_ID.append([ff, ff2])
+            parallel_vehicle_common.append(common_frm)
+
+            parallel_vehicle_x1.append(vcxtrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
+            parallel_vehicle_x2.append(vcxtrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
+
+            parallel_vehicle_y1.append(vcytrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
+            parallel_vehicle_y2.append(vcytrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
+
+ #  still need to debug here!!
 
 
 
@@ -220,18 +335,25 @@ class Objects():
 
 
 
+# 2. Filter out thoes intersect too short
 
-
-test = pickle.loads('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl')
-
-pkl_file = open('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl', 'rb')
-data1 = pickle.load(pkl_file)
-pprint.pprint(data1)
+# 3. save
 
 
 
-my_pat = pickle.load(open('/home/chengeli/Downloads/TracksFormat/tracks2015.pkl','rb'))
-print my_pat.data
+
+
+# tracks2015 = pickle.load( open ("/home/chengeli/Downloads/tracks2015.pkl","rb")) 
+ 
+
+
+
+
+
+    
+
+
+
 
 
 
