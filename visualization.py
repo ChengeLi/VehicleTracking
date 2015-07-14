@@ -225,12 +225,6 @@ print test_vcytrj == vcytrj
 
 
 # consider the pair-wise relationship between each two cars
-# 1. At each center, get the intersection of the frames
-
-# ------#--------#--------#--------#----> frame number
-
-
-
 class Objects():
     def __init__(self,vcxtrj,vcytrj,vctime):
         self.ptsTrj= {}
@@ -244,6 +238,15 @@ class Objects():
         self.pos = [] 
         self.status = 1   # 1: alive  2: dead
         self.globalID = sorted(vctime.keys())
+        self.dir = {} # directions 0 or 1
+        self.bad_IDs = []
+
+
+        for key, val in vctime.iteritems():
+            if val ==[] or val[1]-val[0] <= 5*3:
+                self.bad_IDs.append(key)
+
+
 
         for key, value in vcxtrj.iteritems():
             x_location = vcxtrj[key]
@@ -252,24 +255,48 @@ class Objects():
                 self.Trj.append([x_location[ii],y_location[ii]]) 
                 self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
 
+        for key in vctime.iterkeys():
+            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=0).sum() - (size(self.yTrj[key])-1))<=5:
+                self.dir[key] = 1
+            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=0).sum() - (size(self.yTrj[key])-1))<=5:
+                self.dir[key] = 0
+            else: 
+                self.dir[key] = 999
+                self.bad_IDs.append(key)
+
 
 
 obj_pair = Objects(test_vcxtrj,test_vcytrj,test_vctime)
-pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
+test_vctime = {key: value for key, value in test_vctime.items() 
+             if key not in obj_pair.bad_IDs}
+test_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
+             if key not in obj_pair.bad_IDs}
+test_vcytrj = {key: value for key, value in test_vcytrj.items() 
+             if key not in obj_pair.bad_IDs}
+# rebuild this object using filtered data, should be no bad_IDs
+obj_pair = Objects(test_vcxtrj,test_vcytrj,test_vctime)
+print obj_pair.bad_IDs == []
+
+
+# pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
 # test_obj = pickle.load(open("./mat/20150222_Mat/obj_pair.p", "rb" ))
+
+
+
+
 
 
 chunk_len = framerate*40 # 40s
 chunk_center = range(1/2*chunk_len,3000,chunk_len)  #change 1000 to the Framenumber
 chunk_center = chunk_center [1:]
 
-temp_vcxtrj = {}
-temp_vcytrj = {}
-temp_vctime = {}
-for ii in obj_pair.globalID[0:400]:  
-    temp_vcxtrj[ii] = test_vcxtrj[ii]
-    temp_vcytrj[ii] = test_vcytrj[ii]
-    temp_vctime[ii] = test_vctime[ii]
+# temp_vcxtrj = {}
+# temp_vcytrj = {}
+# temp_vctime = {}
+# for ii in obj_pair.globalID[0:400]:  
+#     temp_vcxtrj[ii] = test_vcxtrj[ii]
+#     temp_vcytrj[ii] = test_vcytrj[ii]
+#     temp_vctime[ii] = test_vctime[ii]
 
 potential_key = []
 
@@ -336,6 +363,16 @@ for ff in range (size(set_frm)-1):
 
 
 # 2. Filter out thoes intersect too short
+
+
+if common_frm.size
+
+
+
+
+
+
+
 
 # 3. save
 
