@@ -1,6 +1,8 @@
 from scipy.io import loadmat,savemat
 import cv2,pickle,pdb,glob
 from scipy.sparse import csr_matrix
+import csv
+
 
 # video_src = '/home/andyc/Videos/video0222.mp4'
 video_src = '../VideoData/video0222.mp4'
@@ -32,13 +34,22 @@ for i in np.unique(mlabels):
     vcytrj[i]=[]
     vctime[i]=[]
 
-cam = cv2.VideoCapture(video_src)
-nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-framenum  = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+# cam = cv2.VideoCapture(video_src)
+# nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+# ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+# framenum  = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+# framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
 
-framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
+image_listing = sorted(glob.glob('../VideoData/20150220/*.jpg'))
+firstfrm=cv2.imread(image_listing[0])
+nrows = int(size(firstfrm,0))
+ncols = int(size(firstfrm,1))
+framenum = int(len(image_listing))
+framerate = 5
+
+
 frame_idx = 0
+
 
 plt.figure(1,figsize=[10,12])
 axL = plt.subplot(1,1,1)
@@ -49,7 +60,7 @@ color = array([random.randint(0,255) \
                for _ in range(3*int(max(labels)))])\
                .reshape(max(labels),3)
 
-cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+# cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
 
 def Virctr(x,y):
     '''
@@ -69,7 +80,7 @@ def Virctr(x,y):
     return vcx,vcy
 
 
-while (frame_idx < 3000): #framenum):
+while (frame_idx < framenum):
 
     if (frame_idx % trunclen == 0):
         
@@ -102,7 +113,11 @@ while (frame_idx < 3000): #framenum):
 
 
     print frame_idx
-    ret, frame[:] = cam.read()
+    # ret, frame[:] = cam.read()
+    tmpName= image_listing[frame_idx]
+    frame=cv2.imread(tmpName)
+
+
     # plt.draw()
     pts = trk[:,:,0].T[frame_idx%trunclen]!=0 # pts appear in this frame,i.e. X!=0
 
@@ -208,13 +223,12 @@ pickle.dump( vcytrj, open( "./mat/20150222_Mat/vcytrj.p", "wb" ) )
 
 
 # load and check
-test_vctime = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vctime.p", "rb" ) )
+test_vctime = pickle.load( open( "./mat/20150222_Mat/vctime.p", "rb" ) )
+test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/vcxtrj.p", "rb" ) )
+test_vcytrj = pickle.load( open( "./mat/20150222_Mat/vcytrj.p", "rb" ) )
+
 print test_vctime == vctime  # true
-
-test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vcxtrj.p", "rb" ) )
 print test_vcxtrj == vcxtrj   
-
-test_vcytrj = pickle.load( open( "./mat/20150222_Mat/tracksPickleBKUP/vcytrj.p", "rb" ) )
 print test_vcytrj == vcytrj  
 
 # for key, value in test_vcxtrj.iteritems():
@@ -222,15 +236,27 @@ print test_vcytrj == vcytrj
 #     print vcxtrj[key] == test_vcxtrj[key]
 
 
+badkey = []
+for key, val in test_vctime.iteritems():
+    if val ==[] or val[1]-val[0] <= 5*3:
+        badkey.append(key)
+
+for badk in badkey:
+    del test_vctime[badk]
+    del test_vcxtrj[badk]
+    del test_vcytrj[badk]
+
+
 
 
 # consider the pair-wise relationship between each two cars
-class Objects():
+class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime):
         self.ptsTrj= {}
         self.pts = []
         self.Trj = [] #[x,y]
         self.Trj_with_ID = [] # [ID,x,y]
+        self.Trj_with_ID_frm = [] # [ID,frm,x,y]
         self.xTrj = vcxtrj # x
         self.yTrj = vcytrj  #y
         self.frame = vctime #current frm number
@@ -240,7 +266,7 @@ class Objects():
         self.globalID = sorted(vctime.keys())
         self.dir = {} # directions 0 or 1
         self.bad_IDs = []
-
+        self.bad_IDs2 = [] # bad IDs with different length time and x,y
 
         for key, val in vctime.iteritems():
             if val ==[] or val[1]-val[0] <= 5*3:
@@ -251,9 +277,24 @@ class Objects():
         for key, value in vcxtrj.iteritems():
             x_location = vcxtrj[key]
             y_location = vcytrj[key]
-            for ii in range(size(value)):
-                self.Trj.append([x_location[ii],y_location[ii]]) 
-                self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
+            
+            # print size(curfrm),"!!!!===================!"
+            
+            if not vctime[key]==[]:
+                curfrm = range(vctime[key][0],vctime[key][1]+1)
+                if size(curfrm)!= size(value):
+                    print "error!==============================="
+                    self.bad_IDs2.append(key)
+                                   
+                else:
+                    for ii in range(size(value)):
+                    # pdb.set_trace()
+                    
+                        self.Trj.append([x_location[ii],y_location[ii]]) 
+                        self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
+                        self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
+
+
 
         for key in vctime.iterkeys():
             if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=0).sum() - (size(self.yTrj[key])-1))<=5:
@@ -264,9 +305,10 @@ class Objects():
                 self.dir[key] = 999
                 self.bad_IDs.append(key)
 
+        # can also set threshold on the trj, e.g. delta_y <=0.8  
 
 
-obj_pair = Objects(test_vcxtrj,test_vcytrj,test_vctime)
+obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 test_vctime = {key: value for key, value in test_vctime.items() 
              if key not in obj_pair.bad_IDs}
 test_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
@@ -274,12 +316,58 @@ test_vcxtrj = {key: value for key, value in test_vcxtrj.items()
 test_vcytrj = {key: value for key, value in test_vcytrj.items() 
              if key not in obj_pair.bad_IDs}
 # rebuild this object using filtered data, should be no bad_IDs
-obj_pair = Objects(test_vcxtrj,test_vcytrj,test_vctime)
+obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 print obj_pair.bad_IDs == []
+
+
+
+writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm.csv', 'wb'))
+for kk in range(size(obj_pair.Trj_with_ID_frm,0)):
+    writer.writerow(obj_pair.Trj_with_ID_frm[kk])
+
+
+
 
 
 # pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
 # test_obj = pickle.load(open("./mat/20150222_Mat/obj_pair.p", "rb" ))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
