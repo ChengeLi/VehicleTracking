@@ -54,8 +54,8 @@ dicidx =0
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 # change from reading video to reading images
-# image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
-image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
+image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
+# image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
 firstfrm=cv2.imread(image_listing[0])
 
 nrows = int(size(firstfrm,0))
@@ -63,13 +63,10 @@ ncols = int(size(firstfrm,1))
 nframe = int(len(image_listing))
 
 
-
 track_len = 10
 detect_interval = 5
 #tracks = []
 tracksdic = {} 
-Ttracks = []
-
 
 
 frame_idx = 0
@@ -79,6 +76,8 @@ lenoffset = 0
         
 
 
+
+nframe = 3000 # test
 while (frame_idx < nframe):
     # ret, frame = cam.read()   #change from reading video to reading images
     tmpName= image_listing[frame_idx]
@@ -141,7 +140,7 @@ while (frame_idx < nframe):
                     tracksdic[dicidx].append((x,y,frame_idx))
                 dicidx += 1 
 
-            start = start + [frame_idx]*(len(tracksdic)+lenoffset-oldlen)
+            start = start + [frame_idx]*(len(tracksdic)+lenoffset-oldlen) ##add the start time for new added feature pts
             end   = end + [-1]*(len(tracksdic)+lenoffset-oldlen)
             oldlen = len(tracksdic)+lenoffset
 
@@ -152,7 +151,8 @@ while (frame_idx < nframe):
 
     frame_idx += 1
     prev_gray = frame_gray
-    cv2.imshow('lk_track', vis)
+    #  visualize:============================== 
+    # cv2.imshow('lk_track', vis)
             
     #name = '/home/andyc/image/AIG/lking/'+str(self.frame_idx).zfill(5)+'.jpg'
     #cv2.imwrite(name,vis)
@@ -163,31 +163,31 @@ while (frame_idx < nframe):
         
     #========== save data ===================#    
     if  (frame_idx % trunclen) == 0:
-        #pdb.set_trace()
+        # pdb.set_trace()
         #fbr = pickle.load(open('./mask/forbiddenregion_mask.pkl','rb')) #forbbiden region
 
         Xtracks = np.zeros([len(tracksdic),trunclen])
         Ytracks = np.zeros([len(tracksdic),trunclen])
+        Ttracks = np.zeros([len(tracksdic),trunclen])
 
-        offset = ((frame_idx // trunclen)-1)*trunclen
-        #pdb.set_trace()
+        offset = ((frame_idx // trunclen)-1)*trunclen # which trunclen, starting from 0th
         for trjidx,i in enumerate(tracksdic.keys()):
 
             endfidx = end[i]  # end frame number for pts i
 
             startfidx = start[i]
-            if (endfidx >= offset) or (endfidx == -1):
+            if (endfidx >= offset) or (endfidx == -1): #offset is the current trunck
 
                 if endfidx == -1 : # trj still alive                                                                                
-                    k =array(tracksdic[i]).T
-                else:              # trj is dead...                                                                                  
-                    k =array(tracksdic[i])[:-1].T
+                    k =array(tracksdic[i]).T    # shape is: 3X600 3:(x,y,t)
+                else:              # trj is dead in this chunk                                                                                
+                    k =array(tracksdic[i])[:-1].T #(save all but the last -1)
 
                 if startfidx == -1 : #exist in previous trucation
                     startfidx = offset
                     k = k[:,1:]
 
-                if endfidx != -1 : #trj is dead...
+                if endfidx != -1 : #trj is dead in this chunk, save
                     '''
                     xx,yy = k[0:2,-1]
                     if xx >= ncols:
@@ -205,10 +205,12 @@ while (frame_idx < nframe):
                     '''
                     Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0]
                     Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
-
+                    Ttracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[2]
                 else:
                     Xtracks[trjidx,:][startfidx-offset:] = k[0]
                     Ytracks[trjidx,:][startfidx-offset:] = k[1]
+                    Ttracks[trjidx,:][startfidx-offset:] = k[2]
+
 
         #pdb.set_trace()
         #==== save files ====
@@ -218,12 +220,14 @@ while (frame_idx < nframe):
         trk['xtracks'] = csr_matrix(Xtracks)
         trk['ytracks'] = csr_matrix(Ytracks)
         trk['idxtable'] = tracksdic.keys()
-        savename = './mat/20150220_Mat/HR'+str(frame_idx/trunclen).zfill(3)
+        trk['Ttracks'] = csr_matrix(Ttracks)
+
+        savename = './mat/20150222_Mat/HR_w_T'+str(frame_idx/trunclen).zfill(3)
+        # savename = './mat/20150220_Mat/HR'+str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
         #===== release memory =====
-        deadtrj = np.where(array(end)>0 )[0]  # dead trj
-        #pdb.set_trace()
+        deadtrj = np.where(array(end)>0 )[0]  # dead trjs' dying positions
         lenoffset += len(deadtrj)
         for i in range(oldlen):
             if i in deadtrj:
@@ -232,8 +236,18 @@ while (frame_idx < nframe):
             else:
                 try: #if trj exist and cross two truncations
                     tracksdic[i] = [tracksdic[i][-1]]
-                    start[i] = -1
+                    start[i] = -1  # it's from the last trunction
                 except: # if trj already been removed
                     pass
 
 #if (frame_idx % trunclen) !=0:
+
+
+
+
+
+
+
+
+
+

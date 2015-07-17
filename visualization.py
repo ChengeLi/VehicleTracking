@@ -1,8 +1,10 @@
 from scipy.io import loadmat,savemat
-import cv2,pickle,pdb,glob
+import cv2,pdb
+from glob import glob
 from scipy.sparse import csr_matrix
 import csv
-
+import cPickle as pickle
+import pprint
 
 # video_src = '/home/andyc/Videos/video0222.mp4'
 video_src = '../VideoData/video0222.mp4'
@@ -13,7 +15,7 @@ inifilename = 'HR'
 lrsl = './mat/20150222_Mat/finalresult/'+inifilename
 mask = loadmat(lrsl)['mask'][0]
 labels = loadmat(lrsl)['label'][0]
-matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
+matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
 ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max label number
 ptsidx = ptstrj['idxtable'][0]
 
@@ -40,7 +42,7 @@ for i in np.unique(mlabels):
 # framenum  = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 # framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
 
-image_listing = sorted(glob.glob('../VideoData/20150220/*.jpg'))
+image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
 firstfrm=cv2.imread(image_listing[0])
 nrows = int(size(firstfrm,0))
 ncols = int(size(firstfrm,1))
@@ -177,7 +179,6 @@ while (frame_idx < framenum):
 
     frame_idx = frame_idx+1
   
-    #pdb.set_trace()
 
 
 
@@ -197,32 +198,34 @@ while (frame_idx < framenum):
 
 
 
-import csv
-writer = csv.writer(open('./mat/20150222_Mat/vcxtrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvcxtrj.csv', 'wb'))
 for key, value in vcxtrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/vcytrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvcytrj.csv', 'wb'))
 for key, value in vcytrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/vctime.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvctime.csv', 'wb'))
 for key, value in vctime.items():
    writer.writerow([key,value])
 
 
 
-import cPickle as pickle
-import pprint
 
  # Save a dictionary into a pickle file.
-pickle.dump( vctime, open( "./mat/20150222_Mat/vctime.p", "wb" ) )
-pickle.dump( vcxtrj, open( "./mat/20150222_Mat/vcxtrj.p", "wb" ) )
-pickle.dump( vcytrj, open( "./mat/20150222_Mat/vcytrj.p", "wb" ) )
+pickle.dump( vctime, open( "./mat/20150222_Mat/Fullvctime.p", "wb" ) )
+pickle.dump( vcxtrj, open( "./mat/20150222_Mat/Fullvcxtrj.p", "wb" ) )
+pickle.dump( vcytrj, open( "./mat/20150222_Mat/Fullvcytrj.p", "wb" ) )
 
 
 
 # load and check
+test_vctime = pickle.load( open( "./mat/20150222_Mat/Fullvctime.p", "rb" ) )
+test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/Fullvcxtrj.p", "rb" ) )
+test_vcytrj = pickle.load( open( "./mat/20150222_Mat/Fullvcytrj.p", "rb" ) )
+
+
 test_vctime = pickle.load( open( "./mat/20150222_Mat/vctime.p", "rb" ) )
 test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/vcxtrj.p", "rb" ) )
 test_vcytrj = pickle.load( open( "./mat/20150222_Mat/vcytrj.p", "rb" ) )
@@ -237,8 +240,8 @@ print test_vcytrj == vcytrj
 
 
 badkey = []
-for key, val in test_vctime.iteritems():
-    if val ==[] or val[1]-val[0] <= 5*3:
+for key, val in test_vcxtrj.iteritems():
+    if val ==[] or size(val)<=5*3:
         badkey.append(key)
 
 for badk in badkey:
@@ -246,8 +249,12 @@ for badk in badkey:
     del test_vcxtrj[badk]
     del test_vcytrj[badk]
 
-
-
+badkey2 = []
+for key, val in test_vctime.iteritems():
+    if not val==[]:
+        if size(test_vcxtrj[key])!= val[1]-val[0]+1:
+            badkey2.append(key)
+                                   
 
 # consider the pair-wise relationship between each two cars
 class TrjObj():
@@ -297,9 +304,9 @@ class TrjObj():
 
 
         for key in vctime.iterkeys():
-            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=0).sum() - (size(self.yTrj[key])-1))<=5:
+            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-0.1).sum() - (size(self.yTrj[key])-1))<=5:
                 self.dir[key] = 1
-            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=0).sum() - (size(self.yTrj[key])-1))<=5:
+            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=0.1).sum() - (size(self.yTrj[key])-1))<=5:
                 self.dir[key] = 0
             else: 
                 self.dir[key] = 999
@@ -315,16 +322,30 @@ test_vcxtrj = {key: value for key, value in test_vcxtrj.items()
              if key not in obj_pair.bad_IDs}
 test_vcytrj = {key: value for key, value in test_vcytrj.items() 
              if key not in obj_pair.bad_IDs}
+
+test_vctime = {key: value for key, value in test_vctime.items() 
+             if key not in obj_pair.bad_IDs2}
+test_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
+             if key not in obj_pair.bad_IDs2}
+test_vcytrj = {key: value for key, value in test_vcytrj.items() 
+             if key not in obj_pair.bad_IDs2}
+
+
+
+
 # rebuild this object using filtered data, should be no bad_IDs
 obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 print obj_pair.bad_IDs == []
 
 
 
-writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm_clean.csv', 'wb'))
+temp = []
 for kk in range(size(obj_pair.Trj_with_ID_frm,0)):
-    writer.writerow(obj_pair.Trj_with_ID_frm[kk])
-
+    temp =  obj_pair.Trj_with_ID_frm[kk]
+    curkey = obj_pair.Trj_with_ID_frm[kk][0]
+    temp.append(obj_pair.dir[curkey])
+    writer.writerow(temp)
 
 
 

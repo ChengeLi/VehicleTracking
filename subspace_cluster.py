@@ -186,6 +186,9 @@ if __name__ == '__main__':
         labelsave ={}
         labelsave['label']=labels
         labelsave['mask']=mask
+        labelsave['tTracks']=file['Ttracks']
+
+
         savename = './mat/20150222_Mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
 
         savemat(savename,labelsave)

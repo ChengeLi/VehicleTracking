@@ -13,6 +13,8 @@ for matidx,matfile in enumerate(matfiles):
     ptstrj = loadmat(matfile)
     x = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
     y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
+    t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+
     ptsidx = ptstrj['idxtable'][0]
 
     sample = ptstrj['xtracks'].shape[0]
@@ -29,6 +31,7 @@ for matidx,matfile in enumerate(matfiles):
     mask =[]
     x_re = []
     y_re =[]
+    t_re = []
     xspd =[]
     yspd =[]
     minspdth = 15 #threshold of min speed
@@ -44,9 +47,11 @@ for matidx,matfile in enumerate(matfiles):
                 if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is not a not move point
                     if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a idole point
 
-                        mask.append(ptsidx[i])
+                        mask.append(ptsidx[i]) # ID 
                         x_re.append(x[i,:])
                         y_re.append(y[i,:])
+                        t_re.append(t[i,:])
+
                         xspd.append(xspeed[i,:])
                         yspd.append(yspeed[i,:])
             except:
@@ -59,6 +64,8 @@ for matidx,matfile in enumerate(matfiles):
     num = arange(fnum)
     x_re = array(x_re)
     y_re = array(y_re)
+    t_re = array(t_re)
+    
     xspd = array(xspd)
     yspd = array(yspd)
 
@@ -91,6 +98,7 @@ for matidx,matfile in enumerate(matfiles):
     result['adj'] = adj
     result['c']   = c
     result['mask']= mask
+    result['Ttracks'] = t_re
 
     savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
     savemat(savename,result)

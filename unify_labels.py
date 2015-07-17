@@ -8,9 +8,6 @@ fmask = [] #final mask
 inifilename = 'HR'
 matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))
 
-#pdb.set_trace()
-
-
 for matidx in range(len(matfiles)-1): 
     #pdb.set_trace() 
     if matidx == 0:
@@ -24,11 +21,11 @@ for matidx in range(len(matfiles)-1):
     M2 = loadmat(matfiles[matidx+1])['mask'][0]
 
     labelnum = max(L1)
-    commonidx = np.intersect1d(M1,M2)  #idx exist in 2 trucations
+    commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
     
     print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))
 
-    L2[:] = L2 + labelnum+1
+    L2[:] = L2 + labelnum+1 # to make sure there're no duplicate labels
 
     
     for i in commonidx:
@@ -42,7 +39,7 @@ for matidx in range(len(matfiles)-1):
         idx2 = np.where(L2==label2)
         print('label 2 group : {0}\n\n').format(M2[idx2])
 
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in commonidx:
         if i not in atmp:
         
@@ -50,31 +47,52 @@ for matidx in range(len(matfiles)-1):
             label2 = L2[np.where((M2 == i)!=0)[0][0]]
             idx1 = np.where(L1==label1)
             idx2 = np.where(L2==label2)
-            tmp1 = np.intersect1d(M1[idx1],commonidx)
+            tmp1 = np.intersect1d(M1[idx1],commonidx) # appear in both trunks and label is label1 
             tmp2 = np.intersect1d(M2[idx2],commonidx)
 
             L1idx =list(idx1[0])
             L2idx =list(idx2[0])
+            L1idx_TEST =list(idx1[0])
+            L2idx_TEST =list(idx2[0])
 
-            diff = np.setdiff1d(tmp1,tmp2)
+
+            diff1 = np.setdiff1d(tmp1,tmp2)  # this difference only accounts for elements in tmp1
+            diff = np.union1d(np.setdiff1d(tmp1,np.intersect1d(tmp1,tmp2)) , np.setdiff1d(tmp2,np.intersect1d(tmp1,tmp2) ))
+            pdb.set_trace()
+
             atmp = np.unique(np.hstack((tmp1,tmp2)))
 
 
             if len(diff)>0:
-                for j in diff:
-                    if j in tmp1:
-                        wlab = L1[np.where((M1 == j)!=0)[0][0]] # wrong labels
-                        widx = np.where(L1==wlab) #idx of wrong od wrong labels
+                for jj in diff:
+                    if jj in tmp1:  ## in the same group in trunk1 but different groups in trunk 2
+                        # pdb.set_trace()
+                        wlab = L1[np.where((M1 == jj )!=0)[0][0]] # wrong labels
+                        widx = np.where(L1==wlab) #idx of wrong labels
                         L1[widx] = label1
-                        L1idx.append(np.where(M1 == j)[0][0])
-                    else: # j in tmp2:
-                        wlab = L2[np.where((M2 == j)!=0)[0][0]]
+                        L1idx.append(np.where(M1 == jj )[0][0])
+                        
+                    else: # jj  in tmp2:
+                        # pdb.set_trace()
+                        wlab = L2[np.where((M2 == jj )!=0)[0][0]]
                         widx = np.where(L2==wlab)
                         L2[widx] = label2
-                        L2idx.append(np.where(M2 == j)[0][0])
+                        L2idx.append(np.where(M2 == jj )[0][0])
 
-            L1[L1idx] = label1
-            L2[L2idx] = label1
+
+
+            L1_TEST = L1
+            L2_TEST = L2
+            L1[L1idx] = label1  ## keep the first appearing label
+            L2[L2idx] = label1   
+            L1_TEST[L1idx_TEST] = label1  ## keep the first appearing label
+            L2_TEST[L2idx_TEST] = label1 
+            pdb.set_trace()  
+            print L1 == L1_TEST
+            print L2 == L2_TEST
+
+
+
 
     if matidx == 0 :
         flab[:] = flab + list(L1) 
