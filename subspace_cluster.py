@@ -144,7 +144,9 @@ if __name__ == '__main__':
 #    """With constructed adjacency matrix """
 
     inifilename = 'HR'
-    matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'*.mat'))
+    # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'*.mat'))
+    matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+'*.mat'))
+
 
     for matidx,matfile in enumerate(matfiles):
 
@@ -181,15 +183,15 @@ if __name__ == '__main__':
             j = j+1
         labels = labels_new
             #pdb.set_trace()
-            #print 1
     
         labelsave ={}
         labelsave['label']=labels
         labelsave['mask']=mask
-        labelsave['tTracks']=file['Ttracks']
+        labelsave['Ttracks']=file['Ttracks']
 
 
-        savename = './mat/20150222_Mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
+        # savename = './mat/20150222_Mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
+        savename = './mat/20150222_Mat/labels/'+inifilename+'_label_withT_'+str(matidx+1).zfill(3)
 
         savemat(savename,labelsave)
 

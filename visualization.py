@@ -11,15 +11,17 @@ video_src = '../VideoData/video0222.mp4'
 trunclen = 600
 
 inifilename = 'HR'
+# lrsl = './mat/20150222_Mat/finalresult/'+inifilename
+lrsl = './mat/20150222_Mat/finalresult/'+inifilename+'_with_T'
 
-lrsl = './mat/20150222_Mat/finalresult/'+inifilename
+
 mask = loadmat(lrsl)['mask'][0]
 labels = loadmat(lrsl)['label'][0]
 matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
 ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max label number
 ptsidx = ptstrj['idxtable'][0]
 
-
+reshape(25,4).tolist()
 
 mlabels = np.ones(max(ptsidx)+1)*-1
 #build pts trj labels (-1 : not interest pts)
@@ -82,6 +84,7 @@ def Virctr(x,y):
     return vcx,vcy
 
 
+framenum = 3000 # for testing
 while (frame_idx < framenum):
 
     if (frame_idx % trunclen == 0):

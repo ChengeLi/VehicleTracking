@@ -6,7 +6,8 @@ import pdb,glob
 
 
 inifilename = 'HR'
-matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
+# matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'_w_T'+'*.mat'))  #read the files with the time tracks
 
 for matidx,matfile in enumerate(matfiles):
 
@@ -100,6 +101,8 @@ for matidx,matfile in enumerate(matfiles):
     result['mask']= mask
     result['Ttracks'] = t_re
 
-    savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
+    # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
+    savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+str(matidx+1).zfill(3)
+
     savemat(savename,result)
 
