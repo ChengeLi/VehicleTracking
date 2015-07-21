@@ -151,17 +151,35 @@ dpidx = np.where(np.diff(sorted(mask)) == 0)[0]  #find duplicate ID in mask
 for k in dpidx: #dpidx[::-1]:
     labels.pop(k)
     mask.pop(k)
-    del fTtracks[mask[k]]
  
 result = {}
 result['label']   = labels
 result['mask']= mask
-result['Ttracks'] = fTtracks
+# result['Ttracks'] = fTtracks
 
-# savename = './mat/20150222_Mat/finalresult/'+inifilename
-savename = './mat/20150222_Mat/finalresult/'+inifilename+'_with_T'
 
+savename = './mat/20150222_Mat/finalresult/'+inifilename
 savemat(savename,result)
+
+# why not working???!!!!
+# savename2 = './mat/20150222_Mat/finalresult/'+inifilename+'Ttracks'
+# result2 = {}
+# result2['Ttracks'] = fTtracks
+# savemat(savename2,result2)
+
+
+pickle.dump( fTtracks, open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "wb" ) )
+
+
+
+
+
+
+
+
+
+
+
 
 
 

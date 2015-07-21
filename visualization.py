@@ -11,32 +11,37 @@ video_src = '../VideoData/video0222.mp4'
 trunclen = 600
 
 inifilename = 'HR'
-# lrsl = './mat/20150222_Mat/finalresult/'+inifilename
-lrsl = './mat/20150222_Mat/finalresult/'+inifilename+'_with_T'
-
-
+lrsl = './mat/20150222_Mat/finalresult/'+inifilename
 mask = loadmat(lrsl)['mask'][0]
 labels = loadmat(lrsl)['label'][0]
+
+times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
+
+
 matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
-ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max label number
+ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max index number
 ptsidx = ptstrj['idxtable'][0]
 
-reshape(25,4).tolist()
+# reshape(25,4).tolist()
 
 mlabels = np.ones(max(ptsidx)+1)*-1
 #build pts trj labels (-1 : not interest pts)
 for idx,i in enumerate(mask):  # i=mask[idx], the cotent
     mlabels[i] = labels[idx]
+# mlabel: ID --> label
 
 vcxtrj = {} ##dictionary
 vcytrj = {}
 
 vctime = {}
+vctime2 = {}
 
-for i in np.unique(mlabels):
-    vcxtrj[i]=[]
+for i in np.unique(mlabels):  ## there are several pts contributing to one label i
+    vcxtrj[i]=[] # find a virtual center for each label i
     vcytrj[i]=[]
     vctime[i]=[]
+
+    vctime2[i] = [] 
 
 # cam = cv2.VideoCapture(video_src)
 # nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
@@ -100,7 +105,7 @@ while (frame_idx < framenum):
         startT = np.ones([sample,1])*-999
         endT = np.ones([sample,1])*-999
 
-        for i in range(sample):
+        for i in range(sample):  # for the ith sample
             trk[i,:,0] = xtrj[i]
             trk[i,:,1] = ytrj[i]
             # trk[i,:,2] = arange(fnum)
@@ -108,7 +113,7 @@ while (frame_idx < framenum):
 
             ## get the time T (where the pt appears and disappears)
             
-            havePt  = find(xtrj[i,:]>0)
+            havePt  = array(np.where(xtrj[i,:]>0))[0]
             if havePt!=[]:
                 startT[i] = min(havePt)+(frame_idx/trunclen*trunclen) 
                 endT[i]   = max(havePt)+(frame_idx/trunclen*trunclen) 
@@ -124,10 +129,9 @@ while (frame_idx < framenum):
 
 
     # plt.draw()
+    # current frame index is: (frame_idx%trunclen)
     pts = trk[:,:,0].T[frame_idx%trunclen]!=0 # pts appear in this frame,i.e. X!=0
-
-
-    # pdb.set_trace()
+    # pts = np.where(trk[:,:,0].T[frame_idx%trunclen]>0) 
 
     labinf = list(set(mlabels[ptsidx[pts]])) # label in current frame
     dots = []
@@ -148,6 +152,8 @@ while (frame_idx < framenum):
 
 
             vctime[k]=[int(t1),int(t2)]
+
+            # vctime2[k] = 
 
             #lines = axL.plot(vcxtrj[k],vcytrj[k],color = (0,1,0),linewidth=2)
             lines = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
@@ -201,15 +207,15 @@ while (frame_idx < framenum):
 
 
 
-writer = csv.writer(open('./mat/20150222_Mat/Fullvcxtrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/3000vcxtrj.csv', 'wb'))
 for key, value in vcxtrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/Fullvcytrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/3000vcytrj.csv', 'wb'))
 for key, value in vcytrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/Fullvctime.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/3000vctime.csv', 'wb'))
 for key, value in vctime.items():
    writer.writerow([key,value])
 
@@ -398,86 +404,75 @@ for kk in range(size(obj_pair.Trj_with_ID_frm,0)):
 
 
 
-chunk_len = framerate*40 # 40s
-chunk_center = range(1/2*chunk_len,3000,chunk_len)  #change 1000 to the Framenumber
-chunk_center = chunk_center [1:]
+# chunk_len = framerate*40 # 40s
+# chunk_center = range(1/2*chunk_len,3000,chunk_len)  #change 1000 to the Framenumber
+# chunk_center = chunk_center [1:]
 
-# temp_vcxtrj = {}
-# temp_vcytrj = {}
-# temp_vctime = {}
-# for ii in obj_pair.globalID[0:400]:  
-#     temp_vcxtrj[ii] = test_vcxtrj[ii]
-#     temp_vcytrj[ii] = test_vcytrj[ii]
-#     temp_vctime[ii] = test_vctime[ii]
+# # temp_vcxtrj = {}
+# # temp_vcytrj = {}
+# # temp_vctime = {}
+# # for ii in obj_pair.globalID[0:400]:  
+# #     temp_vcxtrj[ii] = test_vcxtrj[ii]
+# #     temp_vcytrj[ii] = test_vcytrj[ii]
+# #     temp_vctime[ii] = test_vctime[ii]
 
-potential_key = []
+# potential_key = []
 
-for ii in range(size(chunk_center,0)):
-
-
-    for key, value in temp_vctime.iteritems():
-        if value!=[]:
-            startF = value[0]
-            endF = value[1]
-            if not(startF >= chunk_center[ii]+1/2*chunk_len or endF < chunk_center[ii]-1/2*chunk_len):
-                potential_key.append(int(key))
+# for ii in range(size(chunk_center,0)):
 
 
-potential_x = []
-potential_y = []
-
-set_x = []
-set_y = []
-set_frm = []
-# get intersection for those IDs
-for kk in range(len(potential_key)):
-    potential_frm = temp_vctime[potential_key[kk]]
-    set_frm.append(set(range(potential_frm[0],potential_frm[1],1)))
+#     for key, value in temp_vctime.iteritems():
+#         if value!=[]:
+#             startF = value[0]
+#             endF = value[1]
+#             if not(startF >= chunk_center[ii]+1/2*chunk_len or endF < chunk_center[ii]-1/2*chunk_len):
+#                 potential_key.append(int(key))
 
 
-    potential_x = temp_vcxtrj[potential_key[kk]]
-    set_x.append(set(potential_x))
+# potential_x = []
+# potential_y = []
 
-    potential_y = temp_vcytrj[potential_key[kk]]
-    set_y.append(set(potential_y))
-
-
-parallel_vehicle_ID = []
-parallel_vehicle_common = []
-parallel_vehicle_x1 = []
-parallel_vehicle_x2 = []
-parallel_vehicle_y1 = []
-parallel_vehicle_y2 = []
+# set_x = []
+# set_y = []
+# set_frm = []
+# # get intersection for those IDs
+# for kk in range(len(potential_key)):
+#     potential_frm = temp_vctime[potential_key[kk]]
+#     set_frm.append(set(range(potential_frm[0],potential_frm[1],1)))
 
 
+#     potential_x = temp_vcxtrj[potential_key[kk]]
+#     set_x.append(set(potential_x))
 
-for ff in range (size(set_frm)-1):
-    z = set_frm[ff]
-    for ff2 in range(ff+1, size(set_frm)):
-        common_frm = z.intersection(set_frm[ff2])
-        if len(common_frm) >= 10:
-            common_frm = list(common_frm)
-            parallel_vehicle_ID.append([ff, ff2])
-            parallel_vehicle_common.append(common_frm)
+#     potential_y = temp_vcytrj[potential_key[kk]]
+#     set_y.append(set(potential_y))
 
-            parallel_vehicle_x1.append(vcxtrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
-            parallel_vehicle_x2.append(vcxtrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
 
-            parallel_vehicle_y1.append(vcytrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
-            parallel_vehicle_y2.append(vcytrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
-
- #  still need to debug here!!
+# parallel_vehicle_ID = []
+# parallel_vehicle_common = []
+# parallel_vehicle_x1 = []
+# parallel_vehicle_x2 = []
+# parallel_vehicle_y1 = []
+# parallel_vehicle_y2 = []
 
 
 
+# for ff in range (size(set_frm)-1):
+#     z = set_frm[ff]
+#     for ff2 in range(ff+1, size(set_frm)):
+#         common_frm = z.intersection(set_frm[ff2])
+#         if len(common_frm) >= 10:
+#             common_frm = list(common_frm)
+#             parallel_vehicle_ID.append([ff, ff2])
+#             parallel_vehicle_common.append(common_frm)
 
+#             parallel_vehicle_x1.append(vcxtrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
+#             parallel_vehicle_x2.append(vcxtrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
 
+#             parallel_vehicle_y1.append(vcytrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
+#             parallel_vehicle_y2.append(vcytrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
 
-
-# 2. Filter out thoes intersect too short
-
-
-if common_frm.size
+#  #  still need to debug here!!
 
 
 
@@ -485,14 +480,25 @@ if common_frm.size
 
 
 
-
-# 3. save
-
+# # 2. Filter out thoes intersect too short
 
 
+# if common_frm.size
 
 
-# tracks2015 = pickle.load( open ("/home/chengeli/Downloads/tracks2015.pkl","rb")) 
+
+
+
+
+
+
+# # 3. save
+
+
+
+
+
+# # tracks2015 = pickle.load( open ("/home/chengeli/Downloads/tracks2015.pkl","rb")) 
  
 
 
