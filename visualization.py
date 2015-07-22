@@ -19,13 +19,13 @@ times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) 
 
 
 matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
-ptstrj = loadmat(matfiles[-1]) ##the last one, to get the max index number
-ptsidx = ptstrj['idxtable'][0]
+trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
+IDintrunklast = trunkTrjFile['idxtable'][0]
 
 # reshape(25,4).tolist()
 
-mlabels = np.ones(max(ptsidx)+1)*-1
-#build pts trj labels (-1 : not interest pts)
+mlabels = np.ones(max(IDintrunklast)+1)*-1
+#build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
 for idx,i in enumerate(mask):  # i=mask[idx], the cotent
     mlabels[i] = labels[idx]
 # mlabel: ID --> label
@@ -36,7 +36,7 @@ vcytrj = {}
 vctime = {}
 vctime2 = {}
 
-for i in np.unique(mlabels):  ## there are several pts contributing to one label i
+for i in np.unique(mlabels):  ## there are several PtsInCurFrm contributing to one label i
     vcxtrj[i]=[] # find a virtual center for each label i
     vcytrj[i]=[]
     vctime[i]=[]
@@ -55,7 +55,7 @@ nrows = int(size(firstfrm,0))
 ncols = int(size(firstfrm,1))
 framenum = int(len(image_listing))
 framerate = 5
-
+notconnectedLabel= []
 
 frame_idx = 0
 
@@ -89,40 +89,89 @@ def Virctr(x,y):
     return vcx,vcy
 
 
-framenum = 3000 # for testing
+framenum = 1300 # for testing
 while (frame_idx < framenum):
 
     if (frame_idx % trunclen == 0):
-        
-        ptstrj = loadmat(matfiles[frame_idx//trunclen])
-        xtrj = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
-        ytrj = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-        ptsidx = ptstrj['idxtable'][0]
-        sample = ptstrj['xtracks'].shape[0]
-        fnum   = ptstrj['xtracks'].shape[1]
+        print "load file!!-------------------------------------"
+        print frame_idx
+
+        trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
+        xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+        ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+        IDintrunk = trunkTrjFile['idxtable'][0]
+        sample = trunkTrjFile['xtracks'].shape[0]
+        fnum   = trunkTrjFile['xtracks'].shape[1]
 
         trk = np.zeros([sample,fnum,3])
         startT = np.ones([sample,1])*-999
         endT = np.ones([sample,1])*-999
 
+    
+
         for i in range(sample):  # for the ith sample
-            trk[i,:,0] = xtrj[i]
-            trk[i,:,1] = ytrj[i]
+            trk[i,:,0] = xtrj[i,:]
+            trk[i,:,1] = ytrj[i,:]
             # trk[i,:,2] = arange(fnum)
 
 
             ## get the time T (where the pt appears and disappears)
-            
+            # pdb.set_trace()
             havePt  = array(np.where(xtrj[i,:]>0))[0]
-            if havePt!=[]:
-                startT[i] = min(havePt)+(frame_idx/trunclen*trunclen) 
-                endT[i]   = max(havePt)+(frame_idx/trunclen*trunclen) 
+            if len(havePt)!=0:
+                startT[i] = int ( min(havePt)+(frame_idx/trunclen*trunclen) )
+                endT[i]   = int ( max(havePt)+(frame_idx/trunclen*trunclen) )
    
 
 
 
+        # only execute once for a trunk ============================
+        labinT = list(set(mlabels[IDintrunk])) # label in this trunk
+        dots = []
+        for k in np.unique(labinT):
+            if k !=-1:          
+                t1list=startT[mlabels[IDintrunk]==k]  # consider all IDs in the trunk, not only alive in curFrm
+                t2list=endT[mlabels[IDintrunk]==k]
+                
 
-    print frame_idx
+                t1 = t1list[t1list!=-999]
+                t2 = t2list[t2list!=-999]
+
+                if len(t1)*len(t2)!=0:
+                    startfrm=min(t1[t1!=-999])
+                    endfrm=max(t2[t2!=-999])
+                else:
+                    # pdb.set_trace()
+                    startfrm=-888
+                    endfrm=-888
+
+                if not vctime[k]:
+                    vctime[k] =  [int(startfrm),int(endfrm)]
+                else:
+                    lastendfrm = vctime[k][-1]
+                    laststartfrm = vctime[k][-2]
+                    if int(startfrm) == lastendfrm+1:
+                        vctime[k] = [laststartfrm, int(endfrm)]
+                    else:
+                        print "========not connected==============!"
+                        print k
+                        print frame_idx
+                        notconnectedLabel.append(k)
+                        vctime[k].append(int(startfrm))
+                        vctime[k].append(int(endfrm))
+                        # pdb.set_trace()
+
+                # if not vctime[k]:
+                #     vctime[k].append([int(startfrm),int(endfrm)])
+                # else: 
+                #     print "*********************************"
+                #     print vctime[k]
+                #     print [int(startfrm),int(endfrm)]
+                #     pdb.set_trace()
+
+
+
+    
     # ret, frame[:] = cam.read()
     tmpName= image_listing[frame_idx]
     frame=cv2.imread(tmpName)
@@ -130,30 +179,71 @@ while (frame_idx < framenum):
 
     # plt.draw()
     # current frame index is: (frame_idx%trunclen)
-    pts = trk[:,:,0].T[frame_idx%trunclen]!=0 # pts appear in this frame,i.e. X!=0
-    # pts = np.where(trk[:,:,0].T[frame_idx%trunclen]>0) 
+    PtsInCurFrm = trk[:,:,0].T[frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
+    IDinCurFrm = IDintrunk[PtsInCurFrm]
 
-    labinf = list(set(mlabels[ptsidx[pts]])) # label in current frame
+    labinf = list(set(mlabels[IDinCurFrm])) # label in current frame
     dots = []
-    for k in labinf:
+    for k in np.unique(labinf):
         if k !=-1:
-            x = trk[:,:,0].T[frame_idx%trunclen][((mlabels==k)[ptsidx])&pts]
-            y = trk[:,:,1].T[frame_idx%trunclen][((mlabels==k)[ptsidx])&pts]
+            x = trk[:,:,0].T[frame_idx%trunclen][((mlabels==k)[IDintrunk])&PtsInCurFrm]
+            y = trk[:,:,1].T[frame_idx%trunclen][((mlabels==k)[IDintrunk])&PtsInCurFrm]
             vx,vy = Virctr(x,y) # find virtual center
             
             vcxtrj[k].append(vx) 
             vcytrj[k].append(vy)
 
-            t1=startT[((mlabels==k)[ptsidx])&pts]
-            t2=endT[((mlabels==k)[ptsidx])&pts]
+            # t1list=startT[((mlabels==k)[IDintrunk])&PtsInCurFrm]
+            # t2list=endT[((mlabels==k)[IDintrunk])&PtsInCurFrm]
 
-            t1=min(t1)
-            t2=max(t2)
+            # t1list=startT[(mlabels==k)[IDintrunk]]  # consider all IDs in the trunk, not only alive in curFrm
+            # t2list=endT[(mlabels==k)[IDintrunk]]
+            
+
+            # t1 = t1list[t1list!=-999]
+            # t2 = t2list[t2list!=-999]
+
+            # if len(t1)*len(t2)!=0:
+            #     startfrm=min(t1[t1!=-999])
+            #     endfrm=max(t2[t2!=-999])
+            # else:
+            #     pdb.set_trace()
+            #     startfrm=-888
+            #     endfrm=-888
+
+            # if not vctime[k]:
+            #     vctime[k].append([int(startfrm),int(endfrm)])
+            # else: 
+            #     pdb.set_trace()
+
+            tempxyIDs = np.where(mlabels==k)
+            xyIDs = []
+
+            for xxyyiidd in array(tempxyIDs)[0]: 
+                if xxyyiidd in IDinCurFrm:
+                    xyIDs.append(xxyyiidd)
+            
 
 
-            vctime[k]=[int(t1),int(t2)]
+            # xyIDfalse = np.where((mlabels[IDintrunk]==k) & PtsInCurFrm) 
 
-            # vctime2[k] = 
+            t11 = [] 
+            
+            for xyid in array(xyIDs):
+                if xyid in times.keys():                
+                    t11 = t11 + times[xyid]
+                else:
+                    print "=============here======"
+                    print xyid
+                    print frame_idx
+                    pdb.set_trace()
+                    t11 = t11+ [-888]
+
+            mint11 = min(array(t11))
+            maxt11 = max(array(t11))
+            vctime2[k] = [int(mint11), int(maxt11)]
+
+
 
             #lines = axL.plot(vcxtrj[k],vcytrj[k],color = (0,1,0),linewidth=2)
             lines = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
@@ -186,8 +276,45 @@ while (frame_idx < framenum):
         i.remove()
     plt.show()
 
+
+
+
     frame_idx = frame_idx+1
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+for keyID, frmrange in vctime.iteritems():
+    # pdb.set_trace()
+    # print vctime[keyID]
+    # print vctime2[keyID]
+    if vctime2[keyID]:
+        print vctime2[keyID][1]-vctime2[keyID][0] 
+        print vctime[keyID][1]-vctime[keyID][0] 
+        print size(vcxtrj[keyID])
+        pdb.set_trace()
+    else:
+        print size(vctime2[keyID])
+    # print vctime[keyID] == vctime2[keyID]
+    print "=========="
+
+
+
+
+
+
+
+
 
 
 
@@ -268,8 +395,8 @@ for key, val in test_vctime.iteritems():
 # consider the pair-wise relationship between each two cars
 class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime):
-        self.ptsTrj= {}
-        self.pts = []
+        self.trunkTrjFile= {}
+        self.Pts = []
         self.Trj = [] #[x,y]
         self.Trj_with_ID = [] # [ID,x,y]
         self.Trj_with_ID_frm = [] # [ID,frm,x,y]
@@ -300,6 +427,8 @@ class TrjObj():
                 curfrm = range(vctime[key][0],vctime[key][1]+1)
                 if size(curfrm)!= size(value):
                     print "error!==============================="
+                    print('curfrm size : {0}, value size : {1}').format(size(curfrm),size(value))
+
                     self.bad_IDs2.append(key)
                                    
                 else:
@@ -323,6 +452,9 @@ class TrjObj():
 
         # can also set threshold on the trj, e.g. delta_y <=0.8  
 
+test_vcxtrj = vcxtrj
+test_vcytrj = vcytrj
+test_vctime = vctime
 
 obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 test_vctime = {key: value for key, value in test_vctime.items() 

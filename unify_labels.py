@@ -1,31 +1,34 @@
 from scipy.io import loadmat,savemat
 import pdb,glob
+import cPickle as pickle
+import numpy as np
+
 num = 0
 atmp = []
 flab = []  #final labels
 fmask = [] #final mask
-fTtracks = {}
+# fTtracks = {}
 
 inifilename = 'HR'
-# matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))
-matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'_label_withT_'+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))
+# matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'_label_withT_'+'*.mat'))
 
 for matidx in range(len(matfiles)-1): 
     #pdb.set_trace() 
     if matidx == 0:
         L1 = loadmat(matfiles[matidx])['label'][0]
         M1 = loadmat(matfiles[matidx])['mask'][0]
-        Ttracks1 = loadmat(matfiles[matidx])['Ttracks']
+        # Ttracks1 = loadmat(matfiles[matidx])['Ttracks']
     else:
         L1 = L2
         M1 = M2
-        Ttracks1 = Ttracks2
+        # Ttracks1 = Ttracks2
 
     L2 = loadmat(matfiles[matidx+1])['label'][0]
     M2 = loadmat(matfiles[matidx+1])['mask'][0]
-    Ttracks2 = loadmat(matfiles[matidx+1])['Ttracks']
+    # Ttracks2 = loadmat(matfiles[matidx+1])['Ttracks']
 
-    labelnum = max(L1)
+    labelnum = max(L1)  ## not duplicate
     L2[:] = L2 + labelnum+1 # to make sure there're no duplicate labels
 
     commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
@@ -35,11 +38,12 @@ for matidx in range(len(matfiles)-1):
     
     # tracks
     # final track fTracks[ID]=[startFrm, startFrm+1,.....,endFrm]
-    for ii in np.union1d(M1, M2):
-        track_pre = Ttracks1[ np.where(M1 == ii)]
-        track_post = Ttracks2[ np.where(M2 == ii)]
-        trackcombo = list(track_pre[np.where(track_pre>0)]) + list(track_post[np.where(track_post>0)])
-        fTtracks[ii] = list(trackcombo)
+ 
+    # for ii in np.union1d(M1, M2):
+    #     track_pre = Ttracks1[ np.where(M1 == ii)]
+    #     track_post = Ttracks2[ np.where(M2 == ii)]
+    #     trackcombo = list(track_pre[np.where(track_pre>0)]) + list(track_post[np.where(track_post>0)])
+    #     fTtracks[ii] = list(trackcombo)
 
 
 
@@ -58,10 +62,10 @@ for matidx in range(len(matfiles)-1):
     #     print('label 2 group : {0}\n\n').format(M2[idx2])
 
     for i in commonidx:
-        track_pre = Ttracks1[ np.where(M1 == i)]
-        track_post = Ttracks2[ np.where(M2 == i)]
+        # track_pre = Ttracks1[ np.where(M1 == i)]
+        # track_post = Ttracks2[ np.where(M2 == i)]
 
-        track = list(track_pre[np.where(track_pre>0)]) + list(track_post[np.where(track_post>0)])
+        # track = list(track_pre[np.where(track_pre>0)]) + list(track_post[np.where(track_post>0)])
 
 
         if i not in atmp:
@@ -136,7 +140,7 @@ for matidx in range(len(matfiles)-1):
     fmask[:] = fmask + list(M2)
 
 
-    fTtracks.update(fTtracks)
+    # fTtracks.update(fTtracks)
 
 
 #pdb.set_trace()
@@ -148,10 +152,11 @@ labels = list(result[1])
 mask   = list(result[0])
 dpidx = np.where(np.diff(sorted(mask)) == 0)[0]  #find duplicate ID in mask
     
-for k in dpidx: #dpidx[::-1]:
+
+for k in dpidx[::-1]:
     labels.pop(k)
     mask.pop(k)
- 
+
 result = {}
 result['label']   = labels
 result['mask']= mask
@@ -168,7 +173,7 @@ savemat(savename,result)
 # savemat(savename2,result2)
 
 
-pickle.dump( fTtracks, open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "wb" ) )
+# pickle.dump( fTtracks, open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "wb" ) )
 
 
 
