@@ -18,7 +18,7 @@ labels = loadmat(lrsl)['label'][0]
 times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
 
 
-matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
+matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))[0:55]
 trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
 IDintrunklast = trunkTrjFile['idxtable'][0]
 
@@ -89,7 +89,7 @@ def Virctr(x,y):
     return vcx,vcy
 
 
-framenum = 1300 # for testing
+# framenum = 1300 # for testing
 while (frame_idx < framenum):
 
     if (frame_idx % trunclen == 0):
@@ -170,7 +170,6 @@ while (frame_idx < framenum):
                 #     pdb.set_trace()
 
 
-
     
     # ret, frame[:] = cam.read()
     tmpName= image_listing[frame_idx]
@@ -227,21 +226,22 @@ while (frame_idx < framenum):
 
             # xyIDfalse = np.where((mlabels[IDintrunk]==k) & PtsInCurFrm) 
 
-            t11 = [] 
+            # vctime 222222 
+            # t11 = [] 
             
-            for xyid in array(xyIDs):
-                if xyid in times.keys():                
-                    t11 = t11 + times[xyid]
-                else:
-                    print "=============here======"
-                    print xyid
-                    print frame_idx
-                    pdb.set_trace()
-                    t11 = t11+ [-888]
+            # for xyid in array(xyIDs):
+            #     if xyid in times.keys():                
+            #         t11 = t11 + times[xyid]
+            #     else:
+            #         print "=============here======"
+            #         print xyid
+            #         print frame_idx
+            #         pdb.set_trace()
+            #         t11 = t11+ [-888]
 
-            mint11 = min(array(t11))
-            maxt11 = max(array(t11))
-            vctime2[k] = [int(mint11), int(maxt11)]
+            # mint11 = min(array(t11))
+            # maxt11 = max(array(t11))
+            # vctime2[k] = [int(mint11), int(maxt11)]
 
 
 
@@ -286,39 +286,29 @@ while (frame_idx < framenum):
 
 
 
+for kkk in notconnectedLabel:
+    # print vctime[kkk]
+    if size(vcxtrj[kkk])==vctime[kkk][1]-vctime[kkk][0]+1:
+        vctime[kkk] = [vctime[kkk][0], vctime[kkk][1]]
 
 
 
 
 
 
-
-
-for keyID, frmrange in vctime.iteritems():
-    # pdb.set_trace()
-    # print vctime[keyID]
-    # print vctime2[keyID]
-    if vctime2[keyID]:
-        print vctime2[keyID][1]-vctime2[keyID][0] 
-        print vctime[keyID][1]-vctime[keyID][0] 
-        print size(vcxtrj[keyID])
-        pdb.set_trace()
-    else:
-        print size(vctime2[keyID])
-    # print vctime[keyID] == vctime2[keyID]
-    print "=========="
-
-
-
-
-
-
-
-
-
-
-
-
+# for keyID, frmrange in vctime.iteritems():
+#     # pdb.set_trace()
+#     # print vctime[keyID]
+#     # print vctime2[keyID]
+#     if vctime2[keyID]:
+#         print vctime2[keyID][1]-vctime2[keyID][0] 
+#         print vctime[keyID][1]-vctime[keyID][0] 
+#         print size(vcxtrj[keyID])
+#         pdb.set_trace()
+#     else:
+#         print size(vctime2[keyID])
+#     # print vctime[keyID] == vctime2[keyID]
+#     print "=========="
 
 
 
@@ -334,15 +324,15 @@ for keyID, frmrange in vctime.iteritems():
 
 
 
-writer = csv.writer(open('./mat/20150222_Mat/3000vcxtrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvcxtrj.csv', 'wb'))
 for key, value in vcxtrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/3000vcytrj.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvcytrj.csv', 'wb'))
 for key, value in vcytrj.items():
    writer.writerow([key, value])
 
-writer = csv.writer(open('./mat/20150222_Mat/3000vctime.csv', 'wb'))
+writer = csv.writer(open('./mat/20150222_Mat/Fullvctime.csv', 'wb'))
 for key, value in vctime.items():
    writer.writerow([key,value])
 
@@ -356,175 +346,8 @@ pickle.dump( vcytrj, open( "./mat/20150222_Mat/Fullvcytrj.p", "wb" ) )
 
 
 
-# load and check
-test_vctime = pickle.load( open( "./mat/20150222_Mat/Fullvctime.p", "rb" ) )
-test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/Fullvcxtrj.p", "rb" ) )
-test_vcytrj = pickle.load( open( "./mat/20150222_Mat/Fullvcytrj.p", "rb" ) )
-
-
-test_vctime = pickle.load( open( "./mat/20150222_Mat/vctime.p", "rb" ) )
-test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/vcxtrj.p", "rb" ) )
-test_vcytrj = pickle.load( open( "./mat/20150222_Mat/vcytrj.p", "rb" ) )
-
-print test_vctime == vctime  # true
-print test_vcxtrj == vcxtrj   
-print test_vcytrj == vcytrj  
-
-# for key, value in test_vcxtrj.iteritems():
-#     pprint.pprint(key)
-#     print vcxtrj[key] == test_vcxtrj[key]
-
-
-badkey = []
-for key, val in test_vcxtrj.iteritems():
-    if val ==[] or size(val)<=5*3:
-        badkey.append(key)
-
-for badk in badkey:
-    del test_vctime[badk]
-    del test_vcxtrj[badk]
-    del test_vcytrj[badk]
-
-badkey2 = []
-for key, val in test_vctime.iteritems():
-    if not val==[]:
-        if size(test_vcxtrj[key])!= val[1]-val[0]+1:
-            badkey2.append(key)
-                                   
-
-# consider the pair-wise relationship between each two cars
-class TrjObj():
-    def __init__(self,vcxtrj,vcytrj,vctime):
-        self.trunkTrjFile= {}
-        self.Pts = []
-        self.Trj = [] #[x,y]
-        self.Trj_with_ID = [] # [ID,x,y]
-        self.Trj_with_ID_frm = [] # [ID,frm,x,y]
-        self.xTrj = vcxtrj # x
-        self.yTrj = vcytrj  #y
-        self.frame = vctime #current frm number
-        self.vel = [] 
-        self.pos = [] 
-        self.status = 1   # 1: alive  2: dead
-        self.globalID = sorted(vctime.keys())
-        self.dir = {} # directions 0 or 1
-        self.bad_IDs = []
-        self.bad_IDs2 = [] # bad IDs with different length time and x,y
-
-        for key, val in vctime.iteritems():
-            if val ==[] or val[1]-val[0] <= 5*3:
-                self.bad_IDs.append(key)
-
-
-
-        for key, value in vcxtrj.iteritems():
-            x_location = vcxtrj[key]
-            y_location = vcytrj[key]
-            
-            # print size(curfrm),"!!!!===================!"
-            
-            if not vctime[key]==[]:
-                curfrm = range(vctime[key][0],vctime[key][1]+1)
-                if size(curfrm)!= size(value):
-                    print "error!==============================="
-                    print('curfrm size : {0}, value size : {1}').format(size(curfrm),size(value))
-
-                    self.bad_IDs2.append(key)
-                                   
-                else:
-                    for ii in range(size(value)):
-                    # pdb.set_trace()
-                    
-                        self.Trj.append([x_location[ii],y_location[ii]]) 
-                        self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
-                        self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
-
-
-
-        for key in vctime.iterkeys():
-            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-0.1).sum() - (size(self.yTrj[key])-1))<=5:
-                self.dir[key] = 1
-            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=0.1).sum() - (size(self.yTrj[key])-1))<=5:
-                self.dir[key] = 0
-            else: 
-                self.dir[key] = 999
-                self.bad_IDs.append(key)
-
-        # can also set threshold on the trj, e.g. delta_y <=0.8  
-
-test_vcxtrj = vcxtrj
-test_vcytrj = vcytrj
-test_vctime = vctime
-
-obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
-test_vctime = {key: value for key, value in test_vctime.items() 
-             if key not in obj_pair.bad_IDs}
-test_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-             if key not in obj_pair.bad_IDs}
-test_vcytrj = {key: value for key, value in test_vcytrj.items() 
-             if key not in obj_pair.bad_IDs}
-
-test_vctime = {key: value for key, value in test_vctime.items() 
-             if key not in obj_pair.bad_IDs2}
-test_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-             if key not in obj_pair.bad_IDs2}
-test_vcytrj = {key: value for key, value in test_vcytrj.items() 
-             if key not in obj_pair.bad_IDs2}
-
-
-
-
-# rebuild this object using filtered data, should be no bad_IDs
-obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
-print obj_pair.bad_IDs == []
-
-
-
-writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm_clean.csv', 'wb'))
-temp = []
-for kk in range(size(obj_pair.Trj_with_ID_frm,0)):
-    temp =  obj_pair.Trj_with_ID_frm[kk]
-    curkey = obj_pair.Trj_with_ID_frm[kk][0]
-    temp.append(obj_pair.dir[curkey])
-    writer.writerow(temp)
-
-
-
-
-# pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
-# test_obj = pickle.load(open("./mat/20150222_Mat/obj_pair.p", "rb" ))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# save the labels where bad time frame appended
+pickle.dump( notconnectedLabel, open("./mat/20150222_Mat/VCTIMEnotconnectedLabel.p","wb"))
 
 
 

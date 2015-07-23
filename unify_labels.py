@@ -10,7 +10,7 @@ fmask = [] #final mask
 # fTtracks = {}
 
 inifilename = 'HR'
-matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))
+matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'*.mat'))[0:55]
 # matfiles = sorted(glob.glob('./mat/20150222_Mat/labels/'+inifilename+'_label_withT_'+'*.mat'))
 
 for matidx in range(len(matfiles)-1): 
@@ -70,7 +70,7 @@ for matidx in range(len(matfiles)-1):
 
         if i not in atmp:
         
-            label1 = L1[np.where((M1 == i)!=0)[0][0]]
+            label1 = L1[np.where((M1 == i)!=0)[0][0]]  # use np.arange(len(M1))[M1 == i]
             label2 = L2[np.where((M2 == i)!=0)[0][0]]
             idx1 = np.where(L1==label1)
             idx2 = np.where(L2==label2)
