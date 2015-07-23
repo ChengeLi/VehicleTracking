@@ -2,6 +2,8 @@ import cPickle as pickle
 import numpy as np
 import csv
 import pdb
+from glob import glob
+import cv2
 
 
 # load and check
@@ -246,7 +248,69 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
 		temp.append(obj_pair2loop.Ydir[ID222])
 		temp.append(obj_pair2loop.Xdir[ID222])
 		writerCooccur.writerow(temp)
-	return 
+	return co1X, co2X, co1Y, co2Y
+
+
+
+
+#=======visualize the pair relationship==============================================
+# for plottting
+image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
+firstfrm=cv2.imread(image_listing[0])
+nrows = int(size(firstfrm,0))
+ncols = int(size(firstfrm,1))
+plt.figure(1,figsize=[10,12])
+axL = plt.subplot(1,1,1)
+frame = np.zeros([nrows,ncols,3]).astype('uint8')
+im = plt.imshow(np.zeros([nrows,ncols,3]))
+axis('off')
+color = array([random.randint(0,255) \
+               for _ in array(range(12000))\
+               .reshape(4000,3)])
+
+
+
+
+def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran):
+    
+    vcxtrj1 = co1X
+    vcytrj1 = co1Y
+    vcxtrj2 = co2X
+    vcytrj2 = co2Y
+    dots = []
+    for k in range(size(cooccur_ran)):
+    	# pdb.set_trace()
+    	print k
+        frame_idx = cooccur_ran[k]
+        tmpName= image_listing[frame_idx]
+        frame=cv2.imread(tmpName)
+        im.set_data(frame[:,:,::-1])
+        plt.draw()
+	 #    lines = axL.plot(vcxtrj1[k],vcytrj1[k],color = (color[k-1].T)/255.,linewidth=2)
+	 #    lines = axL.plot(vcxtrj2[k],vcytrj2[k],color = (color[k-1].T)/255.,linewidth=2)
+	 #    line_exist = 1
+	 # dots.append(axL.scatter(vx, vy, s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
+        # dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
+        # dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
+        dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=50, color=(1,0,0),edgecolor='none'))
+        dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(0,1,0),edgecolor='none'))
+
+        
+        plt.draw()
+        plt.show()
+        # pdb.set_trace()
+
+        del dots[:]
+        plt.show()
+        # for i in dots:
+        #     i.remove()
+		# plt.show()
+
+
+
+
+
+
 
 
 count = 0
@@ -263,10 +327,8 @@ for ind1 in range(len(obj_pair2loop.globalID)-1):
 		[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
 		if coorccurStatus and size(cooccur_ran)>=3:
 			count = count +1
-			get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop)
-
-
-
+			[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop)
+			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran)
 
 
 

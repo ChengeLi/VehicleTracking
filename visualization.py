@@ -176,7 +176,7 @@ while (frame_idx < framenum):
     frame=cv2.imread(tmpName)
 
 
-    # plt.draw()
+    plt.draw()
     # current frame index is: (frame_idx%trunclen)
     PtsInCurFrm = trk[:,:,0].T[frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
     IDinCurFrm = IDintrunk[PtsInCurFrm]
@@ -253,7 +253,7 @@ while (frame_idx < framenum):
             #dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
                                          
     im.set_data(frame[:,:,::-1])
-    # plt.draw()
+    plt.draw()
     # plt.show()
 
 
