@@ -11,9 +11,9 @@ test_vctime = pickle.load( open( "./mat/20150222_Mat/Fullvctime.p", "rb" ) )
 test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/Fullvcxtrj.p", "rb" ) )
 test_vcytrj = pickle.load( open( "./mat/20150222_Mat/Fullvcytrj.p", "rb" ) )
 
-print test_vctime == vctime  # true
-print test_vcxtrj == vcxtrj   
-print test_vcytrj == vcytrj  
+# print test_vctime == vctime  # true
+# print test_vcxtrj == vcxtrj   
+# print test_vcytrj == vcytrj  
 
 # count_true = []
 # for key, value in test_vcxtrj.iteritems():
@@ -152,6 +152,11 @@ for kk in range(size(obj2write.Trj_with_ID_frm,0)):
     writer.writerow(temp)
 
 
+pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
+singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
+
+
+
 
 
 # pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
@@ -257,6 +262,7 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
 # for plottting
 image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
 firstfrm=cv2.imread(image_listing[0])
+framenum = int(len(image_listing))
 nrows = int(size(firstfrm,0))
 ncols = int(size(firstfrm,1))
 plt.figure(1,figsize=[10,12])
@@ -335,14 +341,100 @@ for ind1 in range(len(obj_pair2loop.globalID)-1):
 
 
 
+#==============find the Neighbours after click======================================
+
+def findNeighbors(frame_idx, IDs_in_frame, TrjObject):
+	NeighboursID = []
+	targ_pts = []
+	radius = 100
+	
+	# pdb.set_trace()
+
+	tmpName= image_listing[frame_idx]
+	frame=cv2.imread(tmpName)
+	im1=ax1.imshow(frame[:,:,::-1])
+	# im1.set_data(uint8 (frame))
+	fig.subplots_adjust(0,0,1,1)
+	fig.canvas.draw()
+
+	while not targ_pts:
+		print "please select tartget points!"
+		targ_pts=fig.ginput(0,0, mouse_add=1, mouse_pop=3, mouse_stop=2)#(4,-1) #list 
+
+	targ_w = targ_pts[0][0]
+	targ_h = targ_pts[0][1]
 
 
 
 
+	IDalive = IDs_in_frame[frame_idx]
+	for iddd in IDalive:
+		VehicleObjjj = VehicleObj(TrjObject,iddd)
+		starttime = VehicleObjjj.frame[0]
+		xjjj = VehicleObjjj.xTrj[frame_idx-starttime]
+		yjjj = VehicleObjjj.yTrj[frame_idx-starttime]
+		
+		if (xjjj-targ_w)**2+(yjjj-targ_h)**2<=radius**2:
+			NeighboursID.append(iddd)
+
+	return NeighboursID
+
+	
+
+  
+
+
+
+def in_this_frame(VehicleObj,frame_idx):
+	In_fram_Status = 0
+	appeartime = VehicleObj.frame[0]
+	gonetime = VehicleObj.frame[1]
+
+	if appeartime<= frame_idx: 
+		if gonetime >= frame_idx:
+			In_fram_Status = 1	
+
+	return In_fram_Status
+
+IDs_in_frame = {}
+obj_pair2loop = obj_pair ## not clean full list
+
+for frame_idx in range(framenum):
+	IDs_in_frame[frame_idx] = []
+	for ind111 in range(len(obj_pair2loop.globalID)):
+		# pdb.set_trace()
+		loopVehicleID111 = obj_pair2loop.globalID[ind111]
+		VehicleObj111 = VehicleObj(obj_pair2loop,loopVehicleID111)
+		In_fram_Status22 = in_this_frame(VehicleObj111, frame_idx)
+		
+		if In_fram_Status22:
+			IDs_in_frame[frame_idx].append(loopVehicleID111)
+		else: continue
 
 
 
 
+pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
+singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
+
+
+
+# saving as csv is really slow, and the file is very big (4.9 G)
+# writer = csv.writer(open('./mat/20150222_Mat/IDs_in_frame.csv', 'wb'))
+# temp = []
+# for kk in range(len(IDs_in_frame)):
+#     temp.append(kk)
+#     temp.append(IDs_in_frame[kk])
+#     writer.writerow(temp)
+
+pickle.dump(IDs_in_frame, open("./mat/20150222_Mat/IDs_in_frame.p","wb"))
+test_IDs_in_frame = pickle.load(open("./mat/20150222_Mat/IDs_in_frame.p","rb" ))
+
+fig, ax1 = plt.subplots(1, 1, sharey=False)
+for frame_idx in range(10):
+	NeighboursID = findNeighbors(frame_idx, IDs_in_frame, obj_pair)
+	print "frame",frame_idx, ":"
+	print  NeighboursID
 
 
 
