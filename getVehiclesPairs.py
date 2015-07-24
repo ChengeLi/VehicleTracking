@@ -5,6 +5,8 @@ import pdb
 from glob import glob
 import cv2
 
+import Trj_class_and_func_definitions
+
 
 # load and check
 test_vctime = pickle.load( open( "./mat/20150222_Mat/Fullvctime.p", "rb" ) )
@@ -46,72 +48,7 @@ for badk in badkey2:
 
 
 # consider the pair-wise relationship between each two cars
-class TrjObj():
-    def __init__(self,vcxtrj,vcytrj,vctime):
-        self.trunkTrjFile= {}
-        self.Pts = []
-        self.Trj = [] #[x,y]
-        self.Trj_with_ID = [] # [ID,x,y]
-        self.Trj_with_ID_frm = [] # [ID,frm,x,y]
-        self.xTrj = vcxtrj # x
-        self.yTrj = vcytrj  #y
-        self.frame = vctime #current frm number
-        self.vel = [] 
-        self.pos = [] 
-        self.status = 1   # 1: alive  2: dead
-        self.globalID = sorted(vctime.keys())
-        self.Xdir = {} # Xdirections 0 or 1
-        self.Ydir = {} # Ydirections 0 or 1
-        self.bad_IDs = []
-        self.bad_IDs2 = [] # bad IDs with different length time and x,y
 
-        for key, val in vctime.iteritems():
-            if val ==[] or val[1]-val[0] <= 5*3:
-                self.bad_IDs.append(key)
-
-
-
-        for key, value in vcxtrj.iteritems():
-            x_location = vcxtrj[key]
-            y_location = vcytrj[key]
-            
-            # print size(curfrm),"!!!!===================!"
-            
-            if not vctime[key]==[]:
-                curfrm = range(vctime[key][0],vctime[key][1]+1)
-                if size(curfrm)!= size(value):
-                    print "error!==============================="
-                    print('curfrm size : {0}, value size : {1}').format(size(curfrm),size(value))
-
-                    self.bad_IDs2.append(key)
-                                   
-                else:
-                    for ii in range(size(value)):                   
-                        self.Trj.append([x_location[ii],y_location[ii]]) 
-                        self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
-                        self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
-
-
-
-        for key in vctime.iterkeys():
-            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum() - (size(self.yTrj[key])-1))<=5:
-                self.Ydir[key] = 1
-            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum() - (size(self.yTrj[key])-1))<=5:
-                self.Ydir[key] = 0
-            
-            else: 
-                self.Ydir[key] = 999
-                self.bad_IDs.append(key)
-
-            if abs( ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1])) >=-1).sum()-(size(self.xTrj[key])-1))<=5:
-            	self.Xdir[key] = 1
-            elif abs(((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))<=1).sum() - (size(self.xTrj[key])-1))<=5:
-            	self.Xdir[key] = 0	 
-            else: 
-                self.Xdir[key] = 999
-                self.bad_IDs.append(key)
-
-        # can also set threshold on the trj, e.g. delta_y <=0.8  
 
 obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 
@@ -132,14 +69,14 @@ clean_vcytrj = {key: value for key, value in test_vcytrj.items()
 #     del clean_vcytrj[badk]   
 
 
-
-
+pickle.dump(obj_pair,open("./mat/20150222_Mat/obj_pair.p","wb"))
 
 # rebuild this object using filtered data, should be no bad_IDs
 obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
 print obj_pair2.bad_IDs == []
 print obj_pair2.bad_IDs2 == []
 
+pickle.dump(obj_pair2,open("./mat/20150222_Mat/obj_pair2.p","wb"))
 
 obj2write = obj_pair
 writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm_NOTclean22.csv', 'wb'))
@@ -164,19 +101,6 @@ singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
 
 
 
-
-# =========================extract a vehicle object from the trajectory object
-class VehicleObj():
-    def __init__(self, TrjObj,ID):
-        self.VehicleID = ID
-        self.xTrj = TrjObj.xTrj[ID] # x
-        self.yTrj = TrjObj.yTrj[ID] # y
-        self.frame = TrjObj.frame[ID]   #current frm number
-        self.vel = [] 
-        self.pos = [] 
-        self.status = 1   # 1: alive  2: dead
-        self.Xdir = TrjObj.Xdir[ID]
-        self.Ydir = TrjObj.Ydir[ID]
 
         
 
@@ -341,45 +265,6 @@ for ind1 in range(len(obj_pair2loop.globalID)-1):
 
 
 
-#==============find the Neighbours after click======================================
-
-def findNeighbors(frame_idx, IDs_in_frame, TrjObject):
-	NeighboursID = []
-	targ_pts = []
-	radius = 100
-	
-	# pdb.set_trace()
-
-	tmpName= image_listing[frame_idx]
-	frame=cv2.imread(tmpName)
-	im1=ax1.imshow(frame[:,:,::-1])
-	# im1.set_data(uint8 (frame))
-	fig.subplots_adjust(0,0,1,1)
-	fig.canvas.draw()
-
-	while not targ_pts:
-		print "please select tartget points!"
-		targ_pts=fig.ginput(0,0, mouse_add=1, mouse_pop=3, mouse_stop=2)#(4,-1) #list 
-
-	targ_w = targ_pts[0][0]
-	targ_h = targ_pts[0][1]
-
-
-
-
-	IDalive = IDs_in_frame[frame_idx]
-	for iddd in IDalive:
-		VehicleObjjj = VehicleObj(TrjObject,iddd)
-		starttime = VehicleObjjj.frame[0]
-		xjjj = VehicleObjjj.xTrj[frame_idx-starttime]
-		yjjj = VehicleObjjj.yTrj[frame_idx-starttime]
-		
-		if (xjjj-targ_w)**2+(yjjj-targ_h)**2<=radius**2:
-			NeighboursID.append(iddd)
-
-	return NeighboursID
-
-	
 
   
 
@@ -428,13 +313,7 @@ singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
 #     writer.writerow(temp)
 
 pickle.dump(IDs_in_frame, open("./mat/20150222_Mat/IDs_in_frame.p","wb"))
-test_IDs_in_frame = pickle.load(open("./mat/20150222_Mat/IDs_in_frame.p","rb" ))
 
-fig, ax1 = plt.subplots(1, 1, sharey=False)
-for frame_idx in range(10):
-	NeighboursID = findNeighbors(frame_idx, IDs_in_frame, obj_pair)
-	print "frame",frame_idx, ":"
-	print  NeighboursID
 
 
 
