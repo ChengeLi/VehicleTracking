@@ -1,13 +1,24 @@
 
 #==============find the Neighbours after click======================================
-import Trj_class_and_func_definitions
+# after clicking on the vehicle interested, the trajectories of this vehicle and its 
+# neighbours will be returned and they will be shown in a 2nd figure to visualize.
 
-obj_pair = pickle.load(open("./mat/20150222_Mat/obj_pair.p","wb"))
-# obj_pair2 = pickle.load(open("./mat/20150222_Mat/obj_pair2.p","wb"))
+# left click to select, middle click to confirm, right click to cancel 
+
+import cPickle as pickle
+from Trj_class_and_func_definitions import *
+from glob import glob
+import cv2
+
+
+
+obj_pair = pickle.load(open("./mat/20150222_Mat/obj_pair.p","rb"))
+# obj_pair2 = pickle.load(open("./mat/20150222_Mat/obj_pair2.p","rb"))
 fig, ax1 = plt.subplots(1, 1, sharey=False)
 
 
-        
+image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
+       
 
 
 def findNeighbors(frame_idx, IDs_in_frame, TrjObject):
@@ -30,9 +41,6 @@ def findNeighbors(frame_idx, IDs_in_frame, TrjObject):
 
     targ_w = targ_pts[0][0]
     targ_h = targ_pts[0][1]
-
-
-
 
     IDalive = IDs_in_frame[frame_idx]
     for iddd in IDalive:

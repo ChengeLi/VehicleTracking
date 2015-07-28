@@ -1,3 +1,6 @@
+import numpy as np
+
+
 
 class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime):
@@ -17,9 +20,11 @@ class TrjObj():
         self.Ydir = {} # Ydirections 0 or 1
         self.bad_IDs = []
         self.bad_IDs2 = [] # bad IDs with different length time and x,y
+        self.bad_IDs3 = [] # inconsistent Y directions
+        self.bad_IDs4 = [] # X direction 
 
         for key, val in vctime.iteritems():
-            if val ==[] or val[1]-val[0] <= 5*3:
+            if (val ==[]) or (val[1]-val[0]+1 <= 10): # 5*3:
                 self.bad_IDs.append(key)
 
 
@@ -27,19 +32,17 @@ class TrjObj():
         for key, value in vcxtrj.iteritems():
             x_location = vcxtrj[key]
             y_location = vcytrj[key]
-            
-            # print size(curfrm),"!!!!===================!"
-            
+                        
             if not vctime[key]==[]:
                 curfrm = range(vctime[key][0],vctime[key][1]+1)
-                if size(curfrm)!= size(value):
+                if np.size(curfrm)!= np.size(value):
                     print "error!==============================="
-                    print('curfrm size : {0}, value size : {1}').format(size(curfrm),size(value))
+                    print('curfrm size : {0}, value size : {1}').format(np.size(curfrm),np.size(value))
 
                     self.bad_IDs2.append(key)
                                    
                 else:
-                    for ii in range(size(value)):                   
+                    for ii in range(np.size(value)):                   
                         self.Trj.append([x_location[ii],y_location[ii]]) 
                         self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
                         self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
@@ -47,22 +50,25 @@ class TrjObj():
 
 
         for key in vctime.iterkeys():
-            if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum() - (size(self.yTrj[key])-1))<=5:
+            # if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum() - (np.size(self.yTrj[key])-1))<=5:
+            if ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum()/float((np.size(self.yTrj[key])-1))>=0.70:
                 self.Ydir[key] = 1
-            elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum() - (size(self.yTrj[key])-1))<=5:
+            # elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum() - (np.size(self.yTrj[key])-1))<=5:
+            elif ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum()/float((np.size(self.yTrj[key])-1))>=0.70:  #more than 70% 
                 self.Ydir[key] = 0
             
             else: 
                 self.Ydir[key] = 999
-                self.bad_IDs.append(key)
+                self.bad_IDs3.append(key)
 
-            if abs( ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1])) >=-1).sum()-(size(self.xTrj[key])-1))<=5:
+            # if abs( ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1])) >=-1).sum()-(np.size(self.xTrj[key])-1))<=5:
+            if ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))>=-1).sum()/float((np.size(self.xTrj[key])-1))>=0.50:
             	self.Xdir[key] = 1
-            elif abs(((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))<=1).sum() - (size(self.xTrj[key])-1))<=5:
+            elif ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))<=1).sum()/float((np.size(self.xTrj[key])-1))>=0.50:  #more than 70% 
             	self.Xdir[key] = 0	 
             else: 
                 self.Xdir[key] = 999
-                self.bad_IDs.append(key)
+                self.bad_IDs4.append(key)
 
         # can also set threshold on the trj, e.g. delta_y <=0.8  
 

@@ -46,6 +46,29 @@ for key, val in test_obj.frame.iteritems():
 
 
 
+filename = './direction_change_example.gif';
+
+jpegFiles = dir('./figures/*.jpg'); 
+numfiles = length(jpegFiles);
+
+for n = 30:numfiles
+    temp = ['./figures/', jpegFiles(n).name];
+    image = imread(temp);
+    
+    
+    imshow(image(150:1024+30,190:748+100,:))
+    drawnow
+    frame = getframe(gcf);
+    im = frame2im(frame);
+    [A,map] = rgb2ind(im,256);
+
+    if n == 1
+        imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',0.5);
+    else
+        imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',0.5);
+    end
+end
+
 
 
 
