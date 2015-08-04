@@ -18,34 +18,41 @@ Keys
 ESC - exit
 '''
 
+import os
+import cv2
+import pdb
 import numpy as np
-import cv2,pdb,pickle
+import pickle as pkl
+from glob import glob
 from time import clock
 from scipy.io import savemat
 from scipy.sparse import csr_matrix
 
-from glob import glob
-import os
 
+# -- utilities
+lk_params = dict(winSize=(15, 15), maxLevel=2, 
+                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
+                            10, 0.03))
 
-lk_params = dict( winSize  = (15, 15),
-                  maxLevel = 2,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
+                      blockSize=7)
 
-feature_params = dict( maxCorners = 500,
-                       qualityLevel = 0.2,
-                       minDistance = 7,
-                       blockSize = 7 )
-
-idx = 0
-tdic = [0]
-start = []
-end = []
+idx    = 0
+tdic   = [0]
+start  = []
+end    = []
 oldlen = 0
-dicidx =0
+dicidx = 0
+track_len = 10
+detect_interval = 5
+tracksdic = {} 
+frame_idx = 0
+pregood = []
+trunclen = 600
+lenoffset = 0
 
 
-#video_src = '/home/andyc/Videos/jayst.mp4'
+# video_src = '/home/andyc/Videos/jayst.mp4'
 # video_src = '/home/andyc/Videos/video0222.mp4'
 # video_src = '../VideoData/video0222.mp4'
 # cam = cv2.VideoCapture(video_src)
@@ -53,40 +60,24 @@ dicidx =0
 # ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-# change from reading video to reading images
-image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
-# image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
-firstfrm=cv2.imread(image_listing[0])
+# -- get the full image list
+imlist = sorted(glob('../VideoData/20150222/*.jpg'))
+nframe = len(imlist)
 
-nrows = int(size(firstfrm,0))
-ncols = int(size(firstfrm,1))
-nframe = int(len(image_listing))
+# -- read in first frame and set dimensions
+frame0 = cv2.imread(imlist[0])
+frame  = np.zeros_like(frame0)
+frameL = np.zeros_like(frame0[:,:,0])
 
+# -- set low number of frames for testing
+nframe = 3000
 
-track_len = 10
-detect_interval = 5
-#tracks = []
-tracksdic = {} 
-
-
-frame_idx = 0
-pregood = []
-trunclen = 600
-lenoffset = 0
-        
-
-
-
-nframe = 3000 # test
 while (frame_idx < nframe):
-    # ret, frame = cam.read()   #change from reading video to reading images
-    tmpName= image_listing[frame_idx]
-    frame=cv2.imread(tmpName)
-    frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
-    vis = frame.copy()
+    frame[:,:,:] = cv2.imread(imlist[frame_idx])
+    frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
     
     if len(tracksdic) > 0:
-        img0, img1 = prev_gray, frame_gray
+        img0, img1 = prev_gray, frameL
         p0 = np.float32([tracksdic[tr][-1][:2] for tr in tracksdic  ]).reshape(-1, 1, 2)
         #pdb.set_trace()
         p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
@@ -115,22 +106,22 @@ while (frame_idx < nframe):
             #self.tracks[idx].append((x, y,self.frame_idx))
             #self.Ttracks[idx].append(self.frame_idx)
 
-            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+#    vis = frame.copy()
+#            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
         #cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
         #draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
     if frame_idx % detect_interval == 0:
 
-        mask = np.zeros_like(frame_gray)
-        mask[:] = 255
-        for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
+        mask = 255*np.ones_like(frameL)
 
+        for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
             cv2.circle(mask, (x, y), 5, 0, -1)    
-        p = cv2.goodFeaturesToTrack(frame_gray, mask = mask, **feature_params)
+
+        corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
          
-        #pdb.set_trace()
-        if p is not None:
-            for x, y in np.float32(p).reshape(-1, 2):
+        if corners is not None:
+            for x, y in np.float32(corners).reshape(-1, 2):
                 #self.tracks.append([(x, y,self.frame_idx)])
                         
                 try:
@@ -150,7 +141,7 @@ while (frame_idx < nframe):
 
 
     frame_idx += 1
-    prev_gray = frame_gray
+    prev_gray = frameL
     #  visualize:============================== 
     # cv2.imshow('lk_track', vis)
             
