@@ -45,7 +45,7 @@ oldlen = 0
 dicidx =0
 
 
-#video_src = '/home/andyc/Videos/jayst.mp4'                                                                                         
+#video_src = '/home/andyc/Videos/jayst.mp4'
 # video_src = '/home/andyc/Videos/video0222.mp4'
 # video_src = '../VideoData/video0222.mp4'
 # cam = cv2.VideoCapture(video_src)
