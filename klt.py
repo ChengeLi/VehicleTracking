@@ -65,32 +65,38 @@ imlist = sorted(glob('../VideoData/20150222/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
-frame0 = cv2.imread(imlist[0])
-frame  = np.zeros_like(frame0)
-frameL = np.zeros_like(frame0[:,:,0])
+frame  = cv2.imread(imlist[0])
+frameL  = np.zeros_like(frame[:,:,0])
+frameLp = np.zeros_like(frameL)
 
 # -- set low number of frames for testing
 nframe = 3000
 
 while (frame_idx < nframe):
     frame[:,:,:] = cv2.imread(imlist[frame_idx])
-    frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
+    frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #*self.mask
     
     if len(tracksdic) > 0:
-        img0, img1 = prev_gray, frameL
-        p0 = np.float32([tracksdic[tr][-1][:2] for tr in tracksdic  ]).reshape(-1, 1, 2)
+        pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
+            .reshape(-1, 1, 2)
         #pdb.set_trace()
-        p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
-        p0r, st, err = cv2.calcOpticalFlowPyrLK(img1, img0, p1, None, **lk_params)
-        d = abs(p0-p0r).reshape(-1, 2).max(-1)
-        good = d < 1
-        
-        if (len(pregood)>0):
-            good[:len(pregood)] = good[:len(pregood)]&good
-            #good = (good & inroi)
-            pregood = good
+        pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
+                                                      pnts_old, None, 
+                                                      **lk_params)
+        pnts_oldr, st, err = cv2.calcOpticalFlowPyrLK(frameL, frameLp, 
+                                                      pnts_new, None, 
+                                                      **lk_params)
+        dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
+        good = dist < 1
+ 
+# GGD: !!! The block below never seems to be exectuted... why is this here???
+#        if (len(pregood)>0):
+#            good[:len(pregood)] = good[:len(pregood)]&good
+#            #good = (good & inroi)
+#            pregood = good
                     
-        for (x, y), good_flag, idx in zip(p1.reshape(-1, 2), good,tracksdic.keys()):
+        for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
+                                          tracksdic.keys()):
             #if idx == 144:
             #    pdb.set_trace()
             if not good_flag:
@@ -141,7 +147,7 @@ while (frame_idx < nframe):
 
 
     frame_idx += 1
-    prev_gray = frameL
+    frameLp[:,:] = frameL[:,:]
     #  visualize:============================== 
     # cv2.imshow('lk_track', vis)
             
