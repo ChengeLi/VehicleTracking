@@ -3,16 +3,12 @@
 '''
 Lucas-Kanade tracker
 ====================
-
 Lucas-Kanade sparse optical flow demo. Uses goodFeaturesToTrack
 for track initialization and back-tracking for match verification
 between frames.
-
 Usage
 -----
 lk_track.py [<video_source>]
-
-
 Keys
 ----
 ESC - exit
@@ -83,7 +79,7 @@ while (frame_idx < nframe):
     if len(tracksdic) > 0:
         pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
             .reshape(-1, 1, 2)
-        #pdb.set_trace()
+        # pdb.set_trace()
         pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
                                                       pnts_old, None, 
                                                       **lk_params)
@@ -94,10 +90,11 @@ while (frame_idx < nframe):
         good = dist < 1
  
 # GGD: !!! The block below never seems to be exectuted... why is this here???
-#        if (len(pregood)>0):
-#            good[:len(pregood)] = good[:len(pregood)]&good
-#            #good = (good & inroi)
-#            pregood = good
+        # if (len(pregood)>0):
+        #     # pdb.set_trace()
+        #     good[:len(pregood)] = good[:len(pregood)]&good
+        #     #good = (good & inroi)
+        #     pregood = good
                     
         for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
                                           tracksdic.keys()):
@@ -168,8 +165,49 @@ while (frame_idx < nframe):
         Ytracks = np.zeros([len(tracksdic),trunclen])
         Ttracks = np.zeros([len(tracksdic),trunclen])
 
+<<<<<<< HEAD
         # set first frame in this chunk
         offset  = frame_idx - trunclen
+=======
+        offset = ((frame_idx // trunclen)-1)*trunclen # which trunclen, starting from 0th
+        for trjidx,i in enumerate(tracksdic.keys()):
+
+            endfidx = end[i]  # end frame number for pts i
+
+            startfidx = start[i]
+            if (endfidx >= offset) or (endfidx == -1): #offset is the current trunck
+
+                if endfidx == -1 : # trj still alive                                                                                
+                    k =array(tracksdic[i]).T    # shape is: 3X600 3:(x,y,t)
+                else:              # trj is dead in this chunk                                                                                
+                    k =array(tracksdic[i])[:-1].T #(save all but the last -1)
+
+                if startfidx == -1 : #exist in previous trucation
+                    startfidx = offset
+                    k = k[:,1:]
+
+                if endfidx != -1 : #trj is dead in this chunk, save
+                    '''
+                    xx,yy = k[0:2,-1]
+                    if xx >= ncols:
+                        xx = ncols-1
+                    if xx < 0:
+                        xx = 0
+                    if yy >= nrows:
+                        yy = nrows-1
+                    if yy < 0:
+                        yy = 0
+                    #if fbr[yy,xx] == 1: 
+                    #    Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0] 
+                    #    Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
+                    '''
+                    Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0]
+                    Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
+                    Ttracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[2]
+                else:
+                    Xtracks[trjidx,:][startfidx-offset:] = k[0]
+                    Ytracks[trjidx,:][startfidx-offset:] = k[1]
+                    Ttracks[trjidx,:][startfidx-offset:] = k[2]
 
         # loop through the current trajectories list
         for trjidx, ii in enumerate(tracksdic.keys()):
@@ -238,3 +276,5 @@ while (frame_idx < nframe):
                     start[i] = -1  # it's from the last trunction
                 except: # if trj already been removed
                     pass
+
+#if (frame_idx % trunclen) !=0:
