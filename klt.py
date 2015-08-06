@@ -3,16 +3,12 @@
 '''
 Lucas-Kanade tracker
 ====================
-
 Lucas-Kanade sparse optical flow demo. Uses goodFeaturesToTrack
 for track initialization and back-tracking for match verification
 between frames.
-
 Usage
 -----
 lk_track.py [<video_source>]
-
-
 Keys
 ----
 ESC - exit
@@ -65,47 +61,55 @@ imlist = sorted(glob('../VideoData/20150222/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
-frame0 = cv2.imread(imlist[0])
-frame  = np.zeros_like(frame0)
-frameL = np.zeros_like(frame0[:,:,0])
-frameLPre = np.zeros_like(frame0[:,:,0])
-
-
+frame  = cv2.imread(imlist[0])
+frameL  = np.zeros_like(frame[:,:,0])
+frameLp = np.zeros_like(frameL)
 
 # -- set low number of frames for testing
 nframe = 3000
 
 while (frame_idx < nframe):
     frame[:,:,:] = cv2.imread(imlist[frame_idx])
-    frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
+    frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #*self.mask
     
     if len(tracksdic) > 0:
-        img0, img1 = frameLPre, frameL
-        pdb.set_trace()
-        p0 = np.float32([tracksdic[tr][-1][:2] for tr in tracksdic  ]).reshape(-1, 1, 2)
-        p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
-        p0r, st, err = cv2.calcOpticalFlowPyrLK(img1, img0, p1, None, **lk_params)
-        d = abs(p0-p0r).reshape(-1, 2).max(-1)
-        good = d < 1
-        
-        if (len(pregood)>0):
-            good[:len(pregood)] = good[:len(pregood)]&good
-            pregood = good
+        pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
+            .reshape(-1, 1, 2)
+        #pdb.set_trace()
+        pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
+                                                      pnts_old, None, 
+                                                      **lk_params)
+        pnts_oldr, st, err = cv2.calcOpticalFlowPyrLK(frameL, frameLp, 
+                                                      pnts_new, None, 
+                                                      **lk_params)
+        dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
+        good = dist < 1
+ 
+# GGD: !!! The block below never seems to be exectuted... why is this here???
+#        if (len(pregood)>0):
+#            good[:len(pregood)] = good[:len(pregood)]&good
+#            #good = (good & inroi)
+#            pregood = good
                     
-        for (x, y), idx, goodflag in zip(p1.reshape(-1, 2),good, tracksdic.keys()):
+        for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
+                                          tracksdic.keys()):
+            #if idx == 144:
+            #    pdb.set_trace()
+            if not good_flag:
 
-            if not goodflag:
                 end[idx] = (frame_idx-1)
                 tracksdic[idx].append((-100,-100,frame_idx))
-
+                #self.tracks[idx].append((-100., -100.,self.frame_idx))
+                #self.Ttracks[idx].append(self.frame_idx)
                 continue
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
 
+            #self.tracks[idx].append((x, y,self.frame_idx))
+            #self.Ttracks[idx].append(self.frame_idx)
 
-
-        #    vis = frame.copy()
-            # cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+#    vis = frame.copy()
+#            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
         #cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
         #draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
@@ -139,7 +143,7 @@ while (frame_idx < nframe):
 
 
     frame_idx += 1
-    frameLPre[:,:] = frameL[:,:]
+    frameLp[:,:] = frameL[:,:]
     #  visualize:============================== 
     # cv2.imshow('lk_track', vis)
             
@@ -187,7 +191,6 @@ while (frame_idx < nframe):
                         yy = nrows-1
                     if yy < 0:
                         yy = 0
-
                     #if fbr[yy,xx] == 1: 
                     #    Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0] 
                     #    Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
@@ -201,6 +204,7 @@ while (frame_idx < nframe):
                     Ttracks[trjidx,:][startfidx-offset:] = k[2]
 
 
+        #pdb.set_trace()
         #==== save files ====
 
         trk ={}
@@ -228,13 +232,7 @@ while (frame_idx < nframe):
                 except: # if trj already been removed
                     pass
 
-
-
-
-
-
-
-
+#if (frame_idx % trunclen) !=0:
 
 
 
