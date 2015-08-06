@@ -75,7 +75,7 @@ while (frame_idx < nframe):
     if len(tracksdic) > 0:
         pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
             .reshape(-1, 1, 2)
-        #pdb.set_trace()
+        # pdb.set_trace()
         pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
                                                       pnts_old, None, 
                                                       **lk_params)
@@ -86,10 +86,11 @@ while (frame_idx < nframe):
         good = dist < 1
  
 # GGD: !!! The block below never seems to be exectuted... why is this here???
-#        if (len(pregood)>0):
-#            good[:len(pregood)] = good[:len(pregood)]&good
-#            #good = (good & inroi)
-#            pregood = good
+        # if (len(pregood)>0):
+        #     # pdb.set_trace()
+        #     good[:len(pregood)] = good[:len(pregood)]&good
+        #     #good = (good & inroi)
+        #     pregood = good
                     
         for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
                                           tracksdic.keys()):
