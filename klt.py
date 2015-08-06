@@ -68,6 +68,9 @@ nframe = len(imlist)
 frame0 = cv2.imread(imlist[0])
 frame  = np.zeros_like(frame0)
 frameL = np.zeros_like(frame0[:,:,0])
+frameLPre = np.zeros_like(frame0[:,:,0])
+
+
 
 # -- set low number of frames for testing
 nframe = 3000
@@ -77,9 +80,9 @@ while (frame_idx < nframe):
     frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#*self.mask
     
     if len(tracksdic) > 0:
-        img0, img1 = prev_gray, frameL
+        img0, img1 = frameLPre, frameL
+        pdb.set_trace()
         p0 = np.float32([tracksdic[tr][-1][:2] for tr in tracksdic  ]).reshape(-1, 1, 2)
-        #pdb.set_trace()
         p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
         p0r, st, err = cv2.calcOpticalFlowPyrLK(img1, img0, p1, None, **lk_params)
         d = abs(p0-p0r).reshape(-1, 2).max(-1)
@@ -87,27 +90,22 @@ while (frame_idx < nframe):
         
         if (len(pregood)>0):
             good[:len(pregood)] = good[:len(pregood)]&good
-            #good = (good & inroi)
             pregood = good
                     
-        for (x, y), good_flag, idx in zip(p1.reshape(-1, 2), good,tracksdic.keys()):
-            #if idx == 144:
-            #    pdb.set_trace()
-            if not good_flag:
+        for (x, y), idx, goodflag in zip(p1.reshape(-1, 2),good, tracksdic.keys()):
 
+            if not goodflag:
                 end[idx] = (frame_idx-1)
                 tracksdic[idx].append((-100,-100,frame_idx))
-                #self.tracks[idx].append((-100., -100.,self.frame_idx))
-                #self.Ttracks[idx].append(self.frame_idx)
+
                 continue
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
 
-            #self.tracks[idx].append((x, y,self.frame_idx))
-            #self.Ttracks[idx].append(self.frame_idx)
 
-#    vis = frame.copy()
-#            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+
+        #    vis = frame.copy()
+            # cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
         #cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
         #draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
@@ -141,7 +139,7 @@ while (frame_idx < nframe):
 
 
     frame_idx += 1
-    prev_gray = frameL
+    frameLPre[:,:] = frameL[:,:]
     #  visualize:============================== 
     # cv2.imshow('lk_track', vis)
             
@@ -203,7 +201,6 @@ while (frame_idx < nframe):
                     Ttracks[trjidx,:][startfidx-offset:] = k[2]
 
 
-        #pdb.set_trace()
         #==== save files ====
 
         trk ={}
@@ -231,7 +228,6 @@ while (frame_idx < nframe):
                 except: # if trj already been removed
                     pass
 
-#if (frame_idx % trunclen) !=0:
 
 
 
