@@ -61,16 +61,20 @@ lenoffset = 0
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 # -- get the full image list
-imlist = sorted(glob('../VideoData/20150222/*.jpg'))
+#imlist = sorted(glob('../VideoData/20150222/*.jpg'))
+imlist = sorted(glob('images/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
 frame  = cv2.imread(imlist[0])
 frameL  = np.zeros_like(frame[:,:,0])
 frameLp = np.zeros_like(frameL)
+frameL0 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+# -- set mask
+mask = 255*np.ones_like(frameL)
 
 # -- set low number of frames for testing
-nframe = 3000
+nframe = 3
 
 while (frame_idx < nframe):
     frame[:,:,:] = cv2.imread(imlist[frame_idx])
@@ -100,17 +104,11 @@ while (frame_idx < nframe):
             #if idx == 144:
             #    pdb.set_trace()
             if not good_flag:
-
                 end[idx] = (frame_idx-1)
                 tracksdic[idx].append((-100,-100,frame_idx))
-                #self.tracks[idx].append((-100., -100.,self.frame_idx))
-                #self.Ttracks[idx].append(self.frame_idx)
                 continue
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
-
-            #self.tracks[idx].append((x, y,self.frame_idx))
-            #self.Ttracks[idx].append(self.frame_idx)
 
 #    vis = frame.copy()
 #            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
@@ -118,8 +116,6 @@ while (frame_idx < nframe):
         #draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
     if frame_idx % detect_interval == 0:
-
-        mask = 255*np.ones_like(frameL)
 
         for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
             cv2.circle(mask, (x, y), 5, 0, -1)    
@@ -137,8 +133,12 @@ while (frame_idx < nframe):
                     tracksdic[dicidx].append((x,y,frame_idx))
                 dicidx += 1 
 
-            start = start + [frame_idx]*(len(tracksdic)+lenoffset-oldlen) ##add the start time for new added feature pts
-            end   = end + [-1]*(len(tracksdic)+lenoffset-oldlen)
+            ##add the start time for new added feature pts
+            ##add the end time for new added feature pts
+#            start = start + [frame_idx]*(len(tracksdic)+lenoffset-oldlen) 
+#            end   = end + [-1]*(len(tracksdic)+lenoffset-oldlen)
+            start  = start + [frame_idx]*corners.shape[0]
+            end    = end + [-1]*corners.shape[0]
             oldlen = len(tracksdic)+lenoffset
 
             #pdb.set_trace()
@@ -148,70 +148,70 @@ while (frame_idx < nframe):
 
     frame_idx += 1
     frameLp[:,:] = frameL[:,:]
+
     #  visualize:============================== 
     # cv2.imshow('lk_track', vis)
             
     #name = '/home/andyc/image/AIG/lking/'+str(self.frame_idx).zfill(5)+'.jpg'
     #cv2.imwrite(name,vis)
-            
-    ch = 0xFF & cv2.waitKey(1)
-    if ch == 27:
-        break
-        
-    #========== save data ===================#    
-    if  (frame_idx % trunclen) == 0:
-        # pdb.set_trace()
-        #fbr = pickle.load(open('./mask/forbiddenregion_mask.pkl','rb')) #forbbiden region
 
+
+#    ch = 0xFF & cv2.waitKey(1)
+#    if ch == 27:
+#        break
+        
+    # dump trajectories to file
+    if  (frame_idx % trunclen) == 0:
+
+        # initialize track arrays
         Xtracks = np.zeros([len(tracksdic),trunclen])
         Ytracks = np.zeros([len(tracksdic),trunclen])
         Ttracks = np.zeros([len(tracksdic),trunclen])
 
-        offset = ((frame_idx // trunclen)-1)*trunclen # which trunclen, starting from 0th
-        for trjidx,i in enumerate(tracksdic.keys()):
+        # set first frame in this chunk
+        offset  = frame_idx - trunclen
 
-            endfidx = end[i]  # end frame number for pts i
+        # loop through the current trajectories list
+        for trjidx, ii in enumerate(tracksdic.keys()):
 
-            startfidx = start[i]
-            if (endfidx >= offset) or (endfidx == -1): #offset is the current trunck
+            # set the starting and ending frame index
+            st_ind = start[ii]
+            en_ind = end[ii]
 
-                if endfidx == -1 : # trj still alive                                                                                
-                    k =array(tracksdic[i]).T    # shape is: 3X600 3:(x,y,t)
-                else:              # trj is dead in this chunk                                                                                
-                    k =array(tracksdic[i])[:-1].T #(save all but the last -1)
+            # GGD: Is this necessary???  Dead trajectories are removed...
+            # the track exists in this truncation
+#            if (en_ind>=offset) or (en_ind==-1):
 
-                if startfidx == -1 : #exist in previous trucation
-                    startfidx = offset
-                    k = k[:,1:]
+            # if en_ind is -1, then the traj is still alive,
+            # otherwise, the trajectory is dead (but still in the
+            # tracks dictionary, otherwise it would have been
+            # removed).
+            if en_ind==-1:
+                ttrack = array(tracksdic[ii]).T
+            else:
+                ttrack = array(tracksdic[i])[:-1].T # don't save -100s
 
-                if endfidx != -1 : #trj is dead in this chunk, save
-                    '''
-                    xx,yy = k[0:2,-1]
-                    if xx >= ncols:
-                        xx = ncols-1
-                    if xx < 0:
-                        xx = 0
-                    if yy >= nrows:
-                        yy = nrows-1
-                    if yy < 0:
-                        yy = 0
+            # if st_ind is -1, then the track existed in the previous
+            # truncation and all points except the last one of the
+            # previous truncation were removed, so only save from the
+            # second point.
+            if st_ind==-1:
+                st_ind = offset
+                ttrack = ttrack[:,1:]
 
-                    #if fbr[yy,xx] == 1: 
-                    #    Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0] 
-                    #    Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
-                    '''
-                    Xtracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[0]
-                    Ytracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[1]
-                    Ttracks[trjidx,:][startfidx-offset:endfidx-offset+1] = k[2]
-                else:
-                    Xtracks[trjidx,:][startfidx-offset:] = k[0]
-                    Ytracks[trjidx,:][startfidx-offset:] = k[1]
-                    Ttracks[trjidx,:][startfidx-offset:] = k[2]
+            # put trajectory into matrix
+            tstart, tstop = st_ind-offset, en_ind-offset+1
 
+            if en_ind!=-1:
+                Xtracks[trjidx,:][tstart:tstop] = ttrack[0]
+                Ytracks[trjidx,:][tstart:tstop] = ttrack[1]
+                Ttracks[trjidx,:][tstart:tstop] = ttrack[2]
+            else:
+                Xtracks[trjidx,:][tstart:] = ttrack[0]
+                Ytracks[trjidx,:][tstart:] = ttrack[1]
+                Ttracks[trjidx,:][tstart:] = ttrack[2]
 
-        #pdb.set_trace()
-        #==== save files ====
-
+        # put tracks into sparse matrix
         trk ={}
         
         trk['xtracks'] = csr_matrix(Xtracks)
@@ -219,12 +219,14 @@ while (frame_idx < nframe):
         trk['idxtable'] = tracksdic.keys()
         trk['Ttracks'] = csr_matrix(Ttracks)
 
+        # save as matlab file... :-/
         savename = './mat/20150222_Mat/HR_w_T'+str(frame_idx/trunclen).zfill(3)
-        # savename = './mat/20150220_Mat/HR'+str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
-        #===== release memory =====
-        deadtrj = np.where(array(end)>0 )[0]  # dead trjs' dying positions
+        # for dead tracks, remove them.  for alive tracks, remove all
+        # points except the last one (in order to track into the next
+        # frame), and set the start frame to -1.
+        deadtrj = np.where(np.array(end)>0)[0]
         lenoffset += len(deadtrj)
         for i in range(oldlen):
             if i in deadtrj:
@@ -236,15 +238,3 @@ while (frame_idx < nframe):
                     start[i] = -1  # it's from the last trunction
                 except: # if trj already been removed
                     pass
-
-#if (frame_idx % trunclen) !=0:
-
-
-
-
-
-
-
-
-
-
