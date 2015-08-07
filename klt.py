@@ -57,7 +57,7 @@ lenoffset = 0
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 # -- get the full image list
-imlist = sorted(glob('../VideoData/20150222/*.jpg'))
+imlist = sorted(glob('../VideoData/20150220/*.jpg'))
 # imlist = sorted(glob('images/*.jpg'))
 nframe = len(imlist)
 
@@ -70,11 +70,14 @@ frameLp = np.zeros_like(frameL)
 mask = 255*np.ones_like(frameL)
 
 # -- set low number of frames for testing
-nframe = 3001
+nframe = 601
+
 
 while (frame_idx < nframe):
     frame[:,:,:] = cv2.imread(imlist[frame_idx])
     frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #*self.mask
+
+    vis = frame.copy()
     
     if len(tracksdic) > 0:
         pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
@@ -107,10 +110,10 @@ while (frame_idx < nframe):
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
 
-#    vis = frame.copy()
-#            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
-        #cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
-        #draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
+            # vis = frame.copy()
+            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+    # cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
+    # draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
     if frame_idx % detect_interval == 0:
 
@@ -147,15 +150,14 @@ while (frame_idx < nframe):
     frameLp[:,:] = frameL[:,:]
 
     #  visualize:============================== 
-    # cv2.imshow('lk_track', vis)
+    cv2.imshow('lk_track', vis)
             
     #name = '/home/andyc/image/AIG/lking/'+str(self.frame_idx).zfill(5)+'.jpg'
     #cv2.imwrite(name,vis)
 
-
-#    ch = 0xFF & cv2.waitKey(1)
-#    if ch == 27:
-#        break
+    ch = 0xFF & cv2.waitKey(1)
+    if ch == 27:
+        break
         
     # dump trajectories to file
     if  (frame_idx % trunclen) == 0:
@@ -223,16 +225,17 @@ while (frame_idx < nframe):
         # for dead tracks, remove them.  for alive tracks, remove all
         # points except the last one (in order to track into the next
         # frame), and set the start frame to -1.
-        deadtrj = np.where(np.array(end)>0)[0]
+        deadtrj = np.where(np.array(end)>=0)[0] # ==0 is for the case when the tracks ends at 0 frame
         lenoffset += len(deadtrj)
-        # for i in range(oldlen):   ## oldlen == len(start)
-        for i in range(offset, len(start)):
+        for i in tracksdic.keys():   
             if i in deadtrj:
                 tracksdic.pop(i)
                 end[i] = -2
             else:
-                try: #if trj exist and cross two truncations
-                    tracksdic[i] = [tracksdic[i][-1]]
-                    start[i] = -1  # it's from the last trunction
-                except: # if trj already been removed
-                    pass
+                tracksdic[i] = [tracksdic[i][-1]]
+                start[i] = -1  # it's from the last trunction
+                # try: #if trj exist and cross two truncations
+                #     tracksdic[i] = [tracksdic[i][-1]]
+                #     start[i] = -1  # it's from the last trunction
+                # except: # if trj already been removed
+                #     pass
