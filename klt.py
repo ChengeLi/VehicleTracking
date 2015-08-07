@@ -37,7 +37,7 @@ idx    = 0
 tdic   = [0]
 start  = []
 end    = []
-oldlen = 0
+# oldlen = 0s
 dicidx = 0
 track_len = 10
 detect_interval = 5
@@ -57,8 +57,8 @@ lenoffset = 0
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 # -- get the full image list
-#imlist = sorted(glob('../VideoData/20150222/*.jpg'))
-imlist = sorted(glob('images/*.jpg'))
+imlist = sorted(glob('../VideoData/20150222/*.jpg'))
+# imlist = sorted(glob('images/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
@@ -70,7 +70,7 @@ frameLp = np.zeros_like(frameL)
 mask = 255*np.ones_like(frameL)
 
 # -- set low number of frames for testing
-nframe = 3
+nframe = 3001
 
 while (frame_idx < nframe):
     frame[:,:,:] = cv2.imread(imlist[frame_idx])
@@ -136,7 +136,7 @@ while (frame_idx < nframe):
 #            end   = end + [-1]*(len(tracksdic)+lenoffset-oldlen)
             start  = start + [frame_idx]*corners.shape[0]
             end    = end + [-1]*corners.shape[0]
-            oldlen = len(tracksdic)+lenoffset
+            # oldlen = len(tracksdic)+lenoffset
 
             #pdb.set_trace()
     print('{0} - {1}'.format(frame_idx,len(tracksdic)))
@@ -186,7 +186,7 @@ while (frame_idx < nframe):
             if en_ind==-1:
                 ttrack = array(tracksdic[ii]).T
             else:
-                ttrack = array(tracksdic[i])[:-1].T # don't save -100s
+                ttrack = array(tracksdic[ii])[:-1].T # don't save -100s
 
             # if st_ind is -1, then the track existed in the previous
             # truncation and all points except the last one of the
@@ -217,7 +217,7 @@ while (frame_idx < nframe):
         trk['Ttracks'] = csr_matrix(Ttracks)
 
         # save as matlab file... :-/
-        savename = './mat/20150222_Mat/HR_w_T'+str(frame_idx/trunclen).zfill(3)
+        savename = './mat/20150222_Mat/HR_w_T______test_'+str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
         # for dead tracks, remove them.  for alive tracks, remove all
@@ -225,7 +225,8 @@ while (frame_idx < nframe):
         # frame), and set the start frame to -1.
         deadtrj = np.where(np.array(end)>0)[0]
         lenoffset += len(deadtrj)
-        for i in range(oldlen):
+        # for i in range(oldlen):   ## oldlen == len(start)
+        for i in range(offset, len(start)):
             if i in deadtrj:
                 tracksdic.pop(i)
                 end[i] = -2
