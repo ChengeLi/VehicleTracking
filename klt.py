@@ -57,7 +57,8 @@ lenoffset = 0
 # nframe = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 # -- get the full image list
-imlist = sorted(glob('../VideoData/20150220/*.jpg'))
+#imlist = sorted(glob('../VideoData/20150220/*.jpg'))
+imlist = sorted(glob('images/*.jpg'))
 # imlist = sorted(glob('images/*.jpg'))
 nframe = len(imlist)
 
@@ -117,11 +118,13 @@ while (frame_idx < nframe):
 
     if frame_idx % detect_interval == 0:
 
+        # GGD: this is (I *think*) eliminating redundant non-moving points
+        mask[:,:] = 255
         for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
             cv2.circle(mask, (x, y), 5, 0, -1)    
 
         corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
-         
+
         if corners is not None:
             for x, y in np.float32(corners).reshape(-1, 2):
                 #self.tracks.append([(x, y,self.frame_idx)])
