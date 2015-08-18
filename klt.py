@@ -37,7 +37,6 @@ idx    = 0
 tdic   = [0]
 start  = []
 end    = []
-# oldlen = 0s
 dicidx = 0
 track_len = 10
 detect_interval = 5
@@ -59,7 +58,6 @@ lenoffset = 0
 # -- get the full image list
 #imlist = sorted(glob('../VideoData/20150220/*.jpg'))
 imlist = sorted(glob('images/*.jpg'))
-# imlist = sorted(glob('images/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
@@ -83,7 +81,7 @@ while (frame_idx < nframe):
     if len(tracksdic) > 0:
         pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
             .reshape(-1, 1, 2)
-        # pdb.set_trace()
+
         pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
                                                       pnts_old, None, 
                                                       **lk_params)
@@ -93,17 +91,8 @@ while (frame_idx < nframe):
         dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
         good = dist < 1
  
-# GGD: !!! The block below never seems to be exectuted... why is this here???
-        # if (len(pregood)>0):
-        #     # pdb.set_trace()
-        #     good[:len(pregood)] = good[:len(pregood)]&good
-        #     #good = (good & inroi)
-        #     pregood = good
-                    
         for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
                                           tracksdic.keys()):
-            #if idx == 144:
-            #    pdb.set_trace()
             if not good_flag:
                 end[idx] = (frame_idx-1)
                 tracksdic[idx].append((-100,-100,frame_idx))
@@ -111,10 +100,6 @@ while (frame_idx < nframe):
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
 
-            # vis = frame.copy()
-            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
-    # cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
-    # draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
     if frame_idx % detect_interval == 0:
 
@@ -127,8 +112,6 @@ while (frame_idx < nframe):
 
         if corners is not None:
             for x, y in np.float32(corners).reshape(-1, 2):
-                #self.tracks.append([(x, y,self.frame_idx)])
-                        
                 try:
                     tracksdic[dicidx].append((x,y,frame_idx))
                 except:
@@ -136,32 +119,15 @@ while (frame_idx < nframe):
                     tracksdic[dicidx].append((x,y,frame_idx))
                 dicidx += 1 
 
-            ##add the start time for new added feature pts
-            ##add the end time for new added feature pts
-#            start = start + [frame_idx]*(len(tracksdic)+lenoffset-oldlen) 
-#            end   = end + [-1]*(len(tracksdic)+lenoffset-oldlen)
             start  = start + [frame_idx]*corners.shape[0]
             end    = end + [-1]*corners.shape[0]
-            # oldlen = len(tracksdic)+lenoffset
 
-            #pdb.set_trace()
     print('{0} - {1}'.format(frame_idx,len(tracksdic)))
 
-
-
+    # switch previous frame
     frame_idx += 1
     frameLp[:,:] = frameL[:,:]
 
-    #  visualize:============================== 
-    cv2.imshow('lk_track', vis)
-            
-    #name = '/home/andyc/image/AIG/lking/'+str(self.frame_idx).zfill(5)+'.jpg'
-    #cv2.imwrite(name,vis)
-
-    ch = 0xFF & cv2.waitKey(1)
-    if ch == 27:
-        break
-        
     # dump trajectories to file
     if  (frame_idx % trunclen) == 0:
 
@@ -179,10 +145,6 @@ while (frame_idx < nframe):
             # set the starting and ending frame index
             st_ind = start[ii]
             en_ind = end[ii]
-
-            # GGD: Is this necessary???  Dead trajectories are removed...
-            # the track exists in this truncation
-#            if (en_ind>=offset) or (en_ind==-1):
 
             # if en_ind is -1, then the traj is still alive,
             # otherwise, the trajectory is dead (but still in the
@@ -222,7 +184,8 @@ while (frame_idx < nframe):
         trk['Ttracks'] = csr_matrix(Ttracks)
 
         # save as matlab file... :-/
-        savename = './mat/20150222_Mat/HR_w_T______test_'+str(frame_idx/trunclen).zfill(3)
+        savename = './mat/20150222_Mat/HR_w_T______test_' + \
+            str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
         # for dead tracks, remove them.  for alive tracks, remove all
@@ -237,8 +200,3 @@ while (frame_idx < nframe):
             else:
                 tracksdic[i] = [tracksdic[i][-1]]
                 start[i] = -1  # it's from the last trunction
-                # try: #if trj exist and cross two truncations
-                #     tracksdic[i] = [tracksdic[i][-1]]
-                #     start[i] = -1  # it's from the last trunction
-                # except: # if trj already been removed
-                #     pass
