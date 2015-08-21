@@ -151,7 +151,7 @@ if __name__ == '__main__':
     for matidx,matfile in enumerate(matfiles):
 
         file = scipy_io.loadmat(matfile)
-        feature =(file['adj'] > 0).astype('float')
+        feature =(file['adj'] > 0).astype('float')  ## adj mtx
         #pdb.set_trace()
         c = file['c']
         mask = file['mask']
@@ -160,8 +160,9 @@ if __name__ == '__main__':
             print i
             sub_index = np.where(c==i)[1]
             sub_matrix = feature[sub_index][:,sub_index]
-            if sub_index.size >3:
-                project_dimension = int(np.floor(sub_index.size/20)+1)
+            if sub_index.size >3:  
+                # pdb.set_trace()
+                project_dimension = int(np.floor(sub_index.size/20)+1)  
                 ssc = sparse_subspace_clustering(2000000,feature,n_dimension = project_dimension)
                 ssc.get_adjacency(sub_matrix)
                 ssc.manifold()
@@ -169,8 +170,9 @@ if __name__ == '__main__':
                 #            sub_labels = ssc.clustering_kmeans(int(np.floor(sub_index.size/4)+1))
                 #        visulize(ssc.embedding_,sub_labels,model)
                 labels[sub_index] = np.max(labels) + (sub_labels+1)
+                # print sub_labels  ## not always start from 0?? 
                 print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
-            else:
+            else:   ## if size small, treat as one group
                 sub_labels = np.ones(sub_index.size)
                 labels[sub_index] = np.max(labels) + sub_labels
                 print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
