@@ -69,7 +69,7 @@ frameLp = np.zeros_like(frameL)
 mask = 255*np.ones_like(frameL)
 
 # -- set low number of frames for testing
-nframe = 300
+nframe = 599
 
 masklist = sorted(glob('../S_mask/*.jpg'))  
 
@@ -107,7 +107,7 @@ while (frame_idx < nframe):
 
     if frame_idx % detect_interval == 0:
 
-        # GGD: this is (I *think*) eliminating redundant non-moving points
+        
         # mask[:,:] = 255
 
         # == CG: use the mask from incPCP
@@ -117,10 +117,13 @@ while (frame_idx < nframe):
         #     print "hahahah"
         #     mask[:,:] = cv2.imread(masklist[frame_idx-1])[:,:,0]
         mask[:,:] = cv2.imread(masklist[frame_idx])[:,:,0]
+        cv2.imshow('mask', mask)
+        # pdb.set_trace()
+        # GGD: this is (I *think*) eliminating redundant non-moving points
         for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
             cv2.circle(mask, (x, y), 5, 0, -1)    
 
-
+        
         corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
         # pdb.set_trace()
         if corners is not None:
@@ -137,6 +140,7 @@ while (frame_idx < nframe):
 
     print('{0} - {1}'.format(frame_idx,len(tracksdic)))
     cv2.imshow('lk_track', vis)
+
     ch = 0xFF & cv2.waitKey(1)
     if ch == 27:
         break
