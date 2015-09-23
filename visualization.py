@@ -10,15 +10,18 @@ import pprint
 video_src = '../VideoData/video0222.mp4'
 trunclen = 600
 
-inifilename = 'HR'
-lrsl = './mat/20150222_Mat/finalresult/'+inifilename
+# inifilename = 'HR'
+# lrsl = './mat/20150222_Mat/finalresult/'+inifilename
+# matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))[0:55]
+
+lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
+
 mask = loadmat(lrsl)['mask'][0]
 labels = loadmat(lrsl)['label'][0]
 
 times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
 
 
-matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))[0:55]
 trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
 IDintrunklast = trunkTrjFile['idxtable'][0]
 

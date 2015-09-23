@@ -7,57 +7,62 @@ import pdb,glob
 
 # inifilename = 'HR'
 # matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
-#matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'_w_T'+'*.mat'))  #read the files with the time tracks
-# matfiles = sorted(glob.glob('./mat/'+inifilename+'*.mat'))
-
 matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
-
-# -- utilities
-vthr = 15 #threshold of min speed
-fps  = 4 # GGD: careful about this!  This is video dependent...
-tthr = 60*fps   #transition time (red light time)
-
 
 for matidx,matfile in enumerate(matfiles):
 
     ptstrj = loadmat(matfile)
-    xx = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
-    yy = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-    tt = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+    x = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
+    y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
+    t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
 
     ptsidx = ptstrj['idxtable'][0]
 
-    nklt, nfrm = xx.shape
+    sample = ptstrj['xtracks'].shape[0]
+    fnum   = ptstrj['xtracks'].shape[1]
 
-    # select good frames
-    good_fr = xx!=0
-
-    # calculate velocities
-    vx  = np.diff(xx)*good_fr[:,1:]*good_fr[:,:-1]
-    vy  = np.diff(yy)*good_fr[:,1:]*good_fr[:,:-1]
-    vel = np.sqrt(vx*vx+vy*vy) # vel = np.abs(vx)+np.abs(vy)
-
-    # first eliminate KLT points that are 
-    # 1. tracked for fewer than 1 second
-    # 2. have a max velocity below threshold (for pedestrians)
-    # 3. GGD: I removed this criterion: sum(vel<3)<tthr
-    print("TRJCLUSTER: Careful!!!  Must handle 0 good points case!!!")
-
-    good_pts = (good_fr.sum(1)>fps)&(vel.max(1)>vthr)
-    xx       = xx[good_pts]
-    yy       = yy[good_pts]
-    tt       = tt[good_pts]
-    good_fr  = good_fr[good_pts]
-    mask     = ptsidx[good_pts]
+    #x[x<0]=0
+    #y[y<0]=0
 
 
-    ## GGD: we paused here...
+    xspeed = np.diff(x)*((x!=0)[:,1:])
+    yspeed = np.diff(y)*((y!=0)[:,1:])
+    speed = np.abs(xspeed)+np.abs(yspeed)
+    # chk if trj is long enough
+    mask =[]
+    x_re = []
+    y_re =[]
+    t_re = []
+    xspd =[]
+    yspd =[]
+    minspdth = 15 #threshold of min speed
+    fps = 4
+    transth  = 60*fps   #transition time (red light time)
+
+
+    print('initialization finished....')
+
+    for i in range(sample):
+        if sum(x[i,:]!=0)>4:  # chk if trj is long enough
+            try:
+                if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is not a not move point
+                    if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a idole point
+
+                        mask.append(ptsidx[i]) # ID 
+                        x_re.append(x[i,:])
+                        y_re.append(y[i,:])
+                        t_re.append(t[i,:])
+
+                        xspd.append(xspeed[i,:])
+                        yspd.append(yspeed[i,:])
+            except:
+                pass
 
     sample = len(x_re)
     adj = np.zeros([sample,sample])
     dth = 30*1.5
     spdth = 5
-    num = arange(nfrm)
+    num = arange(fnum)
     x_re = array(x_re)
     y_re = array(y_re)
     t_re = array(t_re)
@@ -97,8 +102,6 @@ for matidx,matfile in enumerate(matfiles):
     result['Ttracks'] = t_re
 
     # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
-    # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+str(matidx+1).zfill(3)
     savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
     savemat(savename,result)
-

@@ -57,7 +57,8 @@ lenoffset = 0
 
 # -- get the full image list
 #imlist = sorted(glob('../VideoData/20150220/*.jpg'))
-imlist = sorted(glob('images/*.jpg'))
+# imlist = sorted(glob('images/*.jpg'))
+imlist = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
@@ -69,7 +70,7 @@ frameLp = np.zeros_like(frameL)
 mask = 255*np.ones_like(frameL)
 
 # -- set low number of frames for testing
-nframe = 601
+nframe = 1801
 
 
 while (frame_idx < nframe):
@@ -184,9 +185,12 @@ while (frame_idx < nframe):
         trk['Ttracks'] = csr_matrix(Ttracks)
 
         # save as matlab file... :-/
-        savename = './mat/20150222_Mat/HR_w_T______test_' + \
-            str(frame_idx/trunclen).zfill(3)
+        # savename = './mat/20150222_Mat/HR_w_T______test_' + \
+            # str(frame_idx/trunclen).zfill(3)
+
+        savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
+
 
         # for dead tracks, remove them.  for alive tracks, remove all
         # points except the last one (in order to track into the next
