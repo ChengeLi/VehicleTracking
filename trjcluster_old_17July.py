@@ -7,7 +7,8 @@ import pdb,glob
 
 # inifilename = 'HR'
 # matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
-matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
+# matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
+matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + '*.mat'))
 
 for matidx,matfile in enumerate(matfiles):
 
@@ -22,7 +23,7 @@ for matidx,matfile in enumerate(matfiles):
     fnum   = ptstrj['xtracks'].shape[1]
 
     #x[x<0]=0
-    #y[y<0]=0
+    #y[y<0]=x0
 
 
     xspeed = np.diff(x)*((x!=0)[:,1:])
@@ -62,13 +63,13 @@ for matidx,matfile in enumerate(matfiles):
     adj = np.zeros([sample,sample])
     dth = 30*1.5
     spdth = 5
-    num = arange(fnum)
-    x_re = array(x_re)
-    y_re = array(y_re)
-    t_re = array(t_re)
+    num  = np.arange(fnum)
+    x_re = np.array(x_re)
+    y_re = np.array(y_re)
+    t_re = np.array(t_re)
     
-    xspd = array(xspd)
-    yspd = array(yspd)
+    xspd = np.array(xspd)
+    yspd = np.array(yspd)
 
     print(sample)
     print('building adj mtx ....')
@@ -102,6 +103,7 @@ for matidx,matfile in enumerate(matfiles):
     result['Ttracks'] = t_re
 
     # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
-    savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
+    # savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
+    savename = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + str(matidx+1).zfill(3)
 
     savemat(savename,result)

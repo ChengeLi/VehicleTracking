@@ -58,7 +58,11 @@ lenoffset = 0
 # -- get the full image list
 #imlist = sorted(glob('../VideoData/20150220/*.jpg'))
 # imlist = sorted(glob('images/*.jpg'))
-imlist = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
+
+# imagepath = '../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'
+imagepath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+imlist = sorted(glob(imagepath + '*.jpg'))
+
 nframe = len(imlist)
 
 # -- read in first frame and set dimensions
@@ -101,6 +105,8 @@ while (frame_idx < nframe):
             if x != -100:
                 tracksdic[idx].append((x,y,frame_idx))
 
+            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+
 
     if frame_idx % detect_interval == 0:
 
@@ -128,6 +134,11 @@ while (frame_idx < nframe):
     # switch previous frame
     frame_idx += 1
     frameLp[:,:] = frameL[:,:]
+    # ## CG: for visulization
+    cv2.imshow('klt', vis)
+    # Wait 0 milliseconds
+    cv2.waitKey(5)
+
 
     # dump trajectories to file
     if  (frame_idx % trunclen) == 0:
@@ -152,9 +163,9 @@ while (frame_idx < nframe):
             # tracks dictionary, otherwise it would have been
             # removed).
             if en_ind==-1:
-                ttrack = array(tracksdic[ii]).T
+                ttrack = np.array(tracksdic[ii]).T
             else:
-                ttrack = array(tracksdic[ii])[:-1].T # don't save -100s
+                ttrack = np.array(tracksdic[ii])[:-1].T # don't save -100s
 
             # if st_ind is -1, then the track existed in the previous
             # truncation and all points except the last one of the
@@ -188,7 +199,8 @@ while (frame_idx < nframe):
         # savename = './mat/20150222_Mat/HR_w_T______test_' + \
             # str(frame_idx/trunclen).zfill(3)
 
-        savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
+        # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
+        savename = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + str(frame_idx/trunclen).zfill(3)
         savemat(savename,trk)
 
 

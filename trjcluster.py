@@ -98,6 +98,7 @@ for matidx,matfile in enumerate(matfiles):
 
     # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
     # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+str(matidx+1).zfill(3)
+    
     savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
     savemat(savename,result)
