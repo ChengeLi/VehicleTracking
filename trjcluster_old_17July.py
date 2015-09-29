@@ -36,7 +36,9 @@ for matidx,matfile in enumerate(matfiles):
     t_re = []
     xspd =[]
     yspd =[]
-    minspdth = 15 #threshold of min speed
+    # minspdth = 15 #threshold of min speed
+    minspdth = 5 #for Canal data
+
     fps = 4
     transth  = 60*fps   #transition time (red light time)
 
@@ -87,7 +89,7 @@ for matidx,matfile in enumerate(matfiles):
                     sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                     sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
                     if (sxdiff <spdth ) & (sydiff<spdth ):
-                        mdis = mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
+                        mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
                         #mahhattan distance
                         if mdis < dth:
                             adj[i,j] = 1

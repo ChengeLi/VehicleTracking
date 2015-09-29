@@ -40,8 +40,14 @@ if __name__ == '__main__':
     # inifilename = 'HR'
     # lrsl = './mat/20150222_Mat/finalresult/'+inifilename
     # matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))[0:55]
-    lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
-    matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
+    # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
+    # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
+
+    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
+    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
+
+
+
 
     mask = loadmat(lrsl)['mask'][0]
     labels = loadmat(lrsl)['label'][0]
@@ -80,7 +86,8 @@ if __name__ == '__main__':
     # framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
 
     # image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
-    image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
+    # image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
+    image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 
     firstfrm=cv2.imread(image_listing[0])
     nrows = int(np.size(firstfrm,0))
@@ -93,6 +100,7 @@ if __name__ == '__main__':
 
 
     # fig = plt.figure(1,figsize=[10,12])
+    fig = plt.figure(1)
     axL = plt.subplot(1,1,1)
     frame = np.zeros([nrows,ncols,3]).astype('uint8')
     im = plt.imshow(np.zeros([nrows,ncols,3]))

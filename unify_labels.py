@@ -168,7 +168,7 @@ result['mask']= mask
 
 # savename = './mat/20150222_Mat/finalresult/'+inifilename
 # savename = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'result' 
-savename = '../DoT/CanalSt@BaxterSt-96.106/labels//CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' +'result' 
+savename = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' +'result' 
 
 
 savemat(savename,result)
