@@ -1,12 +1,12 @@
-from scipy.io import loadmat,savemat
 import cv2,pdb
-from glob import glob
-from scipy.sparse import csr_matrix
 import csv
 import cPickle as pickle
 import pprint
 import numpy as np
 import matplotlib.pyplot as plt
+from glob import glob
+from scipy.sparse import csr_matrix
+from scipy.io import loadmat,savemat
 
 def Virctr(x,y):
     '''
@@ -16,10 +16,10 @@ def Virctr(x,y):
         vcx = np.mean(x)
         vcy = np.mean(y)
     else:
-        mx = np.mean(x)
-        my = np.mean(y)
-        sx = np.std(x)
-        sy = np.std(y)
+        mx  = np.mean(x)
+        my  = np.mean(y)
+        sx  = np.std(x)
+        sy  = np.std(y)
         idx = ((x-mx)<2*sx)&((y-my)<2*sy)
         vcx = np.mean(x[idx])
         vcy = np.mean(y[idx])
@@ -29,10 +29,6 @@ def Virctr(x,y):
 
 
 if __name__ == '__main__':
-
-
-
-
     # video_src = '/home/andyc/Videos/video0222.mp4'
     # video_src = '../VideoData/video0222.mp4'
 
@@ -46,10 +42,6 @@ if __name__ == '__main__':
 
     lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
     matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
-
-
-
-
     mask = loadmat(lrsl)['mask'][0]
     labels = loadmat(lrsl)['label'][0]
 
@@ -58,9 +50,6 @@ if __name__ == '__main__':
 
     trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
     IDintrunklast = trunkTrjFile['idxtable'][0]
-
-    # reshape(25,4).tolist()
-
     mlabels = np.ones(max(IDintrunklast)+1)*-1
     #build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
     for idx,i in enumerate(mask):  # i=mask[idx], the cotent
@@ -198,11 +187,10 @@ if __name__ == '__main__':
                     #     pdb.set_trace()
 
 
-        
-        # ret, frame[:] = cam.read()
-        tmpName= image_listing[frame_idx]
-        frame=cv2.imread(tmpName)
-
+        if !isVideo:
+            frame[:,:,:] = cv2.imread(image_listing[frame_idx])
+        if isVideo:
+            status, frame[:,:,:] = cap.read()
 
         plt.draw()
         # current frame index is: (frame_idx%trunclen)
@@ -321,35 +309,6 @@ if __name__ == '__main__':
 
 
 
-
-
-    # for keyID, frmrange in vctime.iteritems():
-    #     # pdb.set_trace()
-    #     # print vctime[keyID]
-    #     # print vctime2[keyID]
-    #     if vctime2[keyID]:
-    #         print vctime2[keyID][1]-vctime2[keyID][0] 
-    #         print vctime[keyID][1]-vctime[keyID][0] 
-    #         print size(vcxtrj[keyID])
-    #         pdb.set_trace()
-    #     else:
-    #         print size(vctime2[keyID])
-    #     # print vctime[keyID] == vctime2[keyID]
-    #     print "=========="
-
-
-
-    # save the tracks
-
-
-    # savename = './mat/'+'vcxtrj'  ## mat not working??
-    # savemat(savename,vcxtrj)
-
-    # savename = './mat/'+'vcytrj.mat'
-    # savemat(savename,vcytrj)
-
-
-
     '''
     writer = csv.writer(open('./mat/20150222_Mat/Fullvcxtrj.csv', 'wb'))
     for key, value in vcxtrj.items():
@@ -383,114 +342,6 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-
-
-    # chunk_len = framerate*40 # 40s
-    # chunk_center = range(1/2*chunk_len,3000,chunk_len)  #change 1000 to the Framenumber
-    # chunk_center = chunk_center [1:]
-
-    # # temp_vcxtrj = {}
-    # # temp_vcytrj = {}
-    # # temp_vctime = {}
-    # # for ii in obj_pair.globalID[0:400]:  
-    # #     temp_vcxtrj[ii] = test_vcxtrj[ii]
-    # #     temp_vcytrj[ii] = test_vcytrj[ii]
-    # #     temp_vctime[ii] = test_vctime[ii]
-
-    # potential_key = []
-
-    # for ii in range(size(chunk_center,0)):
-
-
-    #     for key, value in temp_vctime.iteritems():
-    #         if value!=[]:
-    #             startF = value[0]
-    #             endF = value[1]
-    #             if not(startF >= chunk_center[ii]+1/2*chunk_len or endF < chunk_center[ii]-1/2*chunk_len):
-    #                 potential_key.append(int(key))
-
-
-    # potential_x = []
-    # potential_y = []
-
-    # set_x = []
-    # set_y = []
-    # set_frm = []
-    # # get intersection for those IDs
-    # for kk in range(len(potential_key)):
-    #     potential_frm = temp_vctime[potential_key[kk]]
-    #     set_frm.append(set(range(potential_frm[0],potential_frm[1],1)))
-
-
-    #     potential_x = temp_vcxtrj[potential_key[kk]]
-    #     set_x.append(set(potential_x))
-
-    #     potential_y = temp_vcytrj[potential_key[kk]]
-    #     set_y.append(set(potential_y))
-
-
-    # parallel_vehicle_ID = []
-    # parallel_vehicle_common = []
-    # parallel_vehicle_x1 = []
-    # parallel_vehicle_x2 = []
-    # parallel_vehicle_y1 = []
-    # parallel_vehicle_y2 = []
-
-
-
-    # for ff in range (size(set_frm)-1):
-    #     z = set_frm[ff]
-    #     for ff2 in range(ff+1, size(set_frm)):
-    #         common_frm = z.intersection(set_frm[ff2])
-    #         if len(common_frm) >= 10:
-    #             common_frm = list(common_frm)
-    #             parallel_vehicle_ID.append([ff, ff2])
-    #             parallel_vehicle_common.append(common_frm)
-
-    #             parallel_vehicle_x1.append(vcxtrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
-    #             parallel_vehicle_x2.append(vcxtrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
-
-    #             parallel_vehicle_y1.append(vcytrj[ff][range(common_frm[0]-vctime[ff][0],common_frm[-1]-vctime[ff][0],1)])
-    #             parallel_vehicle_y2.append(vcytrj[ff2][range(common_frm[0]-vctime[ff2][0],common_frm[-1]-vctime[ff2][0],1)])
-
-    #  #  still need to debug here!!
-
-
-
-
-
-
-
-    # # 2. Filter out thoes intersect too short
-
-
-    # if common_frm.size
-
-
-
-
-
-
-
-
-    # # 3. save
-
-
-
-
-
-    # # tracks2015 = pickle.load( open ("/home/chengeli/Downloads/tracks2015.pkl","rb")) 
-     
-
-
-
-
-
-    
 
 
 
