@@ -28,12 +28,11 @@ def Virctr(x,y):
 
 
 
-def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-    finalLabel,TrkFilePath):
+def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+    finalLabel = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result',\
+    TrkFilePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
     trunclen = 600
-    # lrsl     = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
-    # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
-    
+
     lrsl     = finalLabel
     matfiles = sorted(glob(TrkFilePath+'*.mat'))
     
@@ -62,7 +61,6 @@ def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt
         vctime2[i] = [] 
 
     image_listing = sorted(glob(imagePath + '*.jpg'))
-
     firstfrm=cv2.imread(image_listing[0])
     nrows = int(np.size(firstfrm,0))
     ncols = int(np.size(firstfrm,1))
@@ -83,11 +81,6 @@ def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt
                    for _ in range(3*int(max(labels)))])\
                    .reshape(max(labels),3)
 
-    # cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
-
-
-
-
 
     # framenum = 1300 # for testing
     while (frame_idx < framenum):
@@ -98,11 +91,11 @@ def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt
             
 
             trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
-            xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-            ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
-            IDintrunk = trunkTrjFile['idxtable'][0]
-            sample = trunkTrjFile['xtracks'].shape[0]
-            fnum   = trunkTrjFile['xtracks'].shape[1]
+            xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            IDintrunk    = trunkTrjFile['idxtable'][0]
+            sample       = trunkTrjFile['xtracks'].shape[0]
+            fnum         = trunkTrjFile['xtracks'].shape[1]
 
             trk = np.zeros([sample,fnum,3])
             startT = np.ones([sample,1])*-999
@@ -113,8 +106,6 @@ def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt
             for i in range(sample):  # for the ith sample
                 trk[i,:,0] = xtrj[i,:]
                 trk[i,:,1] = ytrj[i,:]
-                # trk[i,:,2] = arange(fnum)
-
 
                 ## get the time T (where the pt appears and disappears)
                 havePt  = np.array(np.where(xtrj[i,:]>0))[0]
@@ -213,14 +204,8 @@ def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt
             i.remove()
         
         plt.show()
-        
         frame_idx = frame_idx+1
       
-
-
-
-
-
     for kkk in notconnectedLabel:
         # print vctime[kkk]
         if np.size(vcxtrj[kkk])==vctime[kkk][1]-vctime[kkk][0]+1:

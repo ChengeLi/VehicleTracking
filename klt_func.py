@@ -17,10 +17,10 @@ def klt_tracker(isVideo, \
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
                                 10, 0.03))
 
-    # feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
-    #                       blockSize=7)
-    feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
-                          blockSize=5)
+    feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
+                          blockSize=7)
+    # feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
+    #                       blockSize=5)
     idx       = 0
     tdic      = [0]
     start     = []
