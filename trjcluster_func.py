@@ -5,12 +5,9 @@ import numpy as np
 import pdb,glob
 
 
-def trjcluster(matfilepath):
+def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 
-    # inifilename = 'HR'
-    # matfiles = sorted(glob.glob('./mat/20150222_Mat/'+inifilename+'*.mat'))
-    # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
-    matfilepath'../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     matfiles = sorted(glob.glob(matfilepath + '*.mat'))
 
     for matidx,matfile in enumerate(matfiles):
@@ -109,6 +106,6 @@ def trjcluster(matfilepath):
 
         # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
         # savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
-        savename = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + str(matidx+1).zfill(3)
+        savename = savePath + str(matidx+1).zfill(3)
 
         savemat(savename,result)

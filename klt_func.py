@@ -9,7 +9,9 @@ from scipy.io import savemat
 from scipy.sparse import csr_matrix
 
 
-def klt_tracker( dataPath,isVideo):
+def klt_tracker(isVideo, \
+ dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+ savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
     # -- utilities
     lk_params = dict(winSize=(15, 15), maxLevel=2, 
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
@@ -38,12 +40,13 @@ def klt_tracker( dataPath,isVideo):
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        pdb.set_trace()
         status, frame = cap.read()
    
-    if !isVideo:  # -- get the full image list
+    if not isVideo:  # -- get the full image list
         # imagepath = '../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'
         imagepath = dataPath
-        imagepath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # imagepath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         imlist    = sorted(glob(imagepath + '*.jpg'))
         nframe    = len(imlist)
         # -- read in first frame and set dimensions
@@ -61,7 +64,7 @@ def klt_tracker( dataPath,isVideo):
 
     while (frame_idx < nframe):
         
-        if !isVideo:
+        if not isVideo:
             frame[:,:,:] = cv2.imread(imlist[frame_idx])
         if isVideo:
             status, frame[:,:,:] = cap.read()
@@ -187,7 +190,7 @@ def klt_tracker( dataPath,isVideo):
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + str(frame_idx/trunclen).zfill(3)
+            savename = savePath + str(frame_idx/trunclen).zfill(3)
             savemat(savename,trk)
 
 

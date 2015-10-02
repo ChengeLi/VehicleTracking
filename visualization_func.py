@@ -28,7 +28,8 @@ def Virctr(x,y):
 
 
 
-def visualization(image_listing, finalLabel,TrkFilePath):
+def visualization(image_listing='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+    finalLabel,TrkFilePath):
     trunclen = 600
     # lrsl     = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
     # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
@@ -60,7 +61,7 @@ def visualization(image_listing, finalLabel,TrkFilePath):
 
         vctime2[i] = [] 
 
-    image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+    image_listing = sorted(glob(imagePath + '*.jpg'))
 
     firstfrm=cv2.imread(image_listing[0])
     nrows = int(np.size(firstfrm,0))
@@ -159,7 +160,7 @@ def visualization(image_listing, finalLabel,TrkFilePath):
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
 
-        if !isVideo:
+        if not isVideo:
             frame[:,:,:] = cv2.imread(image_listing[frame_idx])
         if isVideo:
             status, frame[:,:,:] = cap.read()

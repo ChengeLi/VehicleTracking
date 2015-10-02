@@ -59,7 +59,6 @@ class sparse_subspace_clustering:
 
             clf = sklearn.linear_model.Lasso(1/np.power(idx.size,0.5)/1000)
             clf.fit(temp_X.T*100,temp_Y*100)
-#            pdb.set_trace()
             adjacency[i,:]= clf.sparse_coef_.todense()[:,0:self.dataset.shape[0]]
         self.adjacency = np.abs( adjacency +np.transpose(adjacency))
     
@@ -120,28 +119,21 @@ def visulize(data,labels,clf):
     for i, (mean, covar, color) in enumerate(zip(clf.means_, clf._get_covars(), color_iter)):
         v, w = linalg.eigh(covar)
         u = w[0] / linalg.norm(w[0])
-        # as the DP will not use every component it has access to
-        # unless it needs it, we shouldn't plot the redundant
-        # components.
         if not np.any(labels == i):
             continue
         plt.scatter(data[labels == i, 0], data[labels== i, 1], .8, color=color)
-        
-        # Plot an ellipse to show the Gaussian component
-        #    plt.xlim(-6, 4 * np.pi - 6)
-#    plt.ylim(-5, 5)
-#    plt.title(title)
     plt.xticks(())
     plt.yticks(())
     plt.show()
 
 
 
-if __name__ == '__main__':
+
+def ssclustering(dataPath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 #    
 #    """With constructed adjacency matrix """
-    # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' +'*.mat'))
+    matfiles = sorted(glob.glob(dataPath +'*.mat'))
     
     for matidx,matfile in enumerate(matfiles):
         file    = scipy_io.loadmat(matfile)
@@ -159,10 +151,7 @@ if __name__ == '__main__':
                 ssc.get_adjacency(sub_matrix)
                 ssc.manifold()
                 sub_labels,model = ssc.clustering(n_components=int(np.floor(sub_index.size/2)+1),alpha= 0.1)
-                #            sub_labels = ssc.clustering_kmeans(int(np.floor(sub_index.size/4)+1))
-                #        visulize(ssc.embedding_,sub_labels,model)
                 labels[sub_index] = np.max(labels) + (sub_labels+1)
-                # print sub_labels  ## not always start from 0?? 
                 print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
             else:   ## if size small, treat as one group
                 sub_labels = np.ones(sub_index.size)
@@ -180,9 +169,7 @@ if __name__ == '__main__':
         labelsave            ={}
         labelsave['label']   =labels
         labelsave['mask']    =mask
-        labelsave['Ttracks'] =file['Ttracks']
 
-        # savename = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
-        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' + str(matidx+1).zfill(3)
+        savename =  savePath+ str(matidx+1).zfill(3)
         savemat(savename,labelsave)
 
