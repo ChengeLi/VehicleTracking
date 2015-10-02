@@ -28,29 +28,20 @@ def Virctr(x,y):
 
 
 
-if __name__ == '__main__':
-    # video_src = '/home/andyc/Videos/video0222.mp4'
-    # video_src = '../VideoData/video0222.mp4'
-
+def visualization(image_listing, finalLabel,TrkFilePath):
     trunclen = 600
+    # lrsl     = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
+    # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
+    
+    lrsl     = finalLabel
+    matfiles = sorted(glob(TrkFilePath+'*.mat'))
+    
+    mask     = loadmat(lrsl)['mask'][0]
+    labels   = loadmat(lrsl)['label'][0]
 
-    # inifilename = 'HR'
-    # lrsl = './mat/20150222_Mat/finalresult/'+inifilename
-    # matfiles = sorted(glob('./mat/20150222_Mat/'+inifilename+'*.mat'))[0:55]
-    # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
-    # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
-
-    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
-    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
-    mask = loadmat(lrsl)['mask'][0]
-    labels = loadmat(lrsl)['label'][0]
-
-    times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
-
-
-    trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
+    trunkTrjFile  = loadmat(matfiles[-1]) ##the last one, to get the max index number
     IDintrunklast = trunkTrjFile['idxtable'][0]
-    mlabels = np.ones(max(IDintrunklast)+1)*-1
+    mlabels       = np.ones(max(IDintrunklast)+1)*-1
     #build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
     for idx,i in enumerate(mask):  # i=mask[idx], the cotent
         mlabels[i] = labels[idx]
@@ -69,14 +60,6 @@ if __name__ == '__main__':
 
         vctime2[i] = [] 
 
-    # cam = cv2.VideoCapture(video_src)
-    # nrows = cam.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-    # ncols = cam.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-    # framenum  = int(cam.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    # framerate = int (cam.get(cv2.cv.CV_CAP_PROP_FPS))
-
-    # image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
-    # image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
     image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 
     firstfrm=cv2.imread(image_listing[0])
@@ -133,7 +116,6 @@ if __name__ == '__main__':
 
 
                 ## get the time T (where the pt appears and disappears)
-                # pdb.set_trace()
                 havePt  = np.array(np.where(xtrj[i,:]>0))[0]
                 if len(havePt)!=0:
                     startT[i] = int ( min(havePt)+(frame_idx/trunclen*trunclen) )
@@ -176,16 +158,6 @@ if __name__ == '__main__':
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
-                            # pdb.set_trace()
-
-                    # if not vctime[k]:
-                    #     vctime[k].append([int(startfrm),int(endfrm)])
-                    # else: 
-                    #     print "*********************************"
-                    #     print vctime[k]
-                    #     print [int(startfrm),int(endfrm)]
-                    #     pdb.set_trace()
-
 
         if !isVideo:
             frame[:,:,:] = cv2.imread(image_listing[frame_idx])
@@ -208,30 +180,6 @@ if __name__ == '__main__':
                 
                 vcxtrj[k].append(vx) 
                 vcytrj[k].append(vy)
-
-                # t1list=startT[((mlabels==k)[IDintrunk])&PtsInCurFrm]
-                # t2list=endT[((mlabels==k)[IDintrunk])&PtsInCurFrm]
-
-                # t1list=startT[(mlabels==k)[IDintrunk]]  # consider all IDs in the trunk, not only alive in curFrm
-                # t2list=endT[(mlabels==k)[IDintrunk]]
-                
-
-                # t1 = t1list[t1list!=-999]
-                # t2 = t2list[t2list!=-999]
-
-                # if len(t1)*len(t2)!=0:
-                #     startfrm=min(t1[t1!=-999])
-                #     endfrm=max(t2[t2!=-999])
-                # else:
-                #     pdb.set_trace()
-                #     startfrm=-888
-                #     endfrm=-888
-
-                # if not vctime[k]:
-                #     vctime[k].append([int(startfrm),int(endfrm)])
-                # else: 
-                #     pdb.set_trace()
-
                 tempxyIDs = np.where(mlabels==k)
                 xyIDs = []
 
@@ -239,29 +187,6 @@ if __name__ == '__main__':
                     if xxyyiidd in IDinCurFrm:
                         xyIDs.append(xxyyiidd)
                 
-
-
-                # xyIDfalse = np.where((mlabels[IDintrunk]==k) & PtsInCurFrm) 
-
-                # vctime 222222 
-                # t11 = [] 
-                
-                # for xyid in array(xyIDs):
-                #     if xyid in times.keys():                
-                #         t11 = t11 + times[xyid]
-                #     else:
-                #         print "=============here======"
-                #         print xyid
-                #         print frame_idx
-                #         pdb.set_trace()
-                #         t11 = t11+ [-888]
-
-                # mint11 = min(array(t11))
-                # maxt11 = max(array(t11))
-                # vctime2[k] = [int(mint11), int(maxt11)]
-
-
-
                 # lines = axL.plot(vcxtrj[k],vcytrj[k],color = (0,1,0),linewidth=2)
                 lines = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
                 line_exist = 1
@@ -274,13 +199,7 @@ if __name__ == '__main__':
         fig.canvas.draw()
         plt.draw()
         plt.pause(0.0001) 
-
-
-        # name = '/home/andyc/image/AIG/HR/'+str(frame_idx).zfill(6)+'.jpg'
-        # name = '../Image/'+str(frame_idx).zfill(6)+'.jpg'
-
-        # savefig(name) ##save figure
-       
+      
         
         while line_exist :
             try:
@@ -305,44 +224,6 @@ if __name__ == '__main__':
         # print vctime[kkk]
         if np.size(vcxtrj[kkk])==vctime[kkk][1]-vctime[kkk][0]+1:
             vctime[kkk] = [vctime[kkk][0], vctime[kkk][1]]
-
-
-
-
-    '''
-    writer = csv.writer(open('./mat/20150222_Mat/Fullvcxtrj.csv', 'wb'))
-    for key, value in vcxtrj.items():
-       writer.writerow([key, value])
-
-    writer = csv.writer(open('./mat/20150222_Mat/Fullvcytrj.csv', 'wb'))
-    for key, value in vcytrj.items():
-       writer.writerow([key, value])
-
-    writer = csv.writer(open('./mat/20150222_Mat/Fullvctime.csv', 'wb'))
-    for key, value in vctime.items():
-       writer.writerow([key,value])
-
-
-    '''
-
-    # ==================================================================
-
-    '''
-     # Save a dictionary into a pickle file.
-    pickle.dump( vctime, open( "./mat/20150222_Mat/Fullvctime.p", "wb" ) )
-    pickle.dump( vcxtrj, open( "./mat/20150222_Mat/Fullvcxtrj.p", "wb" ) )
-    pickle.dump( vcytrj, open( "./mat/20150222_Mat/Fullvcytrj.p", "wb" ) )
-
-
-
-    # save the labels where bad time frame appended
-    pickle.dump( notconnectedLabel, open("./mat/20150222_Mat/VCTIMEnotconnectedLabel.p","wb"))
-
-    '''
-
-
-
-
 
 
 
