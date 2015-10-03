@@ -44,9 +44,7 @@ def klt_tracker(isVideo, \
         status, frame = cap.read()
    
     if not isVideo:  # -- get the full image list
-        # imagepath = '../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'
         imagepath = dataPath
-        # imagepath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         imlist    = sorted(glob(imagepath + '*.jpg'))
         nframe    = len(imlist)
         # -- read in first frame and set dimensions

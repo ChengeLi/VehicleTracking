@@ -1,3 +1,4 @@
+
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse import csr_matrix
@@ -18,7 +19,6 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
 
         ptsidx = ptstrj['idxtable'][0]
-
         sample = ptstrj['xtracks'].shape[0]
         fnum   = ptstrj['xtracks'].shape[1]
 
@@ -36,8 +36,8 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         t_re = []
         xspd = []
         yspd = []
-        # minspdth = 15 #threshold of min speed
-        minspdth = 5 #for Canal data
+        minspdth = 15 #threshold of min speed
+        # minspdth = 5 #for Canal data
 
         fps = 4
         transth  = 60*fps   #transition time (red light time)
@@ -48,8 +48,8 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         for i in range(sample):
             if sum(x[i,:]!=0)>4:  # chk if trj is long enough
                 try:
-                    if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is not a not move point
-                        if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a idole point
+                    if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is a moving point
+                        if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a stationary point
 
                             mask.append(ptsidx[i]) # ID 
                             x_re.append(x[i,:])
@@ -104,8 +104,6 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         result['mask']    = mask
         result['Ttracks'] = t_re
 
-        # savename = './mat/20150222_Mat/adj/'+inifilename+'_adj_'+str(matidx+1).zfill(3)
-        # savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
         savename = savePath + str(matidx+1).zfill(3)
 
         savemat(savename,result)
