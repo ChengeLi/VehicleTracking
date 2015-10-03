@@ -1,4 +1,4 @@
-## Automatic Vehicle tracking system 
+## Automatic Vehicle Tracking System 
 
 ## Input data
 Given a traffic video or a sequence of frame figures as input. 
@@ -47,7 +47,9 @@ Given a traffic video or a sequence of frame figures as input.
 
 ## Credits
 An-ti Chiang, New York University,	dawnandyknight@gmail.com 
+
 Chenge Li, New York University,	   cl2840@nyu.edu
+
 Greg Dobler, New York University,  greg.dobler@nyu.edu 
 
 ## Information
