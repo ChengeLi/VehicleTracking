@@ -1,3 +1,4 @@
+import os
 from scipy.io import loadmat,savemat
 import pdb,glob
 import cPickle as pickle
@@ -12,7 +13,7 @@ def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@Bax
     flab = []  #final labels
     fmask = [] #final mask
 
-    matfiles = sorted(glob.glob(matfilePath +'*.mat'))
+    matfiles = sorted(glob.glob(matfilePath +'ssc_*.mat'))
 
     for matidx in range(len(matfiles)-1): 
         if matidx == 0:

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy as sp
 import scipy.io as scipy_io
@@ -133,7 +134,7 @@ def ssclustering(dataPath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt
             savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 #    
 #    """With constructed adjacency matrix """
-    matfiles = sorted(glob.glob(dataPath +'*.mat'))
+    matfiles = sorted(glob.glob(dataPath +'trj_*.mat'))
     
     for matidx,matfile in enumerate(matfiles):
         file    = scipy_io.loadmat(matfile)
@@ -170,6 +171,6 @@ def ssclustering(dataPath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt
         labelsave['label']   =labels
         labelsave['mask']    =mask
 
-        savename =  savePath+ str(matidx+1).zfill(3)
+        savename =  os.path.join(savePath,'ssc_'+str(matidx+1).zfill(3))
         savemat(savename,labelsave)
 

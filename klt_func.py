@@ -10,11 +10,8 @@ from scipy.sparse import csr_matrix
 
 
 def klt_tracker(isVideo, \
-     dataPath = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.AVI',\
-      savePath = './testfolder/'):
-
- # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
- # savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+ dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+ savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
     # -- utilities
     lk_params = dict(winSize=(15, 15), maxLevel=2, 
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
@@ -38,13 +35,12 @@ def klt_tracker(isVideo, \
     detect_interval = 5
 
     if isVideo:
-        pdb.set_trace()
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        
+#        pdb.set_trace()
         status, frame = cap.read()
    
     if not isVideo:  # -- get the full image list
@@ -62,6 +58,7 @@ def klt_tracker(isVideo, \
 
     # -- set low number of frames for testing
     nframe = 1801
+#    nframe = 601
 
 
     while (frame_idx < nframe):
@@ -69,7 +66,11 @@ def klt_tracker(isVideo, \
         if not isVideo:
             frame[:,:,:] = cv2.imread(imlist[frame_idx])
         if isVideo:
-            status, frame[:,:,:] = cap.read()
+            try:
+                status, frame[:,:,:] = cap.read()
+            except:
+                frame_idx = nframe
+                continue
 
         frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         # for visulization
@@ -127,7 +128,7 @@ def klt_tracker(isVideo, \
         frame_idx   += 1
         frameLp[:,:] = frameL[:,:]
         # ## CG: for visulization
-        cv2.imshow('klt', vis)
+#        cv2.imshow('klt', vis)
         # Wait 0 milliseconds
         cv2.waitKey(5)
 
@@ -192,7 +193,8 @@ def klt_tracker(isVideo, \
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = savePath + str(frame_idx/trunclen).zfill(3)
+            savename = os.path.join(savePath,'klt_'+
+                                    str(frame_idx/trunclen).zfill(3))
             savemat(savename,trk)
 
 

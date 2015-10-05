@@ -34,7 +34,7 @@ def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@B
     trunclen = 600
 
     lrsl     = finalLabel
-    matfiles = sorted(glob(TrkFilePath+'*.mat'))
+    matfiles = sorted(glob(TrkFilePath+'klt_*.mat'))
     
     mask     = loadmat(lrsl)['mask'][0]
     labels   = loadmat(lrsl)['label'][0]
@@ -60,11 +60,16 @@ def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@B
 
         vctime2[i] = [] 
 
-    image_listing = sorted(glob(imagePath + '*.jpg'))
-    firstfrm=cv2.imread(image_listing[0])
+    if not isVideo:
+        image_listing = sorted(glob(imagePath + '*.jpg'))
+        firstfrm=cv2.imread(image_listing[0])
+        framenum = int(len(image_listing))
+    else:
+        cap = cv2.VideoCapture(imagePath)
+        state, firstfrm = cap.read()
+        framenum = 1801
     nrows = int(np.size(firstfrm,0))
     ncols = int(np.size(firstfrm,1))
-    framenum = int(len(image_listing))
     framerate = 5
     notconnectedLabel= []
 
@@ -72,6 +77,7 @@ def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@B
 
 
     # fig = plt.figure(1,figsize=[10,12])
+    plt.ion()
     fig = plt.figure(1)
     axL = plt.subplot(1,1,1)
     frame = np.zeros([nrows,ncols,3]).astype('uint8')

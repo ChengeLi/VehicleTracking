@@ -1,4 +1,5 @@
 
+import os
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse import csr_matrix
@@ -9,7 +10,7 @@ import pdb,glob
 def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 
-    matfiles = sorted(glob.glob(matfilepath + '*.mat'))
+    matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
     for matidx,matfile in enumerate(matfiles):
 
@@ -104,6 +105,6 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         result['mask']    = mask
         result['Ttracks'] = t_re
 
-        savename = savePath + str(matidx+1).zfill(3)
+        savename = os.path.join(savePath,'trj_'+str(matidx+1).zfill(3))
 
         savemat(savename,result)
