@@ -10,8 +10,11 @@ from scipy.sparse import csr_matrix
 
 
 def klt_tracker(isVideo, \
- dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
- savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+     dataPath = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.AVI',\
+      savePath = './testfolder/'):
+
+ # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+ # savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
     # -- utilities
     lk_params = dict(winSize=(15, 15), maxLevel=2, 
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
@@ -35,12 +38,13 @@ def klt_tracker(isVideo, \
     detect_interval = 5
 
     if isVideo:
+        pdb.set_trace()
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        pdb.set_trace()
+        
         status, frame = cap.read()
    
     if not isVideo:  # -- get the full image list
