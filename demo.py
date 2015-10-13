@@ -5,11 +5,12 @@ import unify_label_func as unify_label
 import visualization_func as visual
 
 
-isVideo = True
-myvideo = 'myvideo.mp4'
+isVideo = False
+# myvideo = 'myvideo.mp4'
 
 print("running KLT...")
-klt.klt_tracker(isVideo,dataPath=myvideo,savePath='')
+# klt.klt_tracker(isVideo,dataPath=myvideo,savePath='')
+klt.klt_tracker(isVideo)
 
 print("running trjcluster...")
 trjcluster.trjcluster('','')

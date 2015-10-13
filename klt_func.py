@@ -128,7 +128,8 @@ def klt_tracker(isVideo, \
         frame_idx   += 1
         frameLp[:,:] = frameL[:,:]
         # ## CG: for visulization
-#        cv2.imshow('klt', vis)
+        # pdb.set_trace()
+        cv2.imshow('klt', vis)
         # Wait 0 milliseconds
         cv2.waitKey(5)
 
@@ -195,7 +196,7 @@ def klt_tracker(isVideo, \
             # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
             savename = os.path.join(savePath,'klt_'+
                                     str(frame_idx/trunclen).zfill(3))
-            savemat(savename,trk)
+            # savemat(savename,trk)
 
 
             # for dead tracks, remove them.  for alive tracks, remove all
