@@ -38,6 +38,8 @@ class sparse_subspace_clustering:
             print clf.sparse_coef_.indices.size
             print 'set %d'%i
         self.adjacency = np.abs( adjacency)
+        # want it to be symmetric
+        # self.adjacency = np.abs( adjacency +np.transpose(adjacency))
 
     def construct_adjacency_non_fix_len(self):
         """samples not dimension aligned"""
@@ -177,8 +179,8 @@ def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples exce
     mask = file['mask']
     dataFeature       = np.concatenate((xtrj,xspd,ytrj,yspd), axis = 1)
     # dataFeature       = np.concatenate((xtrj,ytrj), axis = 1)
-    project_dimension = int(20) 
-    ssc               = sparse_subspace_clustering(dataset = dataFeature,n_dimension = project_dimension)
+    project_dimension = int(np.floor(dataFeature.shape[0]/10)+1) # assume per group has max 10 trjs???? 
+    ssc               = sparse_subspace_clustering(lambd = 2000, dataset = dataFeature,n_dimension = project_dimension)
     ssc.construct_adjacency()
     adj    = ssc.adjacency
     ssc.manifold()
@@ -187,21 +189,61 @@ def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples exce
     return mask,labels,adj
 
 def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj choice to be within neighbours
-    xtrj = file['x_re'] 
-    ytrj = file['y_re']
-    xspd = file['xspd']
-    yspd = file['yspd']
-    mask = file['mask']
-    dataFeature       = np.concatenate((xtrj,xspd,ytrj,yspd), axis = 1)
-    # dataFeature       = np.concatenate((xtrj,ytrj), axis = 1)
-    project_dimension = int(20) 
-    ssc               = sparse_subspace_clustering(dataset = dataFeature,n_dimension = project_dimension)
-    ssc.construct_adjacency()
-    adj    = ssc.adjacency
-    ssc.manifold()
-    labels = ssc.clustering_connected(threshold = 0,min_sample_cluster = 50,alpha = 0.1)
+    xtrj    = file['x_re'] 
+    ytrj    = file['y_re']
+    xspd    = file['xspd']
+    yspd    = file['yspd']
+    mask    = file['mask']
+    feature =(file['adj'] > 0).astype('float')  ## adj mtx
+    CClabel = file['c']  #labels from connected Component 
 
-    return mask,labels,adj
+    # dataFeature = np.concatenate((xtrj,xspd,ytrj,yspd), axis = 1)
+    dataFeature   = np.concatenate((xtrj,ytrj), axis = 1)
+
+    labels = np.zeros(CClabel.size)
+    adj = np.zeros((CClabel.size,CClabel.size))
+    for i in np.unique(CClabel):
+        print i
+        sub_index = np.where(CClabel==i)[1]
+
+        
+        if sub_index.size >3:  
+            if sub_index.size <100: #if connected component too big, just use the binary adj
+                project_dimension = int(np.floor(sub_index.size/100)+1)  
+                ssc = sparse_subspace_clustering(lambd =2000,dataset = dataFeature[sub_index,:],n_dimension = project_dimension)
+                ssc.construct_adjacency()
+            else:
+                project_dimension = int(np.floor(sub_index.size/100)+1)
+                sub_matrix = feature[sub_index][:,sub_index]
+                ssc = sparse_subspace_clustering(lambd =2000000,dataset = feature,n_dimension = project_dimension)
+                ssc.get_adjacency(sub_matrix)
+
+
+            """adj assignment not successful!!! whyyyyyyyy"""
+            # adjInNeighbour = ssc.adjacency
+            # adj[sub_index][:,sub_index]= adjInNeighbour[:][:] 
+            
+
+            ssc.manifold()
+            sub_labels,model = ssc.clustering(n_components=int(np.floor(sub_index.size/2)+1),alpha= 0.1)
+            #sub_labels = ssc.clustering_kmeans(int(np.floor(sub_index.size/4)+1))
+            #visulize(ssc.embedding_,sub_labels,model)
+            labels[sub_index] = np.max(labels) + (sub_labels+1)
+            print 'number of trajectory in this connected components%s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
+        else:   
+            sub_labels = np.ones(sub_index.size)
+            labels[sub_index] = np.max(labels) + sub_labels
+            print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
+    j = 0
+    labels_new = np.zeros(labels.shape)
+    unique_array =np.unique(labels)
+
+    for i in range(unique_array.size):
+        labels_new[np.where(labels == unique_array[i])] = j
+        j = j+1
+    labels = labels_new
+
+    return mask,labels
 
 
 if __name__ == '__main__':
@@ -213,18 +255,18 @@ if __name__ == '__main__':
     # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+'*.mat'))
 
     # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/new' +'*.mat'))
+    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/overlap100trj_' +'*.mat'))
 
 
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc"""
-        # mask,labels = ssc_with_Adj_CC(file)
+        mask,labels = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
-        mask,labels, adj = sscConstructedAdj_CC(file)
+        # mask,labels, adj = sscConstructedAdj_CC(file)
 
-
-
+        """ construct adj use ssc, with Neighbour adj as constraint"""
+        # mask,labels = sscAdj_inNeighbour(file)
 
     
         # saving!
@@ -271,7 +313,7 @@ if __name__ == '__main__':
         # savename = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
 
-        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/newssc' + str(matidx+1).zfill(3)
+        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc' + str(matidx+1).zfill(3)
         savemat(savename,labelsave)
 
 
