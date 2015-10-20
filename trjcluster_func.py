@@ -1,4 +1,3 @@
-
 import os
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
@@ -7,8 +6,11 @@ import numpy as np
 import pdb,glob
 
 
-def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+# def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+if __name__ == '__main__':
+    matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
@@ -24,7 +26,7 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         fnum   = ptstrj['xtracks'].shape[1]
 
         #x[x<0]=0
-        #y[y<0]=x0
+        #y[y<0]=0
 
 
         xspeed = np.diff(x)*((x!=0)[:,1:])
@@ -37,8 +39,8 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         t_re = []
         xspd = []
         yspd = []
-        minspdth = 15 #threshold of min speed
-        # minspdth = 5 #for Canal data
+        # minspdth = 15 #threshold of min speed
+        minspdth = 5 #for Canal data
 
         fps = 4
         transth  = 60*fps   #transition time (red light time)
@@ -98,13 +100,38 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
                     adj[i,j] = adj[j,i]
 
         sparsemtx = csr_matrix(adj)
-        s,c       = connected_components(sparsemtx)
+        s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
         result    = {}
         result['adj']     = adj
         result['c']       = c
         result['mask']    = mask
+        result['x_re']    = x_re       
+        result['y_re']    = y_re
         result['Ttracks'] = t_re
+        result['xspd']    = xspd
+        result['yspd']    = yspd
 
-        savename = os.path.join(savePath,'trj_'+str(matidx+1).zfill(3))
 
+        savename = os.path.join(savePath,'newtrj_'+str(matidx+1).zfill(3))
         savemat(savename,result)
+
+        """ visualization """
+        # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
+        # fig888 = figure(888)
+        # ax = plt.subplot(1,1,1)
+        # im = plt.imshow(np.zeros([528,704,3]))
+        # for i in range(s111):
+        #     ind = np.where(c111 ==i)[0]
+        #     print ind
+        #     for jj in range(len(ind)):
+        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
+        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
+        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+        #         fig888.canvas.draw()
+        #     plt.pause(0.0001) 
+        # pdb.set_trace()
+
+
+

@@ -30,9 +30,6 @@ def Virctr(x,y):
 
 if __name__ == '__main__':
 
-
-
-
     # video_src = '/home/andyc/Videos/video0222.mp4'
     # video_src = '../VideoData/video0222.mp4'
 
@@ -44,27 +41,33 @@ if __name__ == '__main__':
     # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
     # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
 
-    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' 
-    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
+    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result_0102old03' 
+    """ use original klt x and y"""
+    # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
+    """ use x_re and y_re from trj_cluster adj"""
+    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/new' +'*.mat'))
 
 
-
-
-    mask = loadmat(lrsl)['mask'][0]
+    # mask is the trajectory index
+    # for final result mat1, there are 1645 trjs
+    mask = loadmat(lrsl)['mask'][0] # labeled trjs' indexes
     labels = loadmat(lrsl)['label'][0]
 
-    times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
+    # times = pickle.load( open( "./mat/20150222_Mat/finalresult/HRTtracks.p", "rb" ) )
 
 
     trunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
-    IDintrunklast = trunkTrjFile['idxtable'][0]
+    # IDintrunklast = trunkTrjFile['idxtable'][0]  #last trunk (3rd mat) has 3603 trjs #use original
+    IDintrunklast = trunkTrjFile['mask'][0] # 26 trjs 
+    mlabels = np.ones(max(IDintrunklast)+1)*-1  #initial to be -1
+    # or you can use: since max(IDintrunklast) might be bigger than max (mask)
+    # mlabels = np.ones(max(mask)+1)*-1  #initial to be -1
 
-    # reshape(25,4).tolist()
 
-    mlabels = np.ones(max(IDintrunklast)+1)*-1
+
     #build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
-    for idx,i in enumerate(mask):  # i=mask[idx], the cotent
-        mlabels[i] = labels[idx]
+    for idx,i in enumerate(mask):  # i=mask[idx], the content
+        mlabels[int(i)] = labels[int(idx)]
     # mlabel: ID --> label
 
     vcxtrj = {} ##dictionary
@@ -108,7 +111,7 @@ if __name__ == '__main__':
     plt.axis('off')
     color = np.array([np.random.randint(0,255) \
                    for _ in range(3*int(max(labels)))])\
-                   .reshape(max(labels),3)
+                   .reshape(int(max(labels)),3)
 
     # cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
 
@@ -116,20 +119,32 @@ if __name__ == '__main__':
 
 
 
-    # framenum = 1300 # for testing
+    framenum = 1300 # for testing
     while (frame_idx < framenum):
+        # pdb.set_trace()
         print ("frame_idx" , frame_idx)
         if (frame_idx % trunclen == 0):
             print "load file!!-------------------------------------"
             print frame_idx
             
+            """ use original klt x and y"""
+            # trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
+            # xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            # ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            # IDintrunk = trunkTrjFile['idxtable'][0]
+            # sample = trunkTrjFile['xtracks'].shape[0]
+            # fnum   = trunkTrjFile['xtracks'].shape[1]
 
+            """ use x_re and y_re"""
             trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
-            xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-            ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
-            IDintrunk = trunkTrjFile['idxtable'][0]
-            sample = trunkTrjFile['xtracks'].shape[0]
-            fnum   = trunkTrjFile['xtracks'].shape[1]
+            xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
+            ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
+            IDintrunk = trunkTrjFile['mask'][0]
+            sample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
+            fnum   = trunkTrjFile['x_re'].shape[1] # 600
+
+            ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+
 
             trk = np.zeros([sample,fnum,3])
             startT = np.ones([sample,1])*-999
@@ -144,14 +159,16 @@ if __name__ == '__main__':
 
 
                 ## get the time T (where the pt appears and disappears)
-                # pdb.set_trace()
                 havePt  = np.array(np.where(xtrj[i,:]>0))[0]
                 if len(havePt)!=0:
                     startT[i] = int ( min(havePt)+(frame_idx/trunclen*trunclen) )
                     endT[i]   = int ( max(havePt)+(frame_idx/trunclen*trunclen) )
+                    # only for check, can delete ttrj
+                    if startT[i]!=np.min(ttrj[i,havePt]) or endT[i]!=np.max(ttrj[i,havePt]):
+                        pdb.set_trace()
+                        print "wrong time!!!"
+                        
        
-
-
 
             # only execute once for a trunk ============================
             labinT = list(set(mlabels[IDintrunk])) # label in this trunk
@@ -166,10 +183,10 @@ if __name__ == '__main__':
                     t2 = t2list[t2list!=-999]
 
                     if len(t1)*len(t2)!=0:
-                        startfrm=min(t1[t1!=-999])
-                        endfrm=max(t2[t2!=-999])
+                        startfrm=min(t1[t1!=-999]) # earliest appering time in this trj group
+                        endfrm=max(t2[t2!=-999])   # latest disappering time in this trj group
                     else:
-                        # pdb.set_trace()
+                        pdb.set_trace()
                         startfrm=-888
                         endfrm=-888
 
@@ -182,12 +199,12 @@ if __name__ == '__main__':
                             vctime[k] = [laststartfrm, int(endfrm)]
                         else:
                             print "========not connected==============!"
+                            pdb.set_trace()
                             print k
                             print frame_idx
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
-                            # pdb.set_trace()
 
                     # if not vctime[k]:
                     #     vctime[k].append([int(startfrm),int(endfrm)])
@@ -206,8 +223,8 @@ if __name__ == '__main__':
 
         plt.draw()
         # current frame index is: (frame_idx%trunclen)
-        PtsInCurFrm = trk[:,:,0].T[frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
-        IDinCurFrm = IDintrunk[PtsInCurFrm]
+        PtsInCurFrm = trk[:,:,0][:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
+        IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
 
         labinf = list(set(mlabels[IDinCurFrm])) # label in current frame
         dots = []
@@ -285,15 +302,13 @@ if __name__ == '__main__':
         
         fig.canvas.draw()
         plt.draw()
-        plt.pause(0.0001) 
+        plt.pause(0.00001) 
 
 
         # name = '/home/andyc/image/AIG/HR/'+str(frame_idx).zfill(6)+'.jpg'
-        # name = '../Image/'+str(frame_idx).zfill(6)+'.jpg'
-
-        # savefig(name) ##save figure
-       
-        
+        # name = './tempFigs/'+str(frame_idx).zfill(6)+'.jpg'
+        # plt.savefig(name) ##save figure
+ 
         while line_exist :
             try:
                 axL.lines.pop(0)
@@ -303,13 +318,10 @@ if __name__ == '__main__':
 
         for i in dots:
             i.remove()
+
         
         plt.show()
-        
         frame_idx = frame_idx+1
-      
-
-
 
 
 

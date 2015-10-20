@@ -10,7 +10,7 @@ from scipy.io import loadmat,savemat
 
 def Virctr(x,y):
     '''
-    calculate virtual center, and remove out lier
+    calculate virtual center, and remove outlier
     '''    
     if len(x)<3:
         vcx = np.mean(x)
@@ -198,7 +198,6 @@ def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@B
         plt.draw()
         plt.pause(0.0001) 
       
-        
         while line_exist :
             try:
                 axL.lines.pop(0)
@@ -208,10 +207,10 @@ def visualization(isVideo, imagePath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@B
 
         for i in dots:
             i.remove()
-        
         plt.show()
         frame_idx = frame_idx+1
-      
+
+
     for kkk in notconnectedLabel:
         # print vctime[kkk]
         if np.size(vcxtrj[kkk])==vctime[kkk][1]-vctime[kkk][0]+1:

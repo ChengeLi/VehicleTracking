@@ -94,7 +94,7 @@ class sparse_subspace_clustering:
                 ssc.get_adjacency(sub_matrix)
                 ssc.manifold()
                 sub_labels,model = ssc.clustering(n_components=int(np.floor(sub_index.size/min_sample_cluster)+1),alpha= alpha)
-            #        visulize(ssc.embedding_,sub_labels,model)
+                visulize(ssc.embedding_,sub_labels,model)
                 labels[sub_index] = np.max(labels) + sub_labels
                 print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
             else:

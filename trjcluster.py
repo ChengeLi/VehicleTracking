@@ -26,6 +26,7 @@ for matidx,matfile in enumerate(matfiles):
     tt = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
 
     ptsidx = ptstrj['idxtable'][0]
+    sample = ptstrj['xtracks'].shape[0]
 
     nklt, nfrm = xx.shape
 
@@ -53,7 +54,7 @@ for matidx,matfile in enumerate(matfiles):
 
     ## GGD: we paused here...
 
-    sample = len(x_re)
+    # sample = len(x_re)
     adj = np.zeros([sample,sample])
     dth = 30*1.5
     spdth = 5
@@ -101,5 +102,5 @@ for matidx,matfile in enumerate(matfiles):
     
     savename = '../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
-    savemat(savename,result)
+    # savemat(savename,result)
 

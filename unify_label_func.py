@@ -1,19 +1,20 @@
 import os
 from scipy.io import loadmat,savemat
-import pdb,glob
+import pdb
+from glob import glob
 import cPickle as pickle
 import numpy as np
 
 
 def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-    savename = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result' ):
+    savename = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/result_new' ):
 
     num = 0
     atmp = []
     flab = []  #final labels
     fmask = [] #final mask
 
-    matfiles = sorted(glob.glob(matfilePath +'ssc_*.mat'))
+    matfiles = sorted(glob(matfilePath +'newssc*.mat'))
 
     for matidx in range(len(matfiles)-1): 
         if matidx == 0:
