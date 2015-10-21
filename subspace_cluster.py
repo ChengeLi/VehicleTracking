@@ -255,18 +255,18 @@ if __name__ == '__main__':
     # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+'*.mat'))
 
     # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/overlap100trj_' +'*.mat'))
+    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
 
 
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc"""
-        mask,labels = ssc_with_Adj_CC(file)
+        # mask,labels = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
         # mask,labels, adj = sscConstructedAdj_CC(file)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
-        # mask,labels = sscAdj_inNeighbour(file)
+        mask,labels = sscAdj_inNeighbour(file)
 
     
         # saving!
@@ -303,6 +303,9 @@ if __name__ == '__main__':
                 lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
                 fig999.canvas.draw()
                 plt.pause(0.0001)
+
+            # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
+
         im = plt.imshow(np.zeros([528,704,3])) 
         pdb.set_trace()
 
@@ -313,7 +316,7 @@ if __name__ == '__main__':
         # savename = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
 
-        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc' + str(matidx+1).zfill(3)
+        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc_len50over30' + str(matidx+1).zfill(3)
         savemat(savename,labelsave)
 
 

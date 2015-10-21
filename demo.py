@@ -6,11 +6,12 @@ import visualization_func as visual
 
 
 isVideo = False
-# myvideo = 'myvideo.mp4'
+# myvideo = '/media/TOSHIBA EXT/Video from CUSP/C0007.MP4'
+myImage = './tempFigs/roi2/'
 
 print("running KLT...")
 # klt.klt_tracker(isVideo,dataPath=myvideo,savePath='')
-klt.klt_tracker(isVideo)
+klt.klt_tracker(isVideo,dataPath=myImage,savePath='./tempFigs/roi2/')
 
 print("running trjcluster...")
 trjcluster.trjcluster('','')

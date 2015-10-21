@@ -7,20 +7,30 @@ from glob import glob
 from time import clock
 from scipy.io import savemat
 from scipy.sparse import csr_matrix
-
+from matplotlib import pyplot as plt
 
 def klt_tracker(isVideo, \
  dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
  savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
     # -- utilities
-    lk_params = dict(winSize=(15, 15), maxLevel=2, 
+    plt.figure(num=None, figsize=(8, 11))
+    """ new jay st """
+    lk_params = dict(winSize=(10, 10), maxLevel=2, 
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
-                                10, 0.03))
+                                10, 0.03)) 
 
-    feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
-                          blockSize=7)
+    feature_params = dict(maxCorners=800, qualityLevel=0.2, minDistance=3, 
+                          blockSize=3)  
+
+    """ canal st """
+    # lk_params = dict(winSize=(15, 15), maxLevel=2, 
+    #                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
+    #                             10, 0.03)) 
+
+    # feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
+    #                       blockSize=7)  
     # feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
-    #                       blockSize=5)
+    #                       blockSize=5)  # old jayst 
     idx       = 0
     tdic      = [0]
     start     = []
@@ -128,11 +138,12 @@ def klt_tracker(isVideo, \
         frame_idx   += 1
         frameLp[:,:] = frameL[:,:]
         # ## CG: for visulization
-        # pdb.set_trace()
-        cv2.imshow('klt', vis)
-        # Wait 0 milliseconds
-        cv2.waitKey(5)
 
+        # cv2.imshow('klt', vis)
+        # cv2.waitKey(5)
+        
+        # plt.imshow(vis[:,:,::-1])
+        # plt.pause(0.00001)
 
         # dump trajectories to file
         if  (frame_idx % trunclen) == 0:
@@ -196,7 +207,7 @@ def klt_tracker(isVideo, \
             # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
             savename = os.path.join(savePath,'klt_'+
                                     str(frame_idx/trunclen).zfill(3))
-            # savemat(savename,trk)
+            savemat(savename,trk)
 
 
             # for dead tracks, remove them.  for alive tracks, remove all

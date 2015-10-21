@@ -17,11 +17,15 @@ def trj_filter(ptsidx, Numsample , minspdth = 15, fps = 4):
     xspd = []
     yspd = []
     print minspdth
+    # lenfile = open('length.txt', 'wb')
     # spdfile = open('maxspeed.txt', 'wb')
     # stoptimefile = open('stoptime.txt', 'wb')
     for i in range(Numsample):
         # if sum(x[i,:]!=0)>4:  # chk if trj is long enough
-        if sum(x[i,:]!=0)>10:  # canal
+        if sum(x[i,:]!=0)>50:  # canal
+            # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
+            # lenfile.write(str(i)+' '+str(sum(x[i,:]!=0))+'\n')
+
             try:
                 # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
                 if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is a moving point
@@ -37,8 +41,9 @@ def trj_filter(ptsidx, Numsample , minspdth = 15, fps = 4):
                         yspd.append(yspeed[i,:])
             except:
                 pass
-    # spdfile.close()
+    # lenfile.close()
     # stoptimefile.close()
+    # pdb.set_trace()
     return mask, x_re, y_re, t_re, xspd, yspd
 
 
@@ -105,7 +110,7 @@ if __name__ == '__main__':
                     tmp2 = x_re[j,:]!=0
                     idx  = num[tmp1&tmp2]
                     # if len(idx)>0: # has overlapping
-                    if len(idx)>=50: # at least overlap for 100 frames
+                    if len(idx)>=30: # at least overlap for 100 frames
                         sidx     = idx[1:-1]
                         sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                         sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
@@ -136,26 +141,26 @@ if __name__ == '__main__':
         result['yspd']    = yspd
 
 
-        # savename = os.path.join(savePath,'overlap50trj_'+str(matidx+1).zfill(3))
-        # savemat(savename,result)
-        pdb.set_trace()
-        """ visualization """
-        s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
-        fig888 = plt.figure(888)
-        ax = plt.subplot(1,1,1)
-        im = plt.imshow(np.zeros([528,704,3]))
-        for i in range(s111):
-            ind = np.where(c111 ==i)[0]
-            print ind
-            for jj in range(len(ind)):
-                startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
-                endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
-                # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-                lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                fig888.canvas.draw()
-            plt.pause(0.0001) 
-        pdb.set_trace()
+        savename = os.path.join(savePath,'len50overlap30trj_'+str(matidx+1).zfill(3))
+        savemat(savename,result)
+        # pdb.set_trace()
+        # """ visualization """
+        # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
+        # fig888 = plt.figure(888)
+        # ax = plt.subplot(1,1,1)
+        # im = plt.imshow(np.zeros([528,704,3]))
+        # for i in range(s111):
+        #     ind = np.where(c111 ==i)[0]
+        #     print ind
+        #     for jj in range(len(ind)):
+        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
+        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
+        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+        #         fig888.canvas.draw()
+        #     plt.pause(0.0001) 
+        # pdb.set_trace()
 
 
 

@@ -41,11 +41,11 @@ if __name__ == '__main__':
     # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
     # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
 
-    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc' 
+    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
     """ use original klt x and y"""
     # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
     """ use x_re and y_re from trj_cluster adj"""
-    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/new' +'*.mat'))
+    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
 
 
     # mask is the trajectory index
@@ -302,12 +302,11 @@ if __name__ == '__main__':
         
         fig.canvas.draw()
         plt.draw()
-        plt.pause(0.00001) 
+        # plt.pause(0.00001) 
 
 
-        # name = '/home/andyc/image/AIG/HR/'+str(frame_idx).zfill(6)+'.jpg'
-        # name = './tempFigs/'+str(frame_idx).zfill(6)+'.jpg'
-        # plt.savefig(name) ##save figure
+        name = './tempFigs/len50lap30_ssc_inNei/'+str(frame_idx).zfill(6)+'.jpg'
+        plt.savefig(name) ##save figure
  
         while line_exist :
             try:
