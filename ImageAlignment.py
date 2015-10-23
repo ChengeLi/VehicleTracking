@@ -39,7 +39,7 @@ def getPerspectiveMtx(img):
 	 
 	return M
 
-def perspectiveWarp(img, M):
+def perspectiveWarp(img, M,frame_idx):
 	dst = cv2.warpPerspective(img,M,(400,1100))
 	# plt.subplot(121),plt.imshow(img[:,:,::-1]),plt.title('Input')
 	# plt.subplot(122),plt.imshow(dst[:,:,::-1]),plt.title('ROI Output')
@@ -83,13 +83,20 @@ if __name__ == '__main__':
 	nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 	ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	status, frame = cap.read()
-	plt.imshow(frame[:,:,::-1])
-	warpMtx = getPerspectiveMtx(frame)
+	    
+
+	start_position = 4801
+	print 'reading buffer...'
+	for ii in range(start_position):
+	    print(ii)
+	    rval, img = cap.read()
+
+
+	# status, frame = cap.read()
+	# plt.imshow(frame[:,:,::-1])
+	warpMtx = getPerspectiveMtx(img)
 	
-	frame_idx = 1
-	while (frame_idx < 1802):
+	for frame_idx in range(1801):
 		status, frame = cap.read()
-		perspectiveWarp(frame, warpMtx)
-		frame_idx = frame_idx +1
+		perspectiveWarp(frame, warpMtx, start_position+frame_idx)
 		# pdb.set_trace()

@@ -14,7 +14,7 @@ print("running KLT...")
 klt.klt_tracker(isVideo,dataPath=myImage,savePath='./tempFigs/roi2/')
 
 print("running trjcluster...")
-trjcluster.trjcluster('','')
+trjcluster.trjcluster('./tempFigs/roi2/',savePath='./tempFigs/roi2/')
 
 print("running subspace_cluster...")
 subspace_cluster.ssclustering('','')

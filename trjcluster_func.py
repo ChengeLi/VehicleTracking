@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 
-def trj_filter(ptsidx, Numsample , minspdth = 15, fps = 4):
+def trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 15, fps = 4):
     transth  = 60*fps   #transition time (red light time)
     mask = []
     x_re = []
@@ -21,8 +21,8 @@ def trj_filter(ptsidx, Numsample , minspdth = 15, fps = 4):
     # spdfile = open('maxspeed.txt', 'wb')
     # stoptimefile = open('stoptime.txt', 'wb')
     for i in range(Numsample):
-        # if sum(x[i,:]!=0)>4:  # chk if trj is long enough
-        if sum(x[i,:]!=0)>50:  # canal
+        if sum(x[i,:]!=0)>4:  # new jay st  # chk if trj is long enough
+        # if sum(x[i,:]!=0)>50:  # canal
             # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
             # lenfile.write(str(i)+' '+str(sum(x[i,:]!=0))+'\n')
 
@@ -47,11 +47,11 @@ def trj_filter(ptsidx, Numsample , minspdth = 15, fps = 4):
     return mask, x_re, y_re, t_re, xspd, yspd
 
 
-# def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
-if __name__ == '__main__':
-    matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
+def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+# if __name__ == '__main__':
+#     matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         
          
 
-        mask, x_re, y_re, t_re, xspd,yspd = trj_filter(ptsidx, Numsample , minspdth = 5, fps = 4)
+        mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 5, fps = 4)
         print('initialization finished....')
 
         NumGoodsample = len(x_re)
@@ -109,8 +109,8 @@ if __name__ == '__main__':
                     tmp1 = x_re[i,:]!=0
                     tmp2 = x_re[j,:]!=0
                     idx  = num[tmp1&tmp2]
-                    # if len(idx)>0: # has overlapping
-                    if len(idx)>=30: # at least overlap for 100 frames
+                    if len(idx)>0: # has overlapping
+                    # if len(idx)>=30: # at least overlap for 100 frames
                         sidx     = idx[1:-1]
                         sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                         sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
