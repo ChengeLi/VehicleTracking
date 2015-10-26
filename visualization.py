@@ -41,11 +41,14 @@ if __name__ == '__main__':
     # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
     # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
 
-    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
+    # lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
+    lrsl = './tempFigs/roi2/ssc_with_Adj_CC_result' 
+
     """ use original klt x and y"""
     # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
     """ use x_re and y_re from trj_cluster adj"""
-    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
 
 
     # mask is the trajectory index
@@ -91,7 +94,9 @@ if __name__ == '__main__':
 
     # image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
     # image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
-    image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+    # image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+    image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
+
 
     firstfrm=cv2.imread(image_listing[0])
     nrows = int(np.size(firstfrm,0))
@@ -109,6 +114,13 @@ if __name__ == '__main__':
     frame = np.zeros([nrows,ncols,3]).astype('uint8')
     im = plt.imshow(np.zeros([nrows,ncols,3]))
     plt.axis('off')
+    # # adjust the plot limits
+    # cut = 1
+    # xmax= cut*ncols
+    # ymax= cut*nrows
+    # plt.xlim(0,xmax)
+    # plt.ylim(0,ymax)
+        
     color = np.array([np.random.randint(0,255) \
                    for _ in range(3*int(max(labels)))])\
                    .reshape(int(max(labels)),3)
@@ -119,7 +131,7 @@ if __name__ == '__main__':
 
 
 
-    framenum = 1300 # for testing
+    framenum = 1801 # for testing
     while (frame_idx < framenum):
         # pdb.set_trace()
         print ("frame_idx" , frame_idx)
@@ -165,8 +177,8 @@ if __name__ == '__main__':
                     endT[i]   = int ( max(havePt)+(frame_idx/trunclen*trunclen) )
                     # only for check, can delete ttrj
                     if startT[i]!=np.min(ttrj[i,havePt]) or endT[i]!=np.max(ttrj[i,havePt]):
-                        pdb.set_trace()
-                        print "wrong time!!!"
+                        # pdb.set_trace()
+                        print "wrong time===========!!!"
                         
        
 
@@ -221,7 +233,7 @@ if __name__ == '__main__':
         frame=cv2.imread(tmpName)
 
 
-        plt.draw()
+        
         # current frame index is: (frame_idx%trunclen)
         PtsInCurFrm = trk[:,:,0][:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
@@ -305,9 +317,19 @@ if __name__ == '__main__':
         # plt.pause(0.00001) 
 
 
-        name = './tempFigs/len50lap30_ssc_inNei/'+str(frame_idx).zfill(6)+'.jpg'
+        name = './tempFigs/roi2Result/'+str(frame_idx).zfill(6)+'.jpg'
+        
+        # cv2.imwrite(name, frame)
         plt.savefig(name) ##save figure
- 
+
+        # pdb.set_trace()
+
+
+
+
+
+
+
         while line_exist :
             try:
                 axL.lines.pop(0)

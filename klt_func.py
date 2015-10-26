@@ -142,7 +142,7 @@ def klt_tracker(isVideo, \
         # cv2.imshow('klt', vis)
         # cv2.waitKey(5)
         
-        # plt.imshow(vis[:,:,::-1])
+        plt.imshow(vis[:,:,::-1])
         # plt.pause(0.00001)
 
         # dump trajectories to file

@@ -5,10 +5,10 @@ from scipy.sparse import csr_matrix
 import numpy as np
 import pdb,glob
 import matplotlib.pyplot as plt
+import math
 
 
-
-def trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 15, fps = 4):
+def trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 15, fps = 4):
     transth  = 60*fps   #transition time (red light time)
     mask = []
     x_re = []
@@ -18,14 +18,14 @@ def trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 15, fps =
     yspd = []
     print minspdth
     # lenfile = open('length.txt', 'wb')
-    # spdfile = open('maxspeed.txt', 'wb')
+    # spdfile = open('./tempFigs/maxspeed.txt', 'wb')
     # stoptimefile = open('stoptime.txt', 'wb')
     for i in range(Numsample):
         if sum(x[i,:]!=0)>4:  # new jay st  # chk if trj is long enough
         # if sum(x[i,:]!=0)>50:  # canal
             # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
             # lenfile.write(str(i)+' '+str(sum(x[i,:]!=0))+'\n')
-
+            # pdb.set_trace()
             try:
                 # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
                 if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is a moving point
@@ -41,29 +41,46 @@ def trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 15, fps =
                         yspd.append(yspeed[i,:])
             except:
                 pass
-    # lenfile.close()
+    # spdfile.close()
     # stoptimefile.close()
     # pdb.set_trace()
+    x_re   = np.array(x_re)
+    y_re   = np.array(y_re)
+    t_re   = np.array(t_re)
+    xspd = np.array(xspd)
+    yspd = np.array(yspd)
     return mask, x_re, y_re, t_re, xspd, yspd
 
 
-def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-    savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
-# if __name__ == '__main__':
-#     matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
+# def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+if __name__ == '__main__':
+    # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+    # savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
+
+    matfilepath = './tempFigs/roi2/'
+    savePath = './tempFigs/roi2/' 
 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
     for matidx,matfile in enumerate(matfiles):
+        print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
         x = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+        t[t==0]=nan
 
         ptsidx    = ptstrj['idxtable'][0]
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
+
+        startPt = np.zeros((Numsample,1))
+        endPt = np.zeros((Numsample,1))
+
+        for tt in range(Numsample):
+            startPt[tt] =  mod( np.nanmin(t[tt,:]), 600) #ignore all nans
+            endPt[tt]   =  mod( np.nanmax(t[tt,:]), 600) 
 
 
         # """to visualize the neighbours"""
@@ -73,15 +90,30 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
 
 
 
-        xspeed = np.diff(x)*((x!=0)[:,1:])
-        yspeed = np.diff(y)*((y!=0)[:,1:])
+        # xspeed = np.diff(x)*((x!=0)[:,1:])  # wrong!
+        # yspeed = np.diff(y)*((y!=0)[:,1:])
+        
+        xspeed = np.diff(x) 
+        yspeed = np.diff(y)
+
+        for ii in range(Numsample):
+            if math.isnan(startPt[ii]) or math.isnan(endPt[ii]):
+                xspeed[ii, :] = 0 # discard
+                yspeed[ii, :] = 0 
+            else:
+                xspeed[ii, int(max(startPt[ii]-1,0))] = 0 
+                xspeed[ii, int(endPt[ii]-1)] = 0 
+                yspeed[ii, int(max(startPt[ii]-1,0))] = 0 
+                yspeed[ii, int(endPt[ii]-1)] = 0 
+
+
+        # pdb.set_trace() 
         speed = np.abs(xspeed)+np.abs(yspeed)
         
         print "Num of original samples is" , Numsample
         
-         
-
-        mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, ptsidx, Numsample , minspdth = 5, fps = 4)
+        mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 1, fps = 4)
+        # pdb.set_trace()
         print('initialization finished....')
 
         NumGoodsample = len(x_re)
@@ -90,19 +122,14 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         spdth  = 5 #speed threshold
         locth = 100
         num    = np.arange(fnum)
-        x_re   = np.array(x_re)
-        y_re   = np.array(y_re)
-        t_re   = np.array(t_re)
-        
-        xspd = np.array(xspd)
-        yspd = np.array(yspd)
+
 
         print "Num of Good samples is" , NumGoodsample
         print('building adj mtx ....')
 
         # build adjacent mtx
         for i in range(NumGoodsample):
-            plt.cla()
+            # plt.cla()
 
             for j in range(NumGoodsample):
                 if i<j:
@@ -141,26 +168,28 @@ def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterS
         result['yspd']    = yspd
 
 
-        savename = os.path.join(savePath,'len50overlap30trj_'+str(matidx+1).zfill(3))
-        savemat(savename,result)
-        # pdb.set_trace()
-        # """ visualization """
-        # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        # color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
-        # fig888 = plt.figure(888)
-        # ax = plt.subplot(1,1,1)
+        # savename = os.path.join(savePath,'len50overlap30trj_'+str(matidx+1).zfill(3))
+        # savemat(savename,result)
+        
+
+        pdb.set_trace()
+        """ visualization """
+        s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
+        fig888 = plt.figure(888)
+        ax = plt.subplot(1,1,1)
         # im = plt.imshow(np.zeros([528,704,3]))
-        # for i in range(s111):
-        #     ind = np.where(c111 ==i)[0]
-        #     print ind
-        #     for jj in range(len(ind)):
-        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
-        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
-        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-        #         fig888.canvas.draw()
-        #     plt.pause(0.0001) 
-        # pdb.set_trace()
+        for i in range(s111):
+            ind = np.where(c111 ==i)[0]
+            print ind
+            for jj in range(len(ind)):
+                startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
+                endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
+                # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+                lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+                fig888.canvas.draw()
+            plt.pause(0.0001) 
+        pdb.set_trace()
 
 
 

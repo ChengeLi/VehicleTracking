@@ -17,10 +17,10 @@ print("running trjcluster...")
 trjcluster.trjcluster('./tempFigs/roi2/',savePath='./tempFigs/roi2/')
 
 print("running subspace_cluster...")
-subspace_cluster.ssclustering('','')
+subspace_cluster.ssclustering('./tempFigs/roi2/','./tempFigs/roi2/')
 
 print("running unify_label...")
-unify_label.unify_label('','result.mat')
+unify_label.unify_label('./tempFigs/roi2/sscConstructedAdj_CC','./tempFigs/roi2/sscConstructedAdj_CCResult.mat')
 
 print("running visualization...")
 visual.visualization(isVideo,myvideo,'result.mat','')

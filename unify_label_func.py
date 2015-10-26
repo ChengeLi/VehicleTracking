@@ -14,7 +14,7 @@ def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@Bax
     flab = []  #final labels
     fmask = [] #final mask
 
-    matfiles = sorted(glob(matfilePath +'prior_ssc_len*.mat'))
+    matfiles = sorted(glob(matfilePath +'*.mat'))
 
     for matidx in range(len(matfiles)-1): 
         if matidx == 0:

@@ -37,9 +37,9 @@ class sparse_subspace_clustering:
             adjacency[i,:]= clf.sparse_coef_.todense()
             print clf.sparse_coef_.indices.size
             print 'set %d'%i
-        self.adjacency = np.abs( adjacency)
+        # self.adjacency = np.abs( adjacency)
         # want it to be symmetric
-        # self.adjacency = np.abs( adjacency +np.transpose(adjacency))
+        self.adjacency = np.abs( adjacency +np.transpose(adjacency))
 
     def construct_adjacency_non_fix_len(self):
         """samples not dimension aligned"""
@@ -255,7 +255,8 @@ if __name__ == '__main__':
     # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+'*.mat'))
 
     # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
 
 
     for matidx,matfile in enumerate(matfiles):
@@ -263,10 +264,10 @@ if __name__ == '__main__':
         """ andy's method, not real sparse sc"""
         # mask,labels = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
-        # mask,labels, adj = sscConstructedAdj_CC(file)
+        mask,labels, adj = sscConstructedAdj_CC(file)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
-        mask,labels = sscAdj_inNeighbour(file)
+        # mask,labels = sscAdj_inNeighbour(file)
 
     
         # saving!
@@ -291,6 +292,7 @@ if __name__ == '__main__':
 
         color = np.array([np.random.randint(0,255) for _ in range(3*int(max(labels)+1))]).reshape(int(max(labels)+1),3)
         fig999 = plt.figure(999)
+        plt.ion()
         ax = plt.subplot(1,1,1)
         
         for i in range(int(max(labels))+1):
@@ -301,12 +303,12 @@ if __name__ == '__main__':
                 endlimit = np.max(np.where(xtrj[trjind[jj],:]!=0))
                 # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
                 lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                fig999.canvas.draw()
-                plt.pause(0.0001)
+                # fig999.canvas.draw()
+                # plt.pause(0.0001)
 
             # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
 
-        im = plt.imshow(np.zeros([528,704,3])) 
+        # im = plt.imshow(np.zeros([528,704,3])) 
         pdb.set_trace()
 
 
@@ -316,7 +318,9 @@ if __name__ == '__main__':
         # savename = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
 
 
-        savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc_len50over30' + str(matidx+1).zfill(3)
+        # savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc_len50over30' + str(matidx+1).zfill(3)
+       
+        savename = './tempFigs/roi2/sscConstructedAdj_CC' + str(matidx+1).zfill(3)
         savemat(savename,labelsave)
 
 
