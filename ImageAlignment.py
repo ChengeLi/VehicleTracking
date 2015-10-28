@@ -78,11 +78,11 @@ def perspectiveWarp(img, M,frame_idx):
 
 
 if __name__ == '__main__':
-	linux_video_src = '/media/TOSHIBA EXT/Video from CUSP/C0007.MP4'
+	linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4'
 	# mac_video_src = '/Volumes/TOSHIBA/DoTdata/VideoFromCUSP/C0007.avi'
 	# test_video_src = '/Users/Chenge/Desktop/C0007.avi'
 
-	cap       = cv2.VideoCapture(test_video_src)
+	cap       = cv2.VideoCapture(linux_video_src)
 	nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 	ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))

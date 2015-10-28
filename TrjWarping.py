@@ -1,25 +1,25 @@
 # warp trajectories based on image warping matrix
-
-
-
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import pdb
 
-color = np.array([np.random.randint(0,255) for _ in range(3*int(100))]).reshape(100,3)
+import glob as glob
+from scipy.io import loadmat,savemat
 
-fakeTrj_y = [1,2,3,4,5,10,15,22,30,40,55]
-fakeTrj_x = range(1,12)
+# color = np.array([np.random.randint(0,255) for _ in range(3*int(100))]).reshape(100,3)
 
-x_re = fakeTrj_x
-y_re = fakeTrj_y
+# fakeTrj_y = [1,2,3,4,5,10,15,22,30,40,55]
+# fakeTrj_x = range(1,12)
 
-fig888 = plt.figure()
-ax = plt.subplot(111)
-lines = ax.plot(x_re[:], y_re[:],color = (color[i-1].T)/255.,linewidth=2)
-fig888.canvas.draw()
-plt.pause(0.0001)
+# x_re = fakeTrj_x
+# y_re = fakeTrj_y
+
+# fig888 = plt.figure()
+# ax = plt.subplot(111)
+# lines = ax.plot(x_re[:], y_re[:],color = (color[i-1].T)/255.,linewidth=2)
+# fig888.canvas.draw()
+# plt.pause(0.0001)
 
 
 
@@ -98,6 +98,11 @@ if __name__ == '__main__':
 
 
 
+trunclen   =600
+def warpTrjs():
+
+
+	cv2.perspectiveTransform(srcXY,dstXY,warpMtxLeft)
 
 
 
@@ -108,5 +113,20 @@ if __name__ == '__main__':
 
 
 
+    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+
+    trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
+    xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
+    ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
+    IDintrunk = trunkTrjFile['mask'][0]
+    sample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
+    fnum   = trunkTrjFile['x_re'].shape[1] # 600
+
+    ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+
+
+    trk = np.zeros([sample,fnum,3])
+    startT = np.ones([sample,1])*-999
+    endT = np.ones([sample,1])*-999
 
 

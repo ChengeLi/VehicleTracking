@@ -6,18 +6,25 @@ import visualization_func as visual
 
 
 isVideo = False
-# myvideo = '/media/TOSHIBA EXT/Video from CUSP/C0007.MP4'
-myImage = './tempFigs/roi2/'
+
+# dataPath = './tempFigs/roi2/'
+# savePath = './tempFigs/roi2/'
+ 
+dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+
+
 
 print("running KLT...")
 # klt.klt_tracker(isVideo,dataPath=myvideo,savePath='')
-klt.klt_tracker(isVideo,dataPath=myImage,savePath='./tempFigs/roi2/')
+klt.klt_tracker(isVideo,dataPath=dataPath,savePath=savePath)
 
 print("running trjcluster...")
-trjcluster.trjcluster('./tempFigs/roi2/',savePath='./tempFigs/roi2/')
+trjcluster.trjcluster(dataPath=dataPath,savePath=savePath)
 
 print("running subspace_cluster...")
-subspace_cluster.ssclustering('./tempFigs/roi2/','./tempFigs/roi2/')
+subspace_cluster.ssclustering(dataPath=dataPath,savePath=savePath)
+
 
 print("running unify_label...")
 unify_label.unify_label('./tempFigs/roi2/sscConstructedAdj_CC','./tempFigs/roi2/sscConstructedAdj_CCResult.mat')

@@ -41,14 +41,14 @@ if __name__ == '__main__':
     # lrsl = '../DoT/5Ave@42St-96.81/finalresult/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/result' 
     # matfiles = sorted(glob('../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+'*.mat'))
 
-    # lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
-    lrsl = './tempFigs/roi2/ssc_with_Adj_CC_result' 
+    lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
+    # lrsl = './tempFigs/roi2/ssc_with_Adj_CC_result' 
 
     """ use original klt x and y"""
     # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
     """ use x_re and y_re from trj_cluster adj"""
-    # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
-    matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
+    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    # matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
 
 
     # mask is the trajectory index
@@ -94,8 +94,8 @@ if __name__ == '__main__':
 
     # image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
     # image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
-    # image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
-    image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
+    image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+    # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
 
 
     firstfrm=cv2.imread(image_listing[0])
@@ -317,9 +317,11 @@ if __name__ == '__main__':
         # plt.pause(0.00001) 
 
 
-        name = './tempFigs/roi2Result/'+str(frame_idx).zfill(6)+'.jpg'
+        name = './canalResult/'+str(frame_idx).zfill(6)+'.jpg'
         
         # cv2.imwrite(name, frame)
+        # extent = axL.get_tightbbox(fig.canvas.renderer).transformed(fig.dpi_scale_trans.inverted())
+        # plt.savefig(name,bbox_inches=extent) ##save figure
         plt.savefig(name) ##save figure
 
         # pdb.set_trace()
