@@ -1,6 +1,6 @@
 from scipy.io import loadmat,savemat
 import cv2,pdb
-from glob import glob
+import glob as glob
 from scipy.sparse import csr_matrix
 import csv
 import cPickle as pickle
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     """ use original klt x and y"""
     # matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*.mat'))
     """ use x_re and y_re from trj_cluster adj"""
-    matfiles = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
     # matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
 
 
@@ -63,15 +63,12 @@ if __name__ == '__main__':
     # IDintrunklast = trunkTrjFile['idxtable'][0]  #last trunk (3rd mat) has 3603 trjs #use original
     IDintrunklast = trunkTrjFile['mask'][0] # 26 trjs 
     mlabels = np.ones(max(IDintrunklast)+1)*-1  #initial to be -1
-    # or you can use: since max(IDintrunklast) might be bigger than max (mask)
-    # mlabels = np.ones(max(mask)+1)*-1  #initial to be -1
-
-
+ 
 
     #build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
-    for idx,i in enumerate(mask):  # i=mask[idx], the content
-        mlabels[int(i)] = labels[int(idx)]
-    # mlabel: ID --> label
+    for idx,ID in enumerate(mask):  # i=mask[idx], the content
+        mlabels[int(ID)] = labels[int(idx)]
+    # mlabels(trjID) = label for this trj
 
     vcxtrj = {} ##dictionary
     vcytrj = {}
@@ -144,7 +141,7 @@ if __name__ == '__main__':
             # xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             # ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             # IDintrunk = trunkTrjFile['idxtable'][0]
-            # sample = trunkTrjFile['xtracks'].shape[0]
+            # Nsample = trunkTrjFile['xtracks'].shape[0]
             # fnum   = trunkTrjFile['xtracks'].shape[1]
 
             """ use x_re and y_re"""
@@ -152,23 +149,22 @@ if __name__ == '__main__':
             xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
             ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
             IDintrunk = trunkTrjFile['mask'][0]
-            sample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
+            Nsample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
             fnum   = trunkTrjFile['x_re'].shape[1] # 600
 
             ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
 
 
-            trk = np.zeros([sample,fnum,3])
-            startT = np.ones([sample,1])*-999
-            endT = np.ones([sample,1])*-999
+            trk = np.zeros([Nsample,fnum,3])
+            startT = np.ones([Nsample,1])*-999
+            endT = np.ones([Nsample,1])*-999
 
         
 
-            for i in range(sample):  # for the ith sample
+            for i in range(Nsample):  # for the ith sample
                 trk[i,:,0] = xtrj[i,:]
                 trk[i,:,1] = ytrj[i,:]
-                # trk[i,:,2] = arange(fnum)
-
+                trk[i,:,2] = ttrj[i,:]
 
                 ## get the time T (where the pt appears and disappears)
                 havePt  = np.array(np.where(xtrj[i,:]>0))[0]
@@ -177,8 +173,9 @@ if __name__ == '__main__':
                     endT[i]   = int ( max(havePt)+(frame_idx/trunclen*trunclen) )
                     # only for check, can delete ttrj
                     if startT[i]!=np.min(ttrj[i,havePt]) or endT[i]!=np.max(ttrj[i,havePt]):
-                        # pdb.set_trace()
-                        print "wrong time===========!!!"
+                        print "wrong time===========!!!, want to delete this trj?"
+                        pdb.set_trace()
+                        
                         
        
 
@@ -199,6 +196,7 @@ if __name__ == '__main__':
                         endfrm=max(t2[t2!=-999])   # latest disappering time in this trj group
                     else:
                         pdb.set_trace()
+                        print "!!!!error!!!!!!there are no trjs in class", str(k)
                         startfrm=-888
                         endfrm=-888
 
@@ -210,14 +208,13 @@ if __name__ == '__main__':
                         if int(startfrm) == lastendfrm+1:
                             vctime[k] = [laststartfrm, int(endfrm)]
                         else:
-                            print "========not connected==============!"
-                            pdb.set_trace()
                             print k
                             print frame_idx
+                            print "========same class trjs not overlapping, disconnected==============!"
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
-
+                            pdb.set_trace() 
                     # if not vctime[k]:
                     #     vctime[k].append([int(startfrm),int(endfrm)])
                     # else: 
@@ -273,15 +270,17 @@ if __name__ == '__main__':
                 # else: 
                 #     pdb.set_trace()
 
-                tempxyIDs = np.where(mlabels==k)
-                xyIDs = []
-
-                for xxyyiidd in np.array(tempxyIDs)[0]: 
-                    if xxyyiidd in IDinCurFrm:
-                        xyIDs.append(xxyyiidd)
-                
 
 
+
+
+
+                # tempxyIDs = np.where(mlabels==k)
+                # xyIDs = []
+
+                # for xxyyiidd in np.array(tempxyIDs)[0]: 
+                #     if xxyyiidd in IDinCurFrm:
+                #         xyIDs.append(xxyyiidd)
                 # xyIDfalse = np.where((mlabels[IDintrunk]==k) & PtsInCurFrm) 
 
                 # vctime 222222 
@@ -315,14 +314,14 @@ if __name__ == '__main__':
         fig.canvas.draw()
         plt.draw()
         # plt.pause(0.00001) 
+        # pdb.set_trace()
 
-
-        name = './canalResult/'+str(frame_idx).zfill(6)+'.jpg'
+        # name = './canalResult/'+str(frame_idx).zfill(6)+'.jpg'
         
         # cv2.imwrite(name, frame)
         # extent = axL.get_tightbbox(fig.canvas.renderer).transformed(fig.dpi_scale_trans.inverted())
         # plt.savefig(name,bbox_inches=extent) ##save figure
-        plt.savefig(name) ##save figure
+        # plt.savefig(name) ##save figure
 
         # pdb.set_trace()
 
@@ -345,13 +344,16 @@ if __name__ == '__main__':
         
         plt.show()
         frame_idx = frame_idx+1
+        # end of while loop
 
 
 
     for kkk in notconnectedLabel:
         # print vctime[kkk]
         if np.size(vcxtrj[kkk])==vctime[kkk][1]-vctime[kkk][0]+1:
+            print "disconnected will satisfy this, right????"
             vctime[kkk] = [vctime[kkk][0], vctime[kkk][1]]
+        pdb.set_trace()
 
 
 
@@ -403,18 +405,14 @@ if __name__ == '__main__':
 
     # ==================================================================
 
-    '''
-     # Save a dictionary into a pickle file.
-    pickle.dump( vctime, open( "./mat/20150222_Mat/Fullvctime.p", "wb" ) )
-    pickle.dump( vcxtrj, open( "./mat/20150222_Mat/Fullvcxtrj.p", "wb" ) )
-    pickle.dump( vcytrj, open( "./mat/20150222_Mat/Fullvcytrj.p", "wb" ) )
-
-
-
+    # Print "Save the dictionary into a pickle file"
+    pickle.dump( vctime, open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vctime.p", "wb" ) )
+    pickle.dump( vcxtrj, open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcxtrj.p", "wb" ) )
+    pickle.dump( vcytrj, open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcytrj.p", "wb" ) )
     # save the labels where bad time frame appended
-    pickle.dump( notconnectedLabel, open("./mat/20150222_Mat/VCTIMEnotconnectedLabel.p","wb"))
+    pickle.dump( notconnectedLabel, open("../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/VCTIMEnotconnectedLabel.p","wb"))
 
-    '''
+    
 
 
 

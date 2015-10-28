@@ -3,9 +3,13 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import pdb
-
 import glob as glob
 from scipy.io import loadmat,savemat
+from scipy.sparse import csr_matrix
+from Trj_class_and_func_definitions import *
+
+import pickle
+
 
 # color = np.array([np.random.randint(0,255) for _ in range(3*int(100))]).reshape(100,3)
 
@@ -47,16 +51,10 @@ def perspectiveWarp(img, M,frame_idx):
 
 if __name__ == '__main__':
 	trunclen = 600
-    matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
-
-	trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
-	xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
-	ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
-	IDintrunk = trunkTrjFile['mask'][0]
-	sample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
-	fnum   = trunkTrjFile['x_re'].shape[1] # 600
-
-
+    # matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
+	# img = cv2.imread('/Users/Chenge/Desktop/DoT/trun1+2_50_30.png')
+	# realimg = img[70:533,100:720,:]
+	
 	pts1_left = np.float32([[161, 147],[224,147], [73,519],[399,397]])  # canal st, left lane
 	pts1_right = np.float32([[229, 164],[340,151], [451,444],[703,331]])  # canal st, right lane
 	# pts2 = np.float32([[0,0],[350,0],[0,305],[350,305]])
@@ -64,14 +62,6 @@ if __name__ == '__main__':
 	pts2_left = np.float32([[0,0],[350,0],[0,600],[350,600]])
 
 	# pts2 = np.float32([[0,0],[380,0],[0,380],[380,380]]) #canal
-
-
-
-
-
-	img = cv2.imread('/Users/Chenge/Desktop/DoT/trun1+2_50_30.png')
-	realimg = img[70:533,100:720,:]
-
 
 	# warpMtx = getPerspectiveMtx(pts1, pts2)
 	warpMtxLeft = cv2.getPerspectiveTransform(pts1_left,pts2_left)
@@ -98,11 +88,78 @@ if __name__ == '__main__':
 
 
 
-trunclen   =600
 def warpTrjs():
+	trunclen = 600
+	matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+	frame_idx = 0
+	trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
+	xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
+	ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
+	ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+
+	xspd = csr_matrix(trunkTrjFile['xspd'], shape=trunkTrjFile['xspd'].shape).toarray()
+	yspd = csr_matrix(trunkTrjFile['yspd'], shape=trunkTrjFile['yspd'].shape).toarray()
+
+	IDintrunk = trunkTrjFile['mask'][0]
+	Nsample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
+	fnum   = trunkTrjFile['x_re'].shape[1] # 600
 
 
-	cv2.perspectiveTransform(srcXY,dstXY,warpMtxLeft)
+	print "build trj obj using raw trjs (x_re and y_re), non-clustered-yet result."
+
+	raw_trj_time = {}
+	raw_xtrj     = {}
+	raw_ytrj     = {}
+    for i in np.unique(IDintrunk):  #initialize
+        vcxtrj[i]=[] 
+        vcytrj[i]=[]
+        vctime[i]=[]
+
+
+
+	raw_trjObj = TrjObj(raw_xtrj, raw_ytrj, raw_trj_time)
+
+
+
+
+
+
+
+
+
+# ======== combine x and y matrix, into the location matrix (x,y)
+
+	
+	xtrjwarpped = np.zeros(xtrj.shape)
+	ytrjwarpped = np.zeros(ytrj.shape)
+
+	for i in range(xtrj.shape[0]):
+		for j in range(xtrj.shape[1]):
+			temp = cv2.perspectiveTransform(np.array((xtrj[i,j],ytrj[i,j]), warpMtxLeft )
+			xtrjwarpped[i,j] = temp[0]
+			ytrjwarpped[i,j] = temp[1]
+
+	
+
+
+
+	dists = np.vstack(([xtrj.T], [ytrj.T])).T
+	cv2.perspectiveTransform(np.array(dists[:,:,:]),warpMtxLeft)
+
+
+	print "build trj obj using the clustered result."
+	# vctime = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vctime.p", "rb" ) )
+	# vcxtrj = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcxtrj.p", "rb" ) )
+	# vcytrj = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcytrj.p", "rb" ) )
+	# clustered_Trj =TrjObj(vcxtrj, vcytrj, vctime)
+
+	# # all dictionaries with trj ID as keys
+	# clean_vctime = {key: value for key, value in vctime.items() 
+	#              if key not in clustered_Trj.bad_IDs}
+	# clean_vcxtrj = {key: value for key, value in vcxtrj.items() 
+	#              if key not in clustered_Trj.bad_IDs}
+	# clean_vcytrj = {key: value for key, value in vcytrj.items() 
+	#              if key not in clustered_Trj.bad_IDs}
 
 
 
@@ -113,20 +170,19 @@ def warpTrjs():
 
 
 
-    matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
-
-    trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
-    xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
-    ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
-    IDintrunk = trunkTrjFile['mask'][0]
-    sample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
-    fnum   = trunkTrjFile['x_re'].shape[1] # 600
-
-    ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
 
 
-    trk = np.zeros([sample,fnum,3])
-    startT = np.ones([sample,1])*-999
-    endT = np.ones([sample,1])*-999
+
+
+
+
+
+
+
+
+
+
+
+
 
 

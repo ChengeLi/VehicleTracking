@@ -1,7 +1,4 @@
 import numpy as np
-
-
-
 class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime):
         self.trunkTrjFile= {}
@@ -18,14 +15,14 @@ class TrjObj():
         self.globalID = sorted(vctime.keys())
         self.Xdir = {} # Xdirections 0 or 1
         self.Ydir = {} # Ydirections 0 or 1
-        self.bad_IDs = []
+        self.bad_IDs1 = []
         self.bad_IDs2 = [] # bad IDs with different length time and x,y
         self.bad_IDs3 = [] # inconsistent Y directions
         self.bad_IDs4 = [] # X direction 
 
         for key, val in vctime.iteritems():
             if (val ==[]) or (val[1]-val[0]+1 <= 10): # 5*3:
-                self.bad_IDs.append(key)
+                self.bad_IDs1.append(key)
 
 
 
@@ -71,7 +68,7 @@ class TrjObj():
                 self.bad_IDs4.append(key)
 
         # can also set threshold on the trj, e.g. delta_y <=0.8  
-
+        self.bad_IDs = self.bad_IDs1 + self.bad_IDs2 +self.bad_IDs3 +self.bad_IDs4
 
 
 
