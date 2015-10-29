@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     # image_listing = sorted(glob('../VideoData/20150220/*.jpg'))
     # image_listing = sorted(glob('../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/*.jpg'))
-    image_listing = sorted(glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+    image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
     # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
 
 
@@ -179,9 +179,8 @@ if __name__ == '__main__':
                         
        
 
-            # only execute once for a trunk ============================
+            # just need to compute vctime once for each trunk ============================
             labinT = list(set(mlabels[IDintrunk])) # label in this trunk
-            dots = []
             for k in np.unique(labinT):
                 if k !=-1:          
                     t1list=startT[mlabels[IDintrunk]==k]  # consider all IDs in the trunk, not only alive in curFrm
@@ -209,22 +208,23 @@ if __name__ == '__main__':
                             vctime[k] = [laststartfrm, int(endfrm)]
                         else:
                             print k
-                            print frame_idx
                             print "========same class trjs not overlapping, disconnected==============!"
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
                             pdb.set_trace() 
-                    # if not vctime[k]:
-                    #     vctime[k].append([int(startfrm),int(endfrm)])
-                    # else: 
-                    #     print "*********************************"
-                    #     print vctime[k]
-                    #     print [int(startfrm),int(endfrm)]
-                    #     pdb.set_trace()
+                        # if not vctime[k]:
+                        #     vctime[k].append([int(startfrm),int(endfrm)])
+                        # else: 
+                        #     print "*********************************"
+                        #     print vctime[k]
+                        #     print [int(startfrm),int(endfrm)]
+                        #     pdb.set_trace()
 
 
-        
+        # execute for each frame, for vcxtrj, vcytry, and plot
+        # compute virtual center every frame
+
         # ret, frame[:] = cam.read()
         tmpName= image_listing[frame_idx]
         frame=cv2.imread(tmpName)
@@ -411,15 +411,6 @@ if __name__ == '__main__':
     pickle.dump( vcytrj, open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcytrj.p", "wb" ) )
     # save the labels where bad time frame appended
     pickle.dump( notconnectedLabel, open("../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/VCTIMEnotconnectedLabel.p","wb"))
-
-    
-
-
-
-
-
-
-
 
 
     # chunk_len = framerate*40 # 40s
