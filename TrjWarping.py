@@ -1,48 +1,165 @@
 # warp trajectories based on image warping matrix
 import cv2
-import numpy as np
-from matplotlib import pyplot as plt
 import pdb
+import pickle
 import glob as glob
+import numpy as np
+import os as os
+from matplotlib import pyplot as plt
 from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 from Trj_class_and_func_definitions import *
 
-import pickle
+
+def warpImage():
+	image_listing   = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+	# image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
+	for kk in range(len(image_listing)):
+		realimg  = cv2.imread(image_listing[kk])
+		dstLeft  = cv2.warpPerspective(realimg,warpMtxLeft,(350,600))
+		dstRight = cv2.warpPerspective(realimg,warpMtxRight,(350,600))
+
+		# plt.imshow(realimg[:,:,::-1]), plt.title('ORIGINAL'),plt.axis('off')
+		# plt.figure(), plt.axis('off')
+		# plt.subplot(121),plt.imshow(dstLeft[:,:,::-1]), plt.title('left lane trajectories')
+		# plt.subplot(122),plt.imshow(dstRight[:,:,::-1]), plt.title('right lane trajectories')
+
+		leftname  = os.path.join('../DoT/CanalSt@BaxterSt-96.106/leftlane/',str(kk).zfill(8))+'.jpg'
+		rightname = os.path.join('../DoT/CanalSt@BaxterSt-96.106/rightlane/',str(kk).zfill(8))+'.jpg'
+		cv2.imwrite(leftname,dstLeft)
+		cv2.imwrite(rightname,dstRight)
 
 
-# color = np.array([np.random.randint(0,255) for _ in range(3*int(100))]).reshape(100,3)
+def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
+	trunclen = 600
+	while frame_idx < 1800:
+		# print "frame = ", str(frame_idx)
+		if (frame_idx % trunclen == 0):
+			print "frame = ", str(frame_idx)
+			# pdb.set_trace()
+			if not isClustered:
+				print "build trj obj using raw trjs (x_re and y_re), non-clustered-yet result."
+				print "Load the dictionary into a pickle file, trunk:", str(frame_idx/trunclen)
+				loadPath   = "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
+				loadnameT  = os.path.join(loadPath,'vctime_'+str(frame_idx/trunclen).zfill(3))+'.p'
+				loadnameX  = os.path.join(loadPath,'vcxtrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
+				loadnameY  = os.path.join(loadPath,'vcytrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
+				vctime     = pickle.load(open( loadnameT, "rb" ) )
+				vcxtrj     = pickle.load(open( loadnameX, "rb" ) )
+				vcytrj     = pickle.load(open( loadnameY, "rb" ) )
+				pdb.set_trace()
+				raw_trjObj = TrjObj(vcxtrj, vcytrj,vctime)
+				trjObj     = raw_trjObj
 
-# fakeTrj_y = [1,2,3,4,5,10,15,22,30,40,55]
-# fakeTrj_x = range(1,12)
-
-# x_re = fakeTrj_x
-# y_re = fakeTrj_y
-
-# fig888 = plt.figure()
-# ax = plt.subplot(111)
-# lines = ax.plot(x_re[:], y_re[:],color = (color[i-1].T)/255.,linewidth=2)
-# fig888.canvas.draw()
-# plt.pause(0.0001)
+			else:
+				print "build trj obj using the clustered result."
+				vctime           = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vctime.p", "rb" ) )
+				vcxtrj           = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcxtrj.p", "rb" ) )
+				vcytrj           = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcytrj.p", "rb" ) )
+				clustered_trjObj =TrjObj(vcxtrj, vcytrj, vctime)
+				trjObj           = clustered_trjObj
 
 
+			# cleaning
+			vctime = {key: value for key, value in vctime.items() 
+			             if key not in trjObj.bad_IDs}
+			vcxtrj = {key: value for key, value in vcxtrj.items() 
+			             if key not in trjObj.bad_IDs}
+			vcytrj = {key: value for key, value in vcytrj.items() 
+			             if key not in trjObj.bad_IDs}
 
 
+			# core: warpping
+			Nsample  = len(vctime.keys())
+			left_lane_ID  = []
+			right_lane_ID = []
+			left_xtrj     = np.zeros((Nsample,trunclen))*np.NaN
+			left_ytrj     = np.zeros((Nsample,trunclen))*np.NaN
+			right_xtrj    = np.zeros((Nsample,trunclen))*np.NaN
+			right_ytrj    = np.zeros((Nsample,trunclen))*np.NaN
+			
+			
+			aliveRange_lower  = lambda key: max(trjObj.frame[key][0],frame_idx)%trunclen
+			aliveRange_higher = lambda key: trjObj.frame[key][1]%trunclen+1
+			fromLastTrunFlag  = lambda key: trjObj.frame[key][0]<frame_idx #from last truncation
+			toNextTrunFlag    = lambda key: trjObj.frame[key][1]>frame_idx+trunclen # go across to next truncation
+
+			for key in trjObj.globalID:
+				if fromLastTrunFlag(key):
+					print "trj ",str(key),"starts from last truncation!"
+					lengthInLastTrun = frame_idx- trjObj.frame[key][0]
+					thisX = trjObj.xTrj[key][lengthInLastTrun:,0] # only save the current truncation
+					thisY = trjObj.yTrj[key][lengthInLastTrun:,0]
+				elif toNextTrunFlag(key):
+					print "trj ",str(key),"lasts to next truncation!"
+					lengthInThisTrun = frame_idx+trunclen - trjObj.frame[key][0]
+					thisX = trjObj.xTrj[key][0:lengthInThisTrun+1,0]
+					thisY = trjObj.yTrj[key][0:lengthInThisTrun+1,0]
+				else:
+					thisX = trjObj.xTrj[key][:,0]
+					thisY = trjObj.yTrj[key][:,0]
+				
+				print "mean x location: ",str(np.mean(trjObj.xTrj[key]))	
+				if trjObj.Ydir[key] == 1 and np.mean(trjObj.xTrj[key])<= 400: #left lane criteria
+					left_lane_ID.append(key)
+					left_xtrj[len(left_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisX
+					left_ytrj[len(left_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
+				else:
+					right_lane_ID.append(key) 
+					right_xtrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisX
+					right_ytrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
+			
+			# delete the empty rows
+			left_xtrj  = left_xtrj[0:len(left_lane_ID),:]
+			left_ytrj  = left_ytrj[0:len(left_lane_ID),:]
+			right_xtrj = right_xtrj[0:len(right_lane_ID),:]
+			right_ytrj = right_ytrj[0:len(right_lane_ID),:]
+
+			# pdb.set_trace()
+			left_locations  = np.vstack(([left_xtrj.T], [left_ytrj.T])).T
+			right_locations = np.vstack(([right_xtrj.T], [right_ytrj.T])).T
+
+			# ======== combine x and y matrix, into the location matrix (x,y)
+			left_warpped  = cv2.perspectiveTransform(np.array(left_locations[:,:,:]),warpMtxLeft)
+			right_warpped = cv2.perspectiveTransform(np.array(right_locations[:,:,:]),warpMtxRight)
+
+			pdb.set_trace()
+			if len(left_lane_ID)>0:
+				warpped = {}
+				warpped['mask']    = left_lane_ID
+				warpped['x_re']    = left_warpped[:,:,0]# for now, only consider the left lane       
+				warpped['y_re']    = left_warpped[:,:,1]  
+				warpped['Ttracks'] = []
+				warpped['xspd']    = []
+				warpped['yspd']    = []
+				savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+				savename = os.path.join(savePath,'warpped_'+str(frame_idx/trunclen).zfill(3))
+				savemat(savename,warpped)
+			else:
+				print "No vehicles in left lane in truncation: ", str(frame_idx/trunclen)
 
 
+			# put the warpped value back to create new trjs
+			warpped_xTrj = {}
+			warpped_yTrj = {}
+			for ll in range(len(left_lane_ID)):
+				leftID = left_lane_ID[ll]
+				warpped_xTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
+				warpped_yTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
+				
+			for rr in range(len(right_lane_ID)):
+				righID = right_lane_ID[rr]
+				warpped_xTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
+				warpped_yTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
 
+			# add the warpped trjs to the objects' fields
+			trjObj.warpped_xTrj = warpped_xTrj
+			trjObj.warpped_yTrj = warpped_yTrj
 
-def perspectiveWarp(img, M,frame_idx):
-	dst = cv2.warpPerspective(img,M,(350,600))
-	# plt.subplot(121),plt.imshow(img[:,:,::-1]),plt.title('Input')
-	# plt.subplot(122),plt.imshow(dst[:,:,::-1]),plt.title('ROI Output')
-	# plt.show()
+		frame_idx = frame_idx+1 
 
-
-	# plt.imshow(dst[:,:,::-1])
-	name = './tempFigs/roi2/'+str(frame_idx).zfill(6)+'.jpg'
-	# plt.savefig(name) ##save figure'
-	cv2.imwrite(name, dst)
+	# return the Trj object, and the warpped results in matrix format, seperately
+	return trjObj,left_warpped,right_warpped
 
 
 
@@ -50,134 +167,29 @@ def perspectiveWarp(img, M,frame_idx):
 
 
 if __name__ == '__main__':
-	trunclen = 600
     # matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
 	# img = cv2.imread('/Users/Chenge/Desktop/DoT/trun1+2_50_30.png')
 	# realimg = img[70:533,100:720,:]
 	
-	pts1_left = np.float32([[161, 147],[224,147], [73,519],[399,397]])  # canal st, left lane
-	pts1_right = np.float32([[229, 164],[340,151], [451,444],[703,331]])  # canal st, right lane
-	# pts2 = np.float32([[0,0],[350,0],[0,305],[350,305]])
-	pts2_right = np.float32([[0,0],[350,0],[0,600],[350,600]])
-	pts2_left = np.float32([[0,0],[350,0],[0,600],[350,600]])
-
-	# pts2 = np.float32([[0,0],[380,0],[0,380],[380,380]]) #canal
-
-	# warpMtx = getPerspectiveMtx(pts1, pts2)
-	warpMtxLeft = cv2.getPerspectiveTransform(pts1_left,pts2_left)
+	pts1_left    = np.float32([[161, 147],[224,147], [73,519],[399,397]])  # canal st, left lane
+	pts1_right   = np.float32([[229, 164],[340,151], [451,444],[703,331]])  # canal st, right lane
+	pts2_right   = np.float32([[0,0],[350,0],[0,600],[350,600]])
+	pts2_left    = np.float32([[0,0],[350,0],[0,600],[350,600]])
+	
+	
+	warpMtxLeft  = cv2.getPerspectiveTransform(pts1_left,pts2_left)
 	warpMtxRight = cv2.getPerspectiveTransform(pts1_right,pts2_right)
-
-	# perspectiveWarp(img, warpMtx, start_position+frame_idx)
-
-
-	dstLeft = cv2.warpPerspective(realimg,warpMtxLeft,(350,600))
-	dstRight = cv2.warpPerspective(realimg,warpMtxRight,(350,600))
-
-	plt.imshow(realimg[:,:,::-1]), plt.title('ORIGINAL'),plt.axis('off')
-
-	plt.figure(), plt.axis('off')
-	plt.subplot(121),plt.imshow(dstLeft[:,:,::-1]), plt.title('left lane trajectories')
-	plt.subplot(122),plt.imshow(dstRight[:,:,::-1]), plt.title('right lane trajectories')
-
-	cv2.imwrite('originalImg.jpg',realimg)
-	# cv2.imwrite('dstLeft.jpg',dstLeft)
-	# cv2.imwrite('dstRight.jpg',dstRight)
-
+	
 	
 
+	frame_idx = 600
+	# warp the trjs based on left and right warpping matrixes
+	raw_trjObj,left_warpped,right_warpped  = warpTrjs(frame_idx, warpMtxLeft, warpMtxRight)
 
 
-
-def warpTrjs():
-	trunclen = 600
-	matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
-	frame_idx = 0
-	trunkTrjFile = loadmat(matfiles[frame_idx//trunclen])
-	xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
-	ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
-	ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
-
-	xspd = csr_matrix(trunkTrjFile['xspd'], shape=trunkTrjFile['xspd'].shape).toarray()
-	yspd = csr_matrix(trunkTrjFile['yspd'], shape=trunkTrjFile['yspd'].shape).toarray()
-
-	IDintrunk = trunkTrjFile['mask'][0]
-	Nsample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
-	fnum   = trunkTrjFile['x_re'].shape[1] # 600
-
-
-	print "build trj obj using raw trjs (x_re and y_re), non-clustered-yet result."
-
-	raw_trj_time = {}
-	raw_xtrj     = {}
-	raw_ytrj     = {}
-    for i in np.unique(IDintrunk):  #initialize
-        vcxtrj[i]=[] 
-        vcytrj[i]=[]
-        vctime[i]=[]
-
-
-
-	raw_trjObj = TrjObj(raw_xtrj, raw_ytrj, raw_trj_time)
-
-
-
-
-
-
-
-
-
-# ======== combine x and y matrix, into the location matrix (x,y)
 
 	
-	xtrjwarpped = np.zeros(xtrj.shape)
-	ytrjwarpped = np.zeros(ytrj.shape)
-
-	for i in range(xtrj.shape[0]):
-		for j in range(xtrj.shape[1]):
-			temp = cv2.perspectiveTransform(np.array((xtrj[i,j],ytrj[i,j]), warpMtxLeft )
-			xtrjwarpped[i,j] = temp[0]
-			ytrjwarpped[i,j] = temp[1]
-
 	
-
-
-
-	dists = np.vstack(([xtrj.T], [ytrj.T])).T
-	cv2.perspectiveTransform(np.array(dists[:,:,:]),warpMtxLeft)
-
-
-	print "build trj obj using the clustered result."
-	# vctime = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vctime.p", "rb" ) )
-	# vcxtrj = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcxtrj.p", "rb" ) )
-	# vcytrj = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcytrj.p", "rb" ) )
-	# clustered_Trj =TrjObj(vcxtrj, vcytrj, vctime)
-
-	# # all dictionaries with trj ID as keys
-	# clean_vctime = {key: value for key, value in vctime.items() 
-	#              if key not in clustered_Trj.bad_IDs}
-	# clean_vcxtrj = {key: value for key, value in vcxtrj.items() 
-	#              if key not in clustered_Trj.bad_IDs}
-	# clean_vcytrj = {key: value for key, value in vcytrj.items() 
-	#              if key not in clustered_Trj.bad_IDs}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
