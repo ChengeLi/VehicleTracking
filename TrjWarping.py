@@ -29,6 +29,63 @@ def warpImage():
 		cv2.imwrite(leftname,dstLeft)
 		cv2.imwrite(rightname,dstRight)
 
+def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj):
+	trunclen = 600
+	if len(left_lane_ID)>0:
+		warpped = {}
+		warpped['mask']    = left_lane_ID
+		warpped['x_re']    = left_warpped[:,:,0]# consider the left lane       
+		warpped['y_re']    = left_warpped[:,:,1]  
+		warpped['Ttracks'] = []
+		warpped['xspd']    = []
+		warpped['yspd']    = []
+		savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+		savename = os.path.join(savePath,'warpped_'+str(frame_idx/trunclen).zfill(3))
+		savemat(savename,warpped)
+		
+
+		original = {}
+		original['mask']    = left_lane_ID
+		original['x_re']    = left_xtrj # consider the left lane       
+		original['y_re']    = left_ytrj  
+		original['Ttracks'] = []
+		original['xspd']    = []
+		original['yspd']    = []
+		savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+		savename = os.path.join(savePath,'original_'+str(frame_idx/trunclen).zfill(3))
+		savemat(savename,original)
+	else:
+		print "No vehicles in left lane in truncation: ", str(frame_idx/trunclen)
+
+
+	if len(right_lane_ID)>0:
+		warpped = {}
+		warpped['mask']    = right_lane_ID
+		warpped['x_re']    = right_warpped[:,:,0]# consider the right lane       
+		warpped['y_re']    = right_warpped[:,:,1]  
+		warpped['Ttracks'] = []
+		warpped['xspd']    = []
+		warpped['yspd']    = []
+		savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+		savename = os.path.join(savePath,'warpped_'+str(frame_idx/trunclen).zfill(3))
+		savemat(savename,warpped)
+		
+
+		original = {}
+		original['mask']    = right_lane_ID
+		original['x_re']    = right_xtrj # consider the right lane       
+		original['y_re']    = right_ytrj  
+		original['Ttracks'] = []
+		original['xspd']    = []
+		original['yspd']    = []
+		savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+		savename = os.path.join(savePath,'original_'+str(frame_idx/trunclen).zfill(3))
+		savemat(savename,original)
+	else:
+		print "No vehicles in right lane in truncation: ", str(frame_idx/trunclen)
+
+
+
 
 def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 	trunclen = 600
@@ -61,16 +118,19 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 
 
 			# cleaning
-			vctime = {key: value for key, value in vctime.items() 
+			print "Bad ids: ", str(trjObj.bad_IDs)
+			trjObj.frame = {key: value for key, value in vctime.items() 
 			             if key not in trjObj.bad_IDs}
-			vcxtrj = {key: value for key, value in vcxtrj.items() 
+			trjObj.xTrj = {key: value for key, value in vcxtrj.items() 
 			             if key not in trjObj.bad_IDs}
-			vcytrj = {key: value for key, value in vcytrj.items() 
+			trjObj.yTrj = {key: value for key, value in vcytrj.items() 
 			             if key not in trjObj.bad_IDs}
+			trjObj.globalID = [ value for value in trjObj.globalID 
+			             if value not in trjObj.bad_IDs]
 
-
+			pdb.set_trace()
 			# core: warpping
-			Nsample  = len(vctime.keys())
+			Nsample  = len(trjObj.globalID)
 			left_lane_ID  = []
 			right_lane_ID = []
 			left_xtrj     = np.zeros((Nsample,trunclen))*np.NaN
@@ -99,12 +159,15 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 					thisX = trjObj.xTrj[key][:,0]
 					thisY = trjObj.yTrj[key][:,0]
 				
-				print "mean x location: ",str(np.mean(trjObj.xTrj[key]))	
-				if trjObj.Ydir[key] == 1 and np.mean(trjObj.xTrj[key])<= 400: #left lane criteria
+					
+				# print "max y location: ",str(np.max(trjObj.yTrj[key]))	
+				if trjObj.Ydir[key] == 1 and np.max(trjObj.xTrj[key])<= 400: #left lane criteria
 					left_lane_ID.append(key)
 					left_xtrj[len(left_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisX
 					left_ytrj[len(left_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
 				else:
+					# print "max x location: ",str(np.max(trjObj.xTrj[key]))
+					print str(key)
 					right_lane_ID.append(key) 
 					right_xtrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisX
 					right_ytrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
@@ -124,37 +187,25 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 			right_warpped = cv2.perspectiveTransform(np.array(right_locations[:,:,:]),warpMtxRight)
 
 			pdb.set_trace()
-			if len(left_lane_ID)>0:
-				warpped = {}
-				warpped['mask']    = left_lane_ID
-				warpped['x_re']    = left_warpped[:,:,0]# for now, only consider the left lane       
-				warpped['y_re']    = left_warpped[:,:,1]  
-				warpped['Ttracks'] = []
-				warpped['xspd']    = []
-				warpped['yspd']    = []
-				savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-				savename = os.path.join(savePath,'warpped_'+str(frame_idx/trunclen).zfill(3))
-				savemat(savename,warpped)
-			else:
-				print "No vehicles in left lane in truncation: ", str(frame_idx/trunclen)
+			print "Save left and right warpped trjs."
+			saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj)
 
-
-			# put the warpped value back to create new trjs
-			warpped_xTrj = {}
-			warpped_yTrj = {}
-			for ll in range(len(left_lane_ID)):
-				leftID = left_lane_ID[ll]
-				warpped_xTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
-				warpped_yTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
+			"""put the warpped value back to create new trjs"""
+			# warpped_xTrj = {}
+			# warpped_yTrj = {}
+			# for ll in range(len(left_lane_ID)):
+			# 	leftID = left_lane_ID[ll]
+			# 	warpped_xTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
+			# 	warpped_yTrj[leftID] = left_warpped[ll,aliveRange_lower(key):aliveRange_higher(key)]
 				
-			for rr in range(len(right_lane_ID)):
-				righID = right_lane_ID[rr]
-				warpped_xTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
-				warpped_yTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
+			# for rr in range(len(right_lane_ID)):
+			# 	righID = right_lane_ID[rr]
+			# 	warpped_xTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
+			# 	warpped_yTrj[righID] = right_warpped[rr,aliveRange_lower(key):aliveRange_higher(key)]
 
-			# add the warpped trjs to the objects' fields
-			trjObj.warpped_xTrj = warpped_xTrj
-			trjObj.warpped_yTrj = warpped_yTrj
+			# # add the warpped trjs to the objects' fields
+			# trjObj.warpped_xTrj = warpped_xTrj
+			# trjObj.warpped_yTrj = warpped_yTrj
 
 		frame_idx = frame_idx+1 
 
@@ -182,7 +233,7 @@ if __name__ == '__main__':
 	
 	
 
-	frame_idx = 600
+	frame_idx = 0
 	# warp the trjs based on left and right warpping matrixes
 	raw_trjObj,left_warpped,right_warpped  = warpTrjs(frame_idx, warpMtxLeft, warpMtxRight)
 

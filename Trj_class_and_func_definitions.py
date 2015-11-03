@@ -21,7 +21,6 @@ class TrjObj():
         self.bad_IDs4 = [] # X direction 
 
         for key, val in vctime.iteritems():
-            pdb.set_trace()
             if (val ==[]) or (val[1]-val[0]+1 <= 10): 
                 self.bad_IDs1.append(key)
 
@@ -47,10 +46,10 @@ class TrjObj():
 
         for key in vctime.iterkeys():
             # if abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum() - (np.size(self.yTrj[key])-1))<=5:
-            if ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=-1).sum()/float((np.size(self.yTrj[key])-1))>=0.90:
+            if ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))>=0).sum()/float((np.size(self.yTrj[key])-1))>=0.70:
                 self.Ydir[key] = 1
             # elif abs(((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum() - (np.size(self.yTrj[key])-1))<=5:
-            elif ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=1).sum()/float((np.size(self.yTrj[key])-1))>=0.90:  #more than 70% 
+            elif ((np.asarray(self.yTrj[key][1:])-np.asarray(self.yTrj[key][:-1]))<=0).sum()/float((np.size(self.yTrj[key])-1))>=0.70:  #more than 70% 
                 self.Ydir[key] = 0
             
             else: 

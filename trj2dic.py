@@ -37,7 +37,7 @@ def Virctr(x,y):
 
 
 
-def get_XYT_inDic(matfiles,frame_idx, isClustered, trunclen, isVisualize, axL, im, image_listing ,isSave = True):  # get the time dictionary, such as vctime
+def get_XYT_inDic(matfiles,frame_idx, isClustered, trunclen, isVisualize, axL, im, image_listing ,isSave):  # get the time dictionary, such as vctime
     # applicable to both clustered and non-clustered trj datas
     # If non-clustered trjs, the input mlabels are just the trj ID (mask)
     
@@ -170,7 +170,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, trunclen, isVisualize, axL, i
             # ret, frame[:] = cam.read()
             tmpName= image_listing[frame_idx]
             frame=cv2.imread(tmpName)
-            visualize_trj(axL,im,labinf,vcxtrj, vcytrj,frame, color)
+            visualize_trj(axL,im,labinf,vcxtrj, vcytrj,frame, color,frame_idx)
             
 
         if isSave:    
@@ -196,7 +196,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, trunclen, isVisualize, axL, i
 
 
 # ====fix me 
-def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color):
+def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     dots = []
     line_exist = 0
     for k in np.unique(labinf):
@@ -213,11 +213,7 @@ def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color):
     plt.draw()
     plt.pause(0.00001) 
 
-    # name = './canalResult/'+str(frame_idx).zfill(6)+'.jpg'
-    
-    # cv2.imwrite(name, frame)
-    # extent = axL.get_tightbbox(fig.canvas.renderer).transformed(fig.dpi_scale_trans.inverted())
-    # plt.savefig(name,bbox_inches=extent) ##save figure
+    # name = './canalResult/original/'+str(frame_idx).zfill(6)+'.jpg'
     # plt.savefig(name) ##save figure
 
     while line_exist :
@@ -232,33 +228,41 @@ def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color):
 
 
 
-def prepare_data_to_vis(isAfterWarpping):
+def prepare_data_to_vis(isAfterWarpping,isLeft=True):
     if isAfterWarpping:
-        matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-        matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-        left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/*.jpg'))
-        right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/*.jpg'))
-        image_listing = left_image_listing
+        if isLeft:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/*.jpg'))
+            image_listing = left_image_listing
+        else:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/*.jpg'))
+            image_listing = right_image_listing
     else:
         matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
         image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
-
-
     return matfiles,image_listing
 
 
 
 if __name__ == '__main__':
-    # frame_idx = 0
-    frame_idx = 0
+    frame_idx = 600
     trunclen = 600
     isClustered = False
-    isVisualize = True
+
     isAfterWarpping = True
-    # isVisualize = False 
-    # isAfterWarpping = False
-    matfiles,image_listing = prepare_data_to_vis(isAfterWarpping)
+    if isAfterWarpping:
+        isVisualize = True
+        isLeft = False
+        isSave = False
+    else:
+        isVisualize = False 
+        isSave = True
+
+    matfiles,image_listing = prepare_data_to_vis(isAfterWarpping,isLeft)
 
     firstfrm=cv2.imread(image_listing[0])
     nrows = int(np.size(firstfrm,0))
@@ -271,5 +275,5 @@ if __name__ == '__main__':
     im = plt.imshow(np.zeros([nrows,ncols,3]))
     plt.axis('off')
 
-    get_XYT_inDic(matfiles, frame_idx, isClustered, trunclen, isVisualize, axL, im, image_listing)
+    get_XYT_inDic(matfiles, frame_idx, isClustered, trunclen, isVisualize, axL, im, image_listing, isSave)
 
