@@ -52,16 +52,37 @@ def trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 15
     return mask, x_re, y_re, t_re, xspd, yspd
 
 
+
+def prepare_input_data(isAfterWarpping,isLeft=True):
+    if isAfterWarpping:
+        if isLeft:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
+        else:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
+    else:
+        matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # matfilepath = './tempFigs/roi2/'
+        # savePath = './tempFigs/roi2/' 
+        matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+
+    return matfiles,savePath
+
+
+
+
+
 # def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
 #     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 if __name__ == '__main__':
-    # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    # savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'    
 
-    matfilepath = './tempFigs/roi2/'
-    savePath = './tempFigs/roi2/' 
-
-    matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+    isAfterWarpping   = True
+    isLeft            = False
+    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
 
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
@@ -69,9 +90,10 @@ if __name__ == '__main__':
         x = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        t[t==0]=nan
+        if len(t)>0: 
+            t[t==0]=nan
 
-        ptsidx    = ptstrj['idxtable'][0]
+        ptsidx    = ptstrj['mask'][0]
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
 
@@ -79,8 +101,12 @@ if __name__ == '__main__':
         endPt = np.zeros((Numsample,1))
 
         for tt in range(Numsample):
-            startPt[tt] =  mod( np.nanmin(t[tt,:]), 600) #ignore all nans
-            endPt[tt]   =  mod( np.nanmax(t[tt,:]), 600) 
+            if len(t)>0:
+                startPt[tt] =  mod( np.nanmin(t[tt,:]), 600) #ignore all nans
+                endPt[tt]   =  mod( np.nanmax(t[tt,:]), 600) 
+            else:
+                startPt[tt] =  np.min(np.where(x[tt,:]!=0))
+                endPt[tt]   =  np.max(np.where(x[tt,:]!=0))
 
 
         # """to visualize the neighbours"""
@@ -107,14 +133,24 @@ if __name__ == '__main__':
                 yspeed[ii, int(endPt[ii]-1)] = 0 
 
 
-        # pdb.set_trace() 
+        
         speed = np.abs(xspeed)+np.abs(yspeed)
         
         print "Num of original samples is" , Numsample
-        
-        mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 1, fps = 4)
-        # pdb.set_trace()
+        if isAfterWarpping:
+            x_re = x
+            y_re = y
+            t_re = []
+            xspd = xspeed
+            yspd = yspeed
+            mask = ptsidx
+            print('initialization finished....')
+        else:
+            mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 1, fps = 4)
         print('initialization finished....')
+
+
+
 
         NumGoodsample = len(x_re)
         adj    = np.zeros([NumGoodsample,NumGoodsample])
@@ -125,8 +161,10 @@ if __name__ == '__main__':
 
 
         print "Num of Good samples is" , NumGoodsample
-        print('building adj mtx ....')
+        # print "min(x):", np.min(x), " max(x):",  np.max(x)
+        print "min(y):", np.min(y), " max(y):",  np.max(y)
 
+        print('building adj mtx ....')
         # build adjacent mtx
         for i in range(NumGoodsample):
             # plt.cla()
@@ -161,35 +199,38 @@ if __name__ == '__main__':
         result['adj']     = adj
         result['c']       = c
         result['mask']    = mask
-        result['x_re']    = x_re       
-        result['y_re']    = y_re
+        result['xtracks'] = x_re       
+        result['ytracks'] = y_re
         result['Ttracks'] = t_re
         result['xspd']    = xspd
         result['yspd']    = yspd
 
+        if not isAfterWarpping:
+            savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+1).zfill(3))
+            savemat(savename,result)
+        else:
+            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
+            savemat(savename,result)
+            
 
-        # savename = os.path.join(savePath,'len50overlap30trj_'+str(matidx+1).zfill(3))
-        # savemat(savename,result)
-        
-
-        pdb.set_trace()
         """ visualization """
-        s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
-        fig888 = plt.figure(888)
-        ax = plt.subplot(1,1,1)
-        # im = plt.imshow(np.zeros([528,704,3]))
-        for i in range(s111):
-            ind = np.where(c111 ==i)[0]
-            print ind
-            for jj in range(len(ind)):
-                startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
-                endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
-                # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-                lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                fig888.canvas.draw()
-            plt.pause(0.0001) 
-        pdb.set_trace()
+        # pdb.set_trace()        
+        # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # color = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
+        # fig888 = plt.figure(888)
+        # ax = plt.subplot(1,1,1)
+        # # im = plt.imshow(np.zeros([528,704,3]))
+        # for i in range(s111):
+        #     ind = np.where(c111 ==i)[0]
+        #     print ind
+        #     for jj in range(len(ind)):
+        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
+        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
+        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+        #         fig888.canvas.draw()
+        #     plt.pause(0.0001) 
+        # pdb.set_trace()
 
 
 

@@ -195,10 +195,10 @@ def klt_tracker(isVideo, \
             # put tracks into sparse matrix
             trk ={}
             
-            trk['xtracks']  = csr_matrix(Xtracks)
-            trk['ytracks']  = csr_matrix(Ytracks)
-            trk['Ttracks']  = csr_matrix(Ttracks)
-            trk['idxtable'] = tracksdic.keys()
+            trk['xtracks'] = csr_matrix(Xtracks)
+            trk['ytracks'] = csr_matrix(Ytracks)
+            trk['Ttracks'] = csr_matrix(Ttracks)
+            trk['mask']    = tracksdic.keys()
 
             # save as matlab file... :-/
             # savename = './mat/20150222_Mat/HR_w_T______test_' + \

@@ -193,8 +193,8 @@ while (frame_idx < nframe):
         
         trk['xtracks'] = csr_matrix(Xtracks)
         trk['ytracks'] = csr_matrix(Ytracks)
-        trk['idxtable'] = tracksdic.keys()
         trk['Ttracks'] = csr_matrix(Ttracks)
+        trk['mask']    = tracksdic.keys()
 
         # save as matlab file... :-/
         # savename = './mat/20150222_Mat/HR_w_T______test_' + \

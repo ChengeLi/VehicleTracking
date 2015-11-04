@@ -65,11 +65,11 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, trunclen, isVisualize, axL, i
         if (frame_idx % trunclen == 0):
             
             trunkTrjFile = loadmat(matfiles[frame_idx/trunclen])
-            xtrj = csr_matrix(trunkTrjFile['x_re'], shape=trunkTrjFile['x_re'].shape).toarray()
-            ytrj = csr_matrix(trunkTrjFile['y_re'], shape=trunkTrjFile['y_re'].shape).toarray()
+            xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             IDintrunk = trunkTrjFile['mask'][0]
-            Nsample = trunkTrjFile['x_re'].shape[0] # num of trjs in this trunk
-            fnum   = trunkTrjFile['x_re'].shape[1] # 600
+            Nsample = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
+            fnum   = trunkTrjFile['xtracks'].shape[1] # 600
             ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
 
             # trk = np.zeros([Nsample,fnum,3])
@@ -233,15 +233,15 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
         if isLeft:
             matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/*.jpg'))
+            left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
             image_listing = left_image_listing
         else:
             matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/*.jpg'))
+            right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
             image_listing = right_image_listing
     else:
-        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
+        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len' +'*.mat'))
         image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
     return matfiles,image_listing
@@ -256,7 +256,7 @@ if __name__ == '__main__':
     isAfterWarpping = True
     if isAfterWarpping:
         isVisualize = True
-        isLeft = False
+        isLeft = True
         isSave = False
     else:
         isVisualize = False 

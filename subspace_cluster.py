@@ -246,9 +246,41 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
     return mask,labels
 
 
-if __name__ == '__main__':
-#    
-#    """With constructed adjacency matrix """
+
+# fix me=== copy from trj cluster, needs to customize to this one
+def prepare_input_data(isAfterWarpping,isLeft=True):
+    if isAfterWarpping:
+        if isLeft:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
+
+
+    
+            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
+            savemat(savename,result)
+
+
+
+        else:
+            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
+    else:
+        matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # matfilepath = './tempFigs/roi2/'
+        # savePath = './tempFigs/roi2/' 
+        matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+
+    return matfiles,savePath
+
+
+
+
+
+if __name__ == '__main__':   
+   """With constructed adjacency matrix """
 
     # inifilename = 'HR'
     # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'*.mat'))
@@ -256,7 +288,9 @@ if __name__ == '__main__':
 
     # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
     # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
-    matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
+    # matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
+
+
 
 
     for matidx,matfile in enumerate(matfiles):

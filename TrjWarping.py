@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 from Trj_class_and_func_definitions import *
 
 
-def warpImage():
+def warpImage(warpMtxLeft,warpMtxRight):
 	image_listing   = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 	# image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
 	for kk in range(len(image_listing)):
@@ -32,10 +32,10 @@ def warpImage():
 def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj):
 	trunclen = 600
 	if len(left_lane_ID)>0:
-		warpped = {}
+		warpped            = {}
 		warpped['mask']    = left_lane_ID
-		warpped['x_re']    = left_warpped[:,:,0]# consider the left lane       
-		warpped['y_re']    = left_warpped[:,:,1]  
+		warpped['xtracks'] = left_warpped[:,:,0]# consider the left lane       
+		warpped['ytracks'] = left_warpped[:,:,1]  
 		warpped['Ttracks'] = []
 		warpped['xspd']    = []
 		warpped['yspd']    = []
@@ -44,10 +44,10 @@ def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_la
 		savemat(savename,warpped)
 		
 
-		original = {}
+		original            = {}
 		original['mask']    = left_lane_ID
-		original['x_re']    = left_xtrj # consider the left lane       
-		original['y_re']    = left_ytrj  
+		original['xtracks'] = left_xtrj # consider the left lane       
+		original['ytracks'] = left_ytrj  
 		original['Ttracks'] = []
 		original['xspd']    = []
 		original['yspd']    = []
@@ -59,10 +59,10 @@ def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_la
 
 
 	if len(right_lane_ID)>0:
-		warpped = {}
+		warpped            = {}
 		warpped['mask']    = right_lane_ID
-		warpped['x_re']    = right_warpped[:,:,0]# consider the right lane       
-		warpped['y_re']    = right_warpped[:,:,1]  
+		warpped['xtracks'] = right_warpped[:,:,0]# consider the right lane       
+		warpped['ytracks'] = right_warpped[:,:,1]  
 		warpped['Ttracks'] = []
 		warpped['xspd']    = []
 		warpped['yspd']    = []
@@ -71,10 +71,10 @@ def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_la
 		savemat(savename,warpped)
 		
 
-		original = {}
+		original            = {}
 		original['mask']    = right_lane_ID
-		original['x_re']    = right_xtrj # consider the right lane       
-		original['y_re']    = right_ytrj  
+		original['xtracks'] = right_xtrj # consider the right lane       
+		original['ytracks'] = right_ytrj  
 		original['Ttracks'] = []
 		original['xspd']    = []
 		original['yspd']    = []
@@ -87,13 +87,12 @@ def saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_la
 
 
 
-def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
+def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False,isSave = True):
 	trunclen = 600
 	while frame_idx < 1800:
 		# print "frame = ", str(frame_idx)
 		if (frame_idx % trunclen == 0):
 			print "frame = ", str(frame_idx)
-			# pdb.set_trace()
 			if not isClustered:
 				print "build trj obj using raw trjs (x_re and y_re), non-clustered-yet result."
 				print "Load the dictionary into a pickle file, trunk:", str(frame_idx/trunclen)
@@ -104,7 +103,6 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 				vctime     = pickle.load(open( loadnameT, "rb" ) )
 				vcxtrj     = pickle.load(open( loadnameX, "rb" ) )
 				vcytrj     = pickle.load(open( loadnameY, "rb" ) )
-				pdb.set_trace()
 				raw_trjObj = TrjObj(vcxtrj, vcytrj,vctime)
 				trjObj     = raw_trjObj
 
@@ -128,7 +126,7 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 			trjObj.globalID = [ value for value in trjObj.globalID 
 			             if value not in trjObj.bad_IDs]
 
-			pdb.set_trace()
+			# pdb.set_trace()
 			# core: warpping
 			Nsample  = len(trjObj.globalID)
 			left_lane_ID  = []
@@ -167,7 +165,7 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 					left_ytrj[len(left_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
 				else:
 					# print "max x location: ",str(np.max(trjObj.xTrj[key]))
-					print str(key)
+					# print str(key)
 					right_lane_ID.append(key) 
 					right_xtrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisX
 					right_ytrj[len(right_lane_ID)-1,aliveRange_lower(key):aliveRange_higher(key)] = thisY
@@ -187,8 +185,12 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 			right_warpped = cv2.perspectiveTransform(np.array(right_locations[:,:,:]),warpMtxRight)
 
 			pdb.set_trace()
-			print "Save left and right warpped trjs."
-			saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj)
+			if isSave:
+				print "Save left and right warpped trjs."
+				saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj)
+			else:
+				pass
+
 
 			"""put the warpped value back to create new trjs"""
 			# warpped_xTrj = {}
@@ -216,6 +218,12 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False):
 
 
 
+# fix meeee.....
+def unwarpTrjs(frame_idx, warpMtxLeftInv, warpMtxRightInv,isSave = False):
+	pass 
+
+
+
 
 if __name__ == '__main__':
     # matfiles = sorted(glob('./tempFigs/roi2/len4' +'*.mat'))
@@ -235,12 +243,24 @@ if __name__ == '__main__':
 
 	frame_idx = 0
 	# warp the trjs based on left and right warpping matrixes
-	raw_trjObj,left_warpped,right_warpped  = warpTrjs(frame_idx, warpMtxLeft, warpMtxRight)
+	raw_trjObj_ori,left_warpped,right_warpped  = warpTrjs(frame_idx, warpMtxLeft, warpMtxRight)
 
 
+
+	# warp it back
+	warpMtxLeftInv  = np.linalg.inv(warpMtxLeft)
+	warpMtxRightInv = np.linalg.inv(warpMtxRight)
+	# backLeft  = cv2.warpPerspective(dstLeft,warpMtxLeftInv,realimg.shape[:2][::-1])
+	# backRight = cv2.warpPerspective(dstRight,warpMtxRightInv,realimg.shape[:2][::-1])
+	# warpback  = backLeft + backRight
+	# plt.figure()
+	# plt.imshow(warpback[:,:,::-1])
 
 	
 	
+
+
+
 
 
 

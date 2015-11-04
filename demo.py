@@ -44,12 +44,10 @@ execfile('trj2dic.py') #  # generate dic format files from x_re, y_re
 execfile('TrjWarping.py') # warp the trjs and save to regular matrix format
 
 execfile('trj2dic.py') # visualize the warped trjs in warpped imgs
-
 # noted you need to modify the prameters in trj2dic in different situation!
 
-
-
-
+# after warpping, going back to the clustering:
+execfile('trjcluster_func.py')
 
 
 
