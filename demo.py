@@ -49,7 +49,13 @@ execfile('trj2dic.py') # visualize the warped trjs in warpped imgs
 # after warpping, going back to the clustering:
 execfile('trjcluster_func.py')
 
+execfile('subspace_cluster.py')
 
+# unify labels
+print "unify left labels:"
+unify_label.unify_label('../DoT/CanalSt@BaxterSt-96.106/leftlane/sscLabels/','../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left')
+print "unify right labels"
+unify_label.unify_label('../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/','../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right')
 
 
 

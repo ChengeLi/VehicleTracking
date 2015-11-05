@@ -110,9 +110,9 @@ if __name__ == '__main__':
 
 
         # """to visualize the neighbours"""
-        # fig888 = plt.figure()
-        # ax = plt.subplot(1,1,1)
-        # color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
+        fig888 = plt.figure()
+        ax = plt.subplot(1,1,1)
+        color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
 
 
 

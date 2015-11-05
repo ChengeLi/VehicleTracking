@@ -247,116 +247,106 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
 
 
 
-# fix me=== copy from trj cluster, needs to customize to this one
-def prepare_input_data(isAfterWarpping,isLeft=True):
+def prepare_input_data(isAfterWarpping,isLeft):
     if isAfterWarpping:
         if isLeft:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
-
-
-    
-            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
-            savemat(savename,result)
-
-
-
+            loadPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
+            matfiles = sorted(glob.glob(loadPath +'warpped_Adj_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/sscLabels/'
         else:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
+            loadPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
+            matfiles = sorted(glob.glob(loadPath +'warpped_Adj_'+'*.mat'))
+            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/'
     else:
-        matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # matfilepath = './tempFigs/roi2/'
-        # savePath = './tempFigs/roi2/' 
-        matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+        # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'*.mat'))
+        # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'_adj_withT_'+'*.mat'))
+        # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
+        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len4' +'*.mat'))
+        # matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
 
-    return matfiles,savePath
+        # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_'
+        # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_withT_'
+        # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
+        savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
+        # savePath = './tempFigs/roi2/sscConstructedAdj_CC' 
+
+    return matfiles, savePath
 
 
 
 
 
 if __name__ == '__main__':   
-   """With constructed adjacency matrix """
-
-    # inifilename = 'HR'
-    # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'*.mat'))
-    # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+inifilename+'_adj_withT_'+'*.mat'))
-
-    # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-    # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len50' +'*.mat'))
-    # matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
-
-
-
+    """With constructed adjacency matrix """
+    
+    isAfterWarpping   = True
+    isLeft            = False
+    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
+    isSave            = True
+    isVisualize       = False
 
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
-        """ andy's method, not real sparse sc"""
-        # mask,labels = ssc_with_Adj_CC(file)
+        """ andy's method, not real sparse sc, just spectral clustering"""
+        mask,labels = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
-        mask,labels, adj = sscConstructedAdj_CC(file)
+        # mask,labels, adj = sscConstructedAdj_CC(file)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
         # mask,labels = sscAdj_inNeighbour(file)
 
-    
-        # saving!
-        labelsave            ={}
-        labelsave['label']   =labels
-        labelsave['mask']    =mask
-        labelsave['Ttracks'] =file['Ttracks']
-        
-
-
         pdb.set_trace()
-        # visualize different classes seperated by SSC for each Connected Component
-        """  use the original trj files  """
-        # TrkFilePath  = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # trjfiles     = sorted(glob.glob(TrkFilePath+'klt_*.mat'))
-        # trunkTrjFile = scipy_io.loadmat(trjfiles[matidx])
-        # xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-        # ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
-        """  use the x_re and y_re from adj mat files  """
-        xtrj =file['x_re'] 
-        ytrj = file['y_re']
+        if isVisualize:
+            # visualize different classes seperated by SSC for each Connected Component
+            """  use the original trj files  """
+            # TrkFilePath  = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+            # trjfiles     = sorted(glob.glob(TrkFilePath+'klt_*.mat'))
+            # trunkTrjFile = scipy_io.loadmat(trjfiles[matidx])
+            # xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            # ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            """  use the x_re and y_re from adj mat files  """
+            xtrj = file['xtracks'] 
+            ytrj = file['ytracks']
 
-        color = np.array([np.random.randint(0,255) for _ in range(3*int(max(labels)+1))]).reshape(int(max(labels)+1),3)
-        fig999 = plt.figure(999)
-        plt.ion()
-        ax = plt.subplot(1,1,1)
-        
-        for i in range(int(max(labels))+1):
-            trjind = np.where(labels==i)[0]
-            print trjind
-            for jj in range(len(trjind)):
-                startlimit = np.min(np.where(xtrj[trjind[jj],:]!=0))
-                endlimit = np.max(np.where(xtrj[trjind[jj],:]!=0))
-                # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-                lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                # fig999.canvas.draw()
-                # plt.pause(0.0001)
+            color  = np.array([np.random.randint(0,255) for _ in range(3*int(max(labels)+1))]).reshape(int(max(labels)+1),3)
+            fig999 = plt.figure(999)
+            # plt.ion()
+            ax     = plt.subplot(1,1,1)
+            
+            # newmask   = list(mask[0])
+            newlabels = list(labels)
+            for i in range(int(max(labels))+1):
+                trjind = np.where(labels==i)[0]
+                print "trjind = ", str(trjind)
+                if len(trjind)<=3:
+                    newlabels.remove(i)
+                    # newmask.remove()
+                    continue
+                for jj in range(len(trjind)):
+                    startlimit = np.min(np.where(xtrj[trjind[jj],:]!=0))
+                    endlimit = np.max(np.where(xtrj[trjind[jj],:]!=0))
+                    # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+                    lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+                    # fig999.canvas.draw()
+                    # plt.pause(0.0001)
 
-            # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
+                # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
 
-        # im = plt.imshow(np.zeros([528,704,3])) 
+            # im = plt.imshow(np.zeros([528,704,3])) 
+            
+            fig999.canvas.draw()
+        else:
+            pass
         pdb.set_trace()
 
-
-
-        # savename = './mat/20150222_Mat/labels/'+inifilename+'_label_'+str(matidx+1).zfill(3)
-        # savename = './mat/20150222_Mat/labels/'+inifilename+'_label_withT_'+str(matidx+1).zfill(3)
-        # savename = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(matidx+1).zfill(3)
-
-
-        # savename = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/prior_ssc_len50over30' + str(matidx+1).zfill(3)
-       
-        savename = './tempFigs/roi2/sscConstructedAdj_CC' + str(matidx+1).zfill(3)
-        savemat(savename,labelsave)
-
+        if isSave:
+            print "saving the labels..."
+            labelsave            = {}
+            # labelsave['label']   = np.array(newlabels)
+            labelsave['label']   = labels
+            labelsave['mask']    = mask
+            savename = savePath+ str(matidx+1).zfill(3)
+            savemat(savename,labelsave)
 
     """SSC clustering Andy Project"""
 #    file = scipy_io.loadmat('ptsTrj_remove_station')
