@@ -8,6 +8,88 @@ import matplotlib.pyplot as plt
 import math
 
 
+def adj_element(sxdiff, sydiff, mdis):
+    sigma_xspd_diff = 0.7
+    sigma_yspd_diff = 0.7
+    sigma_spatial_distance = 200
+    adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
+    if adj_element==nan:
+        pdb.set_trace()
+    return adj_element
+
+def construct_adj_gaussian(NumGoodsample, x_re, y_re):
+    # spdfile = open('./mdis.txt', 'wb')
+    adj = np.zeros([NumGoodsample,NumGoodsample])
+    num = np.arange(fnum)
+    print('using gaussian kernel...')
+    for i in range(NumGoodsample):
+        for j in range(NumGoodsample):
+            if i<j:            
+                tmp1 = x_re[i,:]!=0
+                tmp2 = x_re[j,:]!=0
+                idx  = num[tmp1&tmp2]
+                if len(idx)>0: # has overlapping
+                # if len(idx)>=30: # at least overlap for 100 frames
+                    sidx     = idx[1:-1]
+                    sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                    sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
+                    mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
+
+                    adj[i,j] = adj_element(sxdiff, sydiff, mdis)
+                """visualize the neighbours"""
+                # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
+                # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
+                # fig888.canvas.draw()
+                # plt.pause(0.0001)
+            else:
+                adj[i,j] = adj[j,i]
+    spdfile.close()
+    return adj
+
+
+def construct_adj_thresholding(NumGoodsample, x_re, y_re):
+    print('Building Binary adj mtx after thresholing the speed and spatial location differences.')
+    adj     = np.zeros([NumGoodsample,NumGoodsample])
+    spdfile = open('./mdis.txt', 'wb')
+    dth     = 300 #30*1.5
+    yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
+    xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
+    num     = np.arange(fnum)
+    # build adjacent mtx
+    for i in range(NumGoodsample):
+        # plt.cla()
+        # pdb.set_trace()
+        for j in range(NumGoodsample):
+            if i<j:
+                tmp1 = x_re[i,:]!=0
+                tmp2 = x_re[j,:]!=0
+                idx  = num[tmp1&tmp2]
+                if len(idx)>0: # has overlapping
+                # if len(idx)>=30: # at least overlap for 100 frames
+                    sidx     = idx[1:-1]
+                    sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                    sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
+                    # spdfile.write(str(i)+' '+str(sxdiff)+'\n')
+
+                    if (sxdiff <xspdth ) & (sydiff<yspdth ):
+                        mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
+                        # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
+                        #mahhattan distance
+                        if mdis < dth:
+                            adj[i,j] = 1
+                            # adj[i,j] = construct_adj(sxdiff, sydiff, mdis)
+                            """visualize the neighbours"""
+                            # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
+                            # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
+                            # fig888.canvas.draw()
+                            # plt.pause(0.0001)
+            else:
+                adj[i,j] = adj[j,i]
+    spdfile.close()
+    return adj
+
+
+
 def trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 15, fps = 4):
     transth  = 60*fps   #transition time (red light time)
     mask = []
@@ -84,6 +166,13 @@ if __name__ == '__main__':
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
 
+    # """to visualize the neighbours"""
+    fig888 = plt.figure()
+    ax = plt.subplot(1,1,1)
+    color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
+
+
+
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -109,13 +198,6 @@ if __name__ == '__main__':
                 endPt[tt]   =  np.max(np.where(x[tt,:]!=0))
 
 
-        # """to visualize the neighbours"""
-        fig888 = plt.figure()
-        ax = plt.subplot(1,1,1)
-        color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
-
-
-
         # xspeed = np.diff(x)*((x!=0)[:,1:])  # wrong!
         # yspeed = np.diff(y)*((y!=0)[:,1:])
         
@@ -131,12 +213,10 @@ if __name__ == '__main__':
                 xspeed[ii, int(endPt[ii]-1)] = 0 
                 yspeed[ii, int(max(startPt[ii]-1,0))] = 0 
                 yspeed[ii, int(endPt[ii]-1)] = 0 
-
-
         
         speed = np.abs(xspeed)+np.abs(yspeed)
         
-        print "Num of original samples is" , Numsample
+        print "Num of original samples is " , Numsample
         if isAfterWarpping:
             x_re = x
             y_re = y
@@ -144,54 +224,17 @@ if __name__ == '__main__':
             xspd = xspeed
             yspd = yspeed
             mask = ptsidx
-            print('initialization finished....')
         else:
             mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 1, fps = 4)
         print('initialization finished....')
-
-
-
-
+        
         NumGoodsample = len(x_re)
-        adj    = np.zeros([NumGoodsample,NumGoodsample])
-        dth    = 30*1.5
-        spdth  = 5 #speed threshold
-        locth = 100
-        num    = np.arange(fnum)
-
-
         print "Num of Good samples is" , NumGoodsample
-        # print "min(x):", np.min(x), " max(x):",  np.max(x)
-        print "min(y):", np.min(y), " max(y):",  np.max(y)
 
         print('building adj mtx ....')
-        # build adjacent mtx
-        for i in range(NumGoodsample):
-            # plt.cla()
+        # adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
+        adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
 
-            for j in range(NumGoodsample):
-                if i<j:
-                    tmp1 = x_re[i,:]!=0
-                    tmp2 = x_re[j,:]!=0
-                    idx  = num[tmp1&tmp2]
-                    if len(idx)>0: # has overlapping
-                    # if len(idx)>=30: # at least overlap for 100 frames
-                        sidx     = idx[1:-1]
-                        sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                        sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
-                        
-                        if (sxdiff <spdth ) & (sydiff<spdth ):
-                            mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
-                            #mahhattan distance
-                            if mdis < dth:
-                                adj[i,j] = 1
-                                """visualize the neighbours"""
-                                # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
-                                # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
-                                # fig888.canvas.draw()
-                                # plt.pause(0.0001)
-                else:
-                    adj[i,j] = adj[j,i]
 
         sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
@@ -235,4 +278,3 @@ if __name__ == '__main__':
 
 
 
- # lines = ax.plot(x[980,np.where(x[980,:]!=0)], y[980,np.where(x[980,:]!=0)],color = (1,1,0))

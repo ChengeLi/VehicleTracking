@@ -29,7 +29,8 @@ def Virctr(x,y):
         my = np.mean(y)
         sx = np.std(x)
         sy = np.std(y)
-        idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+        # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+        idx = ((x-mx)<sx)&((y-my)<sy)
         vcx = np.mean(x[idx])
         vcy = np.mean(y[idx])
     return vcx,vcy
@@ -37,7 +38,7 @@ def Virctr(x,y):
 
 
 
-def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing ,isSave):  # get the time dictionary, such as vctime
+def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing ,isSave, useVirtualCenter=False):  # get the time dictionary, such as vctime
     # applicable to both clustered and non-clustered trj datas
     # If non-clustered trjs, the input mlabels are just the trj ID (mask)
     
@@ -65,12 +66,12 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
         if (frame_idx % trunclen == 0):
             
             trunkTrjFile = loadmat(matfiles[frame_idx/trunclen])
-            xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-            ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
-            IDintrunk = trunkTrjFile['mask'][0]
-            Nsample = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
-            fnum   = trunkTrjFile['xtracks'].shape[1] # 600
-            ttrj = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+            xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            IDintrunk    = trunkTrjFile['mask'][0]
+            Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
+            fnum         = trunkTrjFile['xtracks'].shape[1] # 600
+            ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
 
             # trk = np.zeros([Nsample,fnum,3])
             # for i in range(Nsample):  # for the ith sample
@@ -143,18 +144,16 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                             pdb.set_trace() 
 
         
-
-        # pdb.set_trace()
         # current frame index is: (frame_idx%trunclen)
         PtsInCurFrm = xtrj[:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf = list(set(mlabels[IDinCurFrm])) # label in current frame
         for k in np.unique(labinf):
             if k !=-1:
-                x = xtrj.T[frame_idx%trunclen][((mlabels==k)[IDintrunk])&PtsInCurFrm]
-                y = ytrj.T[frame_idx%trunclen][((mlabels==k)[IDintrunk])&PtsInCurFrm]
+                x = xtrj.T[frame_idx%trunclen][(mlabels[IDintrunk]==k)&PtsInCurFrm]
+                y = ytrj.T[frame_idx%trunclen][(mlabels[IDintrunk]==k)&PtsInCurFrm]
                 
-                if isClustered:
+                if useVirtualCenter:
                     vx,vy = Virctr(x,y) # find virtual center
                 else:
                     vx = x
@@ -194,18 +193,28 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
         # end of while loop
 
 
-# ====fix me 
 def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     dots = []
     line_exist = 0
     for k in np.unique(labinf):
         if k !=-1:
-            lines = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
-            line_exist = 1
-            # dots.append(axL.scatter(vx, vy, s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
-            # dots.append(axL.scatter(x, y, s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
-            # dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
-    
+            if len(vcxtrj[k])==1 and len(vcytrj[k])==1: #only the virtual center
+                line = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
+                line_exist = 1
+                # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
+                # dots.append(axL.scatter(x, y, s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
+                # dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
+            else:
+                lines      = []
+                # line_exist = []
+                for point in range(len(vcxtrj[k])):
+                    line = axL.plot(vcxtrj[k][point],vcytrj[k][point],color = (color[k-1].T)/255.,linewidth=2)
+                    lines.append(line)
+                    # line_exist.append(1)
+                    line_exist = 1
+
+
+
     im.set_data(frame[:,:,::-1])
         
     fig.canvas.draw()
@@ -215,13 +224,25 @@ def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # name = './canalResult/original/'+str(frame_idx).zfill(6)+'.jpg'
     # plt.savefig(name) ##save figure
 
-    while line_exist :
-        try:
-            axL.lines.pop(0)
-        except:
-            line_exist = 0
-    for i in dots:
-        i.remove()
+    if len(vcxtrj[k])==1 and len(vcytrj[k])==1: #only the virtual center
+        while line_exist :
+            try:
+                axL.line.pop(0)
+            except:
+                line_exist = 0
+        for i in dots:
+            i.remove()
+    else:
+        while line_exist :
+            try:
+                axL.line.pop(0)
+            except:
+                line_exist = 0
+                
+        for i in dots:
+            i.remove()
+
+
     plt.show()
 
 
@@ -257,12 +278,13 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
 
 
 if __name__ == '__main__':
-    frame_idx       = 0
-    trunclen        = 600
-    isClustered     = False
-    isVisualize     = True
-    isAfterWarpping = True
-    
+    frame_idx        = 0
+    trunclen         = 600
+    isClustered      = True
+    isAfterWarpping  = True
+    isVisualize      = True
+    useVirtualCenter = False
+
     if isAfterWarpping:        
         isLeft = True
         isSave = False
@@ -282,5 +304,5 @@ if __name__ == '__main__':
     im  = plt.imshow(np.zeros([nrows,ncols,3]))
     plt.axis('off')
 
-    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing, isSave)
+    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing, isSave, useVirtualCenter)
 

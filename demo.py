@@ -58,6 +58,9 @@ print "unify right labels"
 unify_label.unify_label('../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/','../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right')
 
 
+# visualize the clustered warped trjs in warpped imgs
+execfile('trj2dic.py') 
+
 
 
 

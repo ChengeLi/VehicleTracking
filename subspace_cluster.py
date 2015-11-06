@@ -136,11 +136,11 @@ def visulize(data,labels,clf):
 
 
 def ssc_with_Adj_CC(file):
-
+    
     feature =(file['adj'] > 0).astype('float')  ## adj mtx
     CClabel = file['c']  #labels from connected Component 
-    mask = file['mask']
-    labels = np.zeros(CClabel.size)
+    mask    = file['mask']
+    labels  = np.zeros(CClabel.size)
     for i in np.unique(CClabel):
         print i
         sub_index = np.where(CClabel==i)[1] #noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
     isSave            = True
-    isVisualize       = False
+    isVisualize       = True
 
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
