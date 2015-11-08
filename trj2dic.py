@@ -72,13 +72,6 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
             Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
             fnum         = trunkTrjFile['xtracks'].shape[1] # 600
             ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
-
-            # trk = np.zeros([Nsample,fnum,3])
-            # for i in range(Nsample):  # for the ith sample
-            #     trk[i,:,0] = xtrj[i,:]
-            #     trk[i,:,1] = ytrj[i,:]
-            #     trk[i,:,2] = ttrj[i,:]
-
             startT = np.int32(np.ones([Nsample,1])*-999)
             endT = np.int32(np.ones([Nsample,1])*-999)
 
@@ -121,7 +114,6 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                         startfrm=np.int32(min(t1[t1!=-999])) # earliest appering time in this trj group
                         endfrm=np.int32(max(t2[t2!=-999]))   # latest disappering time in this trj group
                     else:
-                        # pdb.set_trace()
                         print "!!!!error!!!!!!there are no trjs in class", str(k)
                         print "It's Ok to skip these...Now only consider left lane"
                         startfrm=-888
@@ -149,7 +141,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
         IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf = list(set(mlabels[IDinCurFrm])) # label in current frame
         for k in np.unique(labinf):
-            if k !=-1:
+            if k != -1:
                 x = xtrj.T[frame_idx%trunclen][(mlabels[IDintrunk]==k)&PtsInCurFrm]
                 y = ytrj.T[frame_idx%trunclen][(mlabels[IDintrunk]==k)&PtsInCurFrm]
                 
@@ -157,18 +149,18 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                     vx,vy = Virctr(x,y) # find virtual center
                 else:
                     vx = x
-                    vy = y            
-                if vx<0 or vy<0:
-                    continue
+                    vy = y
+                # if vx<0 or vy<0:
+                #     continue
                 vcxtrj[k].append(vx) 
                 vcytrj[k].append(vy)
 
         if isVisualize:
             # Get the frame and visualize!
             # ret, frame[:] = cam.read()
-            tmpName= image_listing[frame_idx]
-            frame=cv2.imread(tmpName)
-            visualize_trj(axL,im,labinf,vcxtrj, vcytrj,frame, color,frame_idx)
+            tmpName = image_listing[frame_idx]
+            frame   = cv2.imread(tmpName)
+            visualize_trj(axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx)
             
 
         if isSave:    
@@ -182,9 +174,9 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                 save_vcxtrj = {}
                 save_vcytrj = {}
                 for i in np.unique(IDintrunk): 
-                    save_vctime[i]=np.array(vctime[i])
-                    save_vcxtrj[i]=np.array(vcxtrj[i])
-                    save_vcytrj[i]=np.array(vcytrj[i])
+                    save_vctime[i] = np.array(vctime[i])
+                    save_vcxtrj[i] = np.array(vcxtrj[i])
+                    save_vcytrj[i] = np.array(vcytrj[i])
                 pickle.dump( save_vctime, open( savenameT, "wb" ) )
                 pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
                 pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
@@ -194,54 +186,50 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
 
 
 def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
-    dots = []
+    dots       = []
     line_exist = 0
+
     for k in np.unique(labinf):
         if k !=-1:
-            if len(vcxtrj[k])==1 and len(vcytrj[k])==1: #only the virtual center
-                line = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
-                line_exist = 1
-                # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
-                # dots.append(axL.scatter(x, y, s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
-                # dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
-            else:
-                lines      = []
-                # line_exist = []
-                for point in range(len(vcxtrj[k])):
-                    line = axL.plot(vcxtrj[k][point],vcytrj[k][point],color = (color[k-1].T)/255.,linewidth=2)
-                    lines.append(line)
-                    # line_exist.append(1)
-                    line_exist = 1
+            # if len(vcxtrj[k][frame_idx])==1 and len(vcytrj[k][frame_idx])==1: #only the virtual center
+            #     line       = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
+            #     line_exist = 1
+            #     # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
+            #     # dots.append(axL.scatter(x, y, s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
+            #     # dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
+            # else:
+            #     """if draw dots"""
+            #     for point in range(len(vcxtrj[k][-1])): #only need to plot the last one
+            #         # pdb.set_trace()
+            #         print "k = ", str(k), "point = ", str(point)
+            #         dots.append(axL.scatter(vcxtrj[k][-1][point], vcytrj[k][-1][point], s=30, color=(color[k-1].T)/255.))
+            #     """if draw lines"""
+            #     # for kk in range(frame_idx):
+            #     #     pdb.set_trace()
+            #     #     for point in range(len(vcxtrj[k][frame_idx])): 
+            #     #         line       = axL.plot(vcxtrj[k][:frame_idx][point],vcytrj[k][:][point],color = (color[k-1].T)/255.,linewidth=2)
+            #     #         line_exist = 1
 
+            for point in range(len(vcxtrj[k][-1])): #only need to plot the last one
+                # print "k = ", str(k), "point = ", str(point)
+                dots.append(axL.scatter(vcxtrj[k][-1][point], vcytrj[k][-1][point], s=20, color=(color[k-1].T)/255.))
 
 
     im.set_data(frame[:,:,::-1])
-        
     fig.canvas.draw()
     plt.draw()
-    plt.pause(0.00001) 
+    # plt.pause(0.00001) 
 
     # name = './canalResult/original/'+str(frame_idx).zfill(6)+'.jpg'
     # plt.savefig(name) ##save figure
 
-    if len(vcxtrj[k])==1 and len(vcytrj[k])==1: #only the virtual center
-        while line_exist :
-            try:
-                axL.line.pop(0)
-            except:
-                line_exist = 0
-        for i in dots:
-            i.remove()
-    else:
-        while line_exist :
-            try:
-                axL.line.pop(0)
-            except:
-                line_exist = 0
-                
-        for i in dots:
-            i.remove()
-
+    while line_exist :
+        try:
+            axL.line.pop(0)
+        except:
+            line_exist = 0
+    for i in dots:
+        i.remove()
 
     plt.show()
 
@@ -286,7 +274,7 @@ if __name__ == '__main__':
     useVirtualCenter = False
 
     if isAfterWarpping:        
-        isLeft = True
+        isLeft = False
         isSave = False
     else:
         isSave = True

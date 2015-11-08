@@ -8,34 +8,45 @@ import matplotlib.pyplot as plt
 import math
 
 
-def adj_element(sxdiff, sydiff, mdis):
+def adj_gaussian_element(sxdiff, sydiff, mdis):
     sigma_xspd_diff = 0.7
     sigma_yspd_diff = 0.7
     sigma_spatial_distance = 200
     adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
-    if adj_element==nan:
-        pdb.set_trace()
     return adj_element
 
+
+def adj_cosine_element(i_trj,j_trj):
+    # cosine similarity
+    cos_element = np.dot(i_trj,j_trj)/np.sqrt(sum(abs(i_trj)**2))/np.sqrt(sum(abs(j_trj)**2))
+    cos_element = (cos_element+1)/2 # make them all positive  
+    print "cos_element: ", str(cos_element)
+    if math.isnan(cos_element):
+        pdb.set_trace()
+    return cos_element
+
+
+
 def construct_adj_gaussian(NumGoodsample, x_re, y_re):
-    # spdfile = open('./mdis.txt', 'wb')
     adj = np.zeros([NumGoodsample,NumGoodsample])
     num = np.arange(fnum)
     print('using gaussian kernel...')
     for i in range(NumGoodsample):
         for j in range(NumGoodsample):
-            if i<j:            
+            if i<=j:            
                 tmp1 = x_re[i,:]!=0
                 tmp2 = x_re[j,:]!=0
                 idx  = num[tmp1&tmp2]
-                if len(idx)>0: # has overlapping
+                if len(idx)>3: # has overlapping
                 # if len(idx)>=30: # at least overlap for 100 frames
                     sidx     = idx[1:-1]
                     sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                     sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
                     mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
 
-                    adj[i,j] = adj_element(sxdiff, sydiff, mdis)
+                    adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
+                    if math.isnan(adj[i,j]):
+                        pdb.set_trace()
                 """visualize the neighbours"""
                 # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
                 # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
@@ -43,8 +54,37 @@ def construct_adj_gaussian(NumGoodsample, x_re, y_re):
                 # plt.pause(0.0001)
             else:
                 adj[i,j] = adj[j,i]
-    spdfile.close()
     return adj
+
+def construct_adj_cosine(NumGoodsample, x_re, y_re):
+    adj = np.zeros([NumGoodsample,NumGoodsample])
+    num = np.arange(fnum)
+    print('using gaussian kernel...')
+    for i in range(NumGoodsample):
+        for j in range(NumGoodsample):
+            if i<=j:            
+                tmp1 = x_re[i,:]!=0
+                tmp2 = x_re[j,:]!=0
+                idx  = num[tmp1&tmp2]
+                if len(idx)>0: # has overlapping
+                # if len(idx)>=30: # at least overlap for 100 frames
+                    sidx = idx[1:-1]
+                    if len(sidx)<1:
+                        continue
+                    i_trj = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
+                    j_trj = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
+                    adj[i,j] = adj_cosine_element(i_trj,j_trj)
+
+                """visualize the neighbours"""
+                # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
+                # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
+                # fig888.canvas.draw()
+                # plt.pause(0.0001)
+            else:
+                adj[i,j] = adj[j,i]
+    return adj
+
+
 
 
 def construct_adj_thresholding(NumGoodsample, x_re, y_re):
@@ -60,7 +100,7 @@ def construct_adj_thresholding(NumGoodsample, x_re, y_re):
         # plt.cla()
         # pdb.set_trace()
         for j in range(NumGoodsample):
-            if i<j:
+            if i<=j:
                 tmp1 = x_re[i,:]!=0
                 tmp2 = x_re[j,:]!=0
                 idx  = num[tmp1&tmp2]
@@ -163,14 +203,12 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
 if __name__ == '__main__':
 
     isAfterWarpping   = True
-    isLeft            = False
+    isLeft            = True
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
 
     # """to visualize the neighbours"""
     fig888 = plt.figure()
     ax = plt.subplot(1,1,1)
-    color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
-
 
 
     for matidx,matfile in enumerate(matfiles):
@@ -185,6 +223,7 @@ if __name__ == '__main__':
         ptsidx    = ptstrj['mask'][0]
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
+        color     = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
 
         startPt = np.zeros((Numsample,1))
         endPt = np.zeros((Numsample,1))
@@ -234,7 +273,8 @@ if __name__ == '__main__':
         print('building adj mtx ....')
         # adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
         adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
-
+        # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
+        pdb.set_trace()
 
         sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label

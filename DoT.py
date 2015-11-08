@@ -27,18 +27,20 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     frameW = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     # vid = np.zeros([15350,480,640,3],dtype = uint8)
     vid = np.zeros([Numfrm,frameH,frameW,3], dtype = np.uint8)
-
     
-    
-
-    start_position = int(skipTime*(Frmrate))
+    start_position = 0+skipChunk
+    # start_position = int(skipTime*(Frmrate))
     # start_position = startFrm[kkthInterval]
 
 
     print 'reading buffer...'
-    for ii in range(start_position):
-        print(ii)
-        rval, img = cap.read()
+    # for ii in range(start_position):
+    #     print(ii)
+    #     rval, img = cap.read()
+    # or just set:
+    cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
+
+
 
     print 'reading frames...'
     for ii in range(Numfrm):
@@ -65,7 +67,7 @@ if __name__ == '__main__':
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
 
     readlength = 2000
-    vid, start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
+    vid, start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 2000)
     
 
 
