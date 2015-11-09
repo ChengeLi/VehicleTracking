@@ -50,7 +50,6 @@ def klt_tracker(isVideo, \
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-#        pdb.set_trace()
         status, frame = cap.read()
    
     if not isVideo:  # -- get the full image list
@@ -142,8 +141,8 @@ def klt_tracker(isVideo, \
         # cv2.imshow('klt', vis)
         # cv2.waitKey(5)
         
-        plt.imshow(vis[:,:,::-1])
-        plt.pause(0.00001)
+        # plt.imshow(vis[:,:,::-1])
+        # plt.pause(0.00001)
 
         # dump trajectories to file
         if  (frame_idx % trunclen) == 0:
@@ -205,9 +204,8 @@ def klt_tracker(isVideo, \
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/mat/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+
-            #                         str(frame_idx/trunclen).zfill(3))
-            # savemat(savename,trk)
+            savename = os.path.join(savePath,'klt_'+str(frame_idx/trunclen).zfill(3))
+            savemat(savename,trk)
 
 
             # for dead tracks, remove them.  for alive tracks, remove all

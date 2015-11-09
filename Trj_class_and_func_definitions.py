@@ -21,7 +21,7 @@ class TrjObj():
         self.bad_IDs4 = [] # X direction 
 
         for key, val in vctime.iteritems():
-            if (val ==[]) or (val[1]-val[0]+1 <= 10): 
+            if (len(val)==0) or (val[1]-val[0]+1 <= 10):
                 self.bad_IDs1.append(key)
 
 
@@ -29,11 +29,11 @@ class TrjObj():
             x_location = vcxtrj[key]
             y_location = vcytrj[key]
             # pdb.set_trace()            
-            if not vctime[key]==[]:
+            if len(vctime[key])==2:
                 curfrm = range(vctime[key][0],vctime[key][1]+1)
                 if np.size(curfrm)!= np.size(value):
                     print "error!==============================="
-                    print('curfrm size : {0}, value size : {1}').format(np.size(curfrm),np.size(value))
+                    print('vctime size : {0}, vcxtrj size : {1}').format(np.size(curfrm),np.size(value))
                     self.bad_IDs2.append(key)
                                    
                 else:
@@ -57,9 +57,9 @@ class TrjObj():
                 self.bad_IDs3.append(key)
 
             # if abs( ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1])) >=-1).sum()-(np.size(self.xTrj[key])-1))<=5:
-            if ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))>=-1).sum()/float((np.size(self.xTrj[key])-1))>=0.90:
+            if ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))>=0).sum()/float((np.size(self.xTrj[key])-1))>=0.70:
             	self.Xdir[key] = 1
-            elif ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))<=1).sum()/float((np.size(self.xTrj[key])-1))>=0.90:  #more than 70% 
+            elif ((np.asarray(self.xTrj[key][1:])-np.asarray(self.xTrj[key][:-1]))<=0).sum()/float((np.size(self.xTrj[key])-1))>=0.70:  #more than 70% 
             	self.Xdir[key] = 0	 
             else: 
                 self.Xdir[key] = 999

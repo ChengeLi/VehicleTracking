@@ -130,51 +130,6 @@ def construct_adj_thresholding(NumGoodsample, x_re, y_re):
 
 
 
-def trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 15, fps = 4):
-    transth  = 60*fps   #transition time (red light time)
-    mask = []
-    x_re = []
-    y_re = []
-    t_re = []
-    xspd = []
-    yspd = []
-    print minspdth
-    # lenfile = open('length.txt', 'wb')
-    # spdfile = open('./tempFigs/maxspeed.txt', 'wb')
-    # stoptimefile = open('stoptime.txt', 'wb')
-    for i in range(Numsample):
-        if sum(x[i,:]!=0)>4:  # new jay st  # chk if trj is long enough
-        # if sum(x[i,:]!=0)>50:  # canal
-            # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
-            # lenfile.write(str(i)+' '+str(sum(x[i,:]!=0))+'\n')
-            # pdb.set_trace()
-            try:
-                # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
-                if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is a moving point
-                    # stoptimefile.write(str(i)+' '+str(sum(speed[i,:][x[i,1:]!=0][1:-1] < 3))+'\n')
-                    if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a stationary point
-
-                        mask.append(ptsidx[i]) # ID 
-                        x_re.append(x[i,:])
-                        y_re.append(y[i,:])
-                        t_re.append(t[i,:])
-
-                        xspd.append(xspeed[i,:])
-                        yspd.append(yspeed[i,:])
-            except:
-                pass
-    # spdfile.close()
-    # stoptimefile.close()
-    # pdb.set_trace()
-    x_re   = np.array(x_re)
-    y_re   = np.array(y_re)
-    t_re   = np.array(t_re)
-    xspd = np.array(xspd)
-    yspd = np.array(yspd)
-    return mask, x_re, y_re, t_re, xspd, yspd
-
-
-
 def prepare_input_data(isAfterWarpping,isLeft=True):
     if isAfterWarpping:
         if isLeft:
@@ -203,7 +158,7 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
 if __name__ == '__main__':
 
     isAfterWarpping   = True
-    isLeft            = True
+    isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
 
     # """to visualize the neighbours"""
@@ -218,7 +173,7 @@ if __name__ == '__main__':
         y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
         if len(t)>0: 
-            t[t==0]=nan
+            t[t==0]=np.nan
 
         ptsidx    = ptstrj['mask'][0]
         Numsample = ptstrj['xtracks'].shape[0]
@@ -230,8 +185,8 @@ if __name__ == '__main__':
 
         for tt in range(Numsample):
             if len(t)>0:
-                startPt[tt] =  mod( np.nanmin(t[tt,:]), 600) #ignore all nans
-                endPt[tt]   =  mod( np.nanmax(t[tt,:]), 600) 
+                startPt[tt] =  np.mod( np.nanmin(t[tt,:]), 600) #ignore all nans
+                endPt[tt]   =  np.mod( np.nanmax(t[tt,:]), 600) 
             else:
                 startPt[tt] =  np.min(np.where(x[tt,:]!=0))
                 endPt[tt]   =  np.max(np.where(x[tt,:]!=0))
@@ -255,22 +210,17 @@ if __name__ == '__main__':
         
         speed = np.abs(xspeed)+np.abs(yspeed)
         
-        print "Num of original samples is " , Numsample
-        if isAfterWarpping:
-            x_re = x
-            y_re = y
-            t_re = []
-            xspd = xspeed
-            yspd = yspeed
-            mask = ptsidx
-        else:
-            mask, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 1, fps = 4)
-        print('initialization finished....')
-        
-        NumGoodsample = len(x_re)
-        print "Num of Good samples is" , NumGoodsample
+        # duplicate
+        # fix me====
+        x_re = x
+        y_re = y
+        t_re = []
+        xspd = xspeed
+        yspd = yspeed
+        mask = ptsidx
 
         print('building adj mtx ....')
+        NumGoodsample = len(x_re)
         # adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
         adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
         # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
@@ -289,10 +239,10 @@ if __name__ == '__main__':
         result['yspd']    = yspd
 
         if not isAfterWarpping:
-            savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+1).zfill(3))
+            savename = os.path.join(savePath,'Adj_'+str(matidx).zfill(3))
             savemat(savename,result)
         else:
-            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
+            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx).zfill(3))
             savemat(savename,result)
             
 

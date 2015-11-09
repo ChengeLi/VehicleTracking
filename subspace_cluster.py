@@ -48,18 +48,17 @@ class sparse_subspace_clustering:
 
         for i in range(self.dataset.shape[0]):
             print i
-            idx = np.where(self.dataset[i,:]!=0)[0]
-            temp_Y = self.dataset[i,idx]/np_lg.norm(self.dataset[i,idx])
-            temp_X = np.zeros([self.dataset.shape[0]+idx.size,idx.size])
+            idx         = np.where(self.dataset[i,:]!=0)[0]
+            temp_Y      = self.dataset[i,idx]/np_lg.norm(self.dataset[i,idx])
+            temp_X      = np.zeros([self.dataset.shape[0]+idx.size,idx.size])
             temp_X_norm = 1.0/(np_lg.norm(self.dataset[:,idx],axis = 1)+np.power(10,-10))
             temp_X_norm[np.where(np.isinf(temp_X_norm))[0]] = 0
-            temp_X[0:self.dataset.shape[0],:] = self.dataset[:,idx]*np.transpose(np_mat.repmat(temp_X_norm,idx.size,1))
+            temp_X[0 :self.dataset.shape[0],:] = self.dataset[:,idx]*np.transpose(np_mat.repmat(temp_X_norm,idx.size,1))
             temp_X[i,:] = np.zeros(idx.size)
-            temp_X[self.dataset.shape[0]:self.dataset.shape[0]+idx.size,:]= np.diag(np.ones(idx.size)*0.1)
+            temp_X[self.dataset.shape[0]:self.dataset.shape[0]+idx.size,:] = np.diag(np.ones(idx.size)*0.1)
 
             clf = sklearn.linear_model.Lasso(1/np.power(idx.size,0.5)/1000)
             clf.fit(temp_X.T*100,temp_Y*100)
-#            pdb.set_trace()
             adjacency[i,:]= clf.sparse_coef_.todense()[:,0:self.dataset.shape[0]]
         self.adjacency = np.abs( adjacency +np.transpose(adjacency))
     
@@ -67,9 +66,9 @@ class sparse_subspace_clustering:
     
     
     def manifold(self):
-        random_state = check_random_state(self.random_state)
+        random_state    = check_random_state(self.random_state)
         self.embedding_ = spectral_embedding(self.adjacency,n_components=self.n_dimension,eigen_solver='arpack',random_state=random_state)*1000
-    def clustering(self,n_components,alpha):
+    def clustering_DPGMM(self,n_components,alpha):
         model = mixture.DPGMM(n_components=n_components,alpha=alpha,n_iter = 1000)
         model.fit(self.embedding_)
         self.label = model.predict(self.embedding_)
@@ -92,7 +91,8 @@ class sparse_subspace_clustering:
                 ssc = sparse_subspace_clustering(2000000,temp_mat,n_dimension = project_dimension)
                 ssc.get_adjacency(sub_matrix)
                 ssc.manifold()
-                sub_labels,model = ssc.clustering(n_components=int(np.floor(sub_index.size/min_sample_cluster)+1),alpha= alpha)
+                sub_labels,model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/min_sample_cluster)+1),alpha= alpha)
+                print "project dimension is: ", str(project_dimension)
             #        visulize(ssc.embedding_,sub_labels,model)
                 labels[sub_index] = np.max(labels) + sub_labels
                 print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
@@ -114,9 +114,10 @@ class sparse_subspace_clustering:
         self.label = model.predict(self.embedding_)
         return self.label
     
-def visulize(data,labels,clf):
-    color_iter =itertools.cycle(['r', 'g', 'b', 'c', 'm'])
-    for i, (mean, covar, color) in enumerate(zip(clf.means_, clf._get_covars(), color_iter)):
+def visulize(data,labels,clf,color):
+    # color_iter =itertools.cycle(['r', 'g', 'b', 'c', 'm'])
+    # for i, (mean, covar, color) in enumerate(zip(clf.means_, clf._get_covars(), color_iter)):
+    for i, (mean, covar) in enumerate(zip(clf.means_, clf._get_covars())):
         v, w = linalg.eigh(covar)
         u = w[0] / linalg.norm(w[0])
         # as the DP will not use every component it has access to
@@ -124,42 +125,59 @@ def visulize(data,labels,clf):
         # components.
         if not np.any(labels == i):
             continue
-        plt.scatter(data[labels == i, 0], data[labels== i, 1], .8, color=color)
+        if data.shape[1]>=2:
+            plt.scatter(data[labels == i, 0], data[labels== i, 1], 8, color=tuple(color))
+        else:
+            pass
+            # print "projected to one dimension."
+            # plt.scatter(range(data[labels == i, 0].shape[0]),data[labels == i, 0], 8, color=color)
         
         # Plot an ellipse to show the Gaussian component
         #    plt.xlim(-6, 4 * np.pi - 6)
 #    plt.ylim(-5, 5)
 #    plt.title(title)
-    plt.xticks(())
-    plt.yticks(())
+    # plt.xticks(())
+    # plt.yticks(())
     plt.show()
 
 
 def ssc_with_Adj_CC(file):
     
-    feature =(file['adj'] > 0).astype('float')  ## adj mtx
-    CClabel = file['c']  #labels from connected Component 
-    mask    = file['mask']
-    labels  = np.zeros(CClabel.size)
+    feature      =(file['adj'] > 0).astype('float')  ## adj mtx
+    CClabel      = file['c']  #labels from connected Component 
+    mask         = file['mask']
+    labels       = np.zeros(CClabel.size)
+    color_choice = np.array([np.random.randint(0,255) \
+       for _ in range(3*int(CClabel.size))])\
+       .reshape(int(CClabel.size),3)
     for i in np.unique(CClabel):
-        print i
+        color = ((color_choice[i].T)/255.)
+        # print "connected component No. " ,str(i)
         sub_index = np.where(CClabel==i)[1] #noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
         sub_matrix = feature[sub_index][:,sub_index]
         if sub_index.size >3:  
-            project_dimension = int(np.floor(sub_index.size/100)+1)  
+            project_dimension = int(np.floor(sub_index.size/100)+1)
+            # project_dimension = int(np.floor(sub_index.size/50)+1)
+            # project_dimension = 2
+            print "project dimension is: ", str(project_dimension)  
             ssc = sparse_subspace_clustering(2000000,feature,n_dimension = project_dimension)
             ssc.get_adjacency(sub_matrix)
             ssc.manifold()
-            sub_labels,model = ssc.clustering(n_components=int(np.floor(sub_index.size/2)+1),alpha= 0.1)
+            # sub_labels,model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/2)+1),alpha=0.1)
+            sub_labels,model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/4)+1),alpha=0.1)
+
+            # pdb.set_trace()
+            # visulize(ssc.embedding_,sub_labels,model,color)
+
             #            sub_labels = ssc.clustering_kmeans(int(np.floor(sub_index.size/4)+1))
             #        visulize(ssc.embedding_,sub_labels,model)
             labels[sub_index] = np.max(labels) + (sub_labels+1)
             # print sub_labels  ## not always start from 0?? 
-            print 'number of trajectory in this connected components%s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
+            print 'number of trajectory in this connected components %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
         else:   ## if size small, treat as one group
             sub_labels = np.ones(sub_index.size)
             labels[sub_index] = np.max(labels) + sub_labels
-            print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
+            # print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
     j = 0
     labels_new = np.zeros(labels.shape)
     unique_array =np.unique(labels)
@@ -185,7 +203,6 @@ def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples exce
     adj    = ssc.adjacency
     ssc.manifold()
     labels = ssc.clustering_connected(threshold = 0,min_sample_cluster = 50,alpha = 0.1)
-
     return mask,labels,adj
 
 def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj choice to be within neighbours
@@ -205,8 +222,6 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
     for i in np.unique(CClabel):
         print i
         sub_index = np.where(CClabel==i)[1]
-
-        
         if sub_index.size >3:  
             if sub_index.size <100: #if connected component too big, just use the binary adj
                 project_dimension = int(np.floor(sub_index.size/100)+1)  
@@ -278,7 +293,6 @@ def prepare_input_data(isAfterWarpping,isLeft):
 
 if __name__ == '__main__':   
     """With constructed adjacency matrix """
-    
     isAfterWarpping   = True
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
@@ -295,7 +309,7 @@ if __name__ == '__main__':
         """ construct adj use ssc, with Neighbour adj as constraint"""
         # mask,labels = sscAdj_inNeighbour(file)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         if isVisualize:
             # visualize different classes seperated by SSC for each Connected Component
             """  use the original trj files  """
@@ -309,7 +323,7 @@ if __name__ == '__main__':
             ytrj = file['ytracks']
 
             color  = np.array([np.random.randint(0,255) for _ in range(3*int(max(labels)+1))]).reshape(int(max(labels)+1),3)
-            fig999 = plt.figure(999)
+            fig999 = plt.figure()
             # plt.ion()
             ax     = plt.subplot(1,1,1)
             
@@ -337,15 +351,15 @@ if __name__ == '__main__':
             fig999.canvas.draw()
         else:
             pass
-        pdb.set_trace()
-
+        
+        # pdb.set_trace()
         if isSave:
             print "saving the labels..."
             labelsave            = {}
             # labelsave['label']   = np.array(newlabels)
             labelsave['label']   = labels
             labelsave['mask']    = mask
-            savename = savePath+ str(matidx+1).zfill(3)
+            savename = savePath+'ssc_'+ str(matidx).zfill(3)
             savemat(savename,labelsave)
 
     """SSC clustering Andy Project"""

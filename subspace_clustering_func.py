@@ -29,8 +29,7 @@ class sparse_subspace_clustering:
         adjacency      = np.zeros([self.dataset.shape[0],self.dataset.shape[0]])
         for i in range(self.dataset.shape[0]):
             
-            clf = sklearn.linear_model.Lasso(self.lambd)
-#            pdb.set_trace()
+            clf    = sklearn.linear_model.Lasso(self.lambd)
             temp_Y = self.dataset[i,:]
             temp_X = np.zeros(self.dataset.shape)
             for j in range(self.dataset.shape[0]):
@@ -45,7 +44,7 @@ class sparse_subspace_clustering:
     def construct_adjacency_non_fix_len(self):
         """samples not dimension aligned"""
         self.adjacency = np.zeros([self.dataset.shape[0],self.dataset.shape[0]])
-        adjacency = np.zeros([self.dataset.shape[0],self.dataset.shape[0]])
+        adjacency      = np.zeros([self.dataset.shape[0],self.dataset.shape[0]])
 
         for i in range(self.dataset.shape[0]):
             print i

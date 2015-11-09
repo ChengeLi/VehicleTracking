@@ -38,7 +38,7 @@ def Virctr(x,y):
 
 
 
-def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing ,isSave, useVirtualCenter=False):  # get the time dictionary, such as vctime
+def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
     # applicable to both clustered and non-clustered trj datas
     # If non-clustered trjs, the input mlabels are just the trj ID (mask)
     
@@ -48,18 +48,28 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                for _ in range(3*int(max(IDintrunklast)))])\
                .reshape(int(max(IDintrunklast)),3)
 
-
     # initialization
     vcxtrj = {} ##dictionary
     vcytrj = {}
     vctime = {}
-
-    for i in range(max(IDintrunklast)+1): 
-        vcxtrj[i]=[]
-        vcytrj[i]=[]
-        vctime[i]=[]
-
     mlabels = np.int32(np.ones(max(IDintrunklast)+1)*-1)  #initial to be -1
+
+    if isClustered:
+        mask   = np.uint16(loadmat(lrsl)['mask'][0]) # labeled trjs' indexes
+        labels = loadmat(lrsl)['label'][0]
+        for idx,ID in enumerate(mask):  # ID=mask[idx], the content, trj ID
+            mlabels[int(ID)] = np.int32(labels[int(idx)])
+
+        for i in np.unique(mlabels):  
+            vcxtrj[i]=[] 
+            vcytrj[i]=[]
+            vctime[i]=[] 
+    else:
+        for i in range(max(IDintrunklast)+1): 
+            vcxtrj[i]=[]
+            vcytrj[i]=[]
+            vctime[i]=[]
+
     notconnectedLabel =[]
     while frame_idx < 1800:
         print "frame = ", str(frame_idx)
@@ -71,12 +81,12 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
             IDintrunk    = trunkTrjFile['mask'][0]
             Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
             fnum         = trunkTrjFile['xtracks'].shape[1] # 600
-            ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+            # ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
             startT = np.int32(np.ones([Nsample,1])*-999)
             endT = np.int32(np.ones([Nsample,1])*-999)
 
             for i in range(Nsample):  # for the ith sample## get the time T (where the pt appears and disappears)
-                havePt  = np.array(np.where(xtrj[i,:]>0))[0]
+                havePt  = np.array(np.where(xtrj[i,:]!=0))[0]
                 if len(havePt)!=0:
                     startT[i] = np.int32( min(havePt)+(frame_idx/trunclen*trunclen) )
                     endT[i]   = np.int32( max(havePt)+(frame_idx/trunclen*trunclen) )
@@ -85,31 +95,21 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                     #     print "wrong time===========!!!, want to delete this trj?"
                     #     pdb.set_trace()
             
-            #  get the mlabels
-            if isClustered:                
-                mask = loadmat(lrsl)['mask'][0] # labeled trjs' indexes
-                labels = loadmat(lrsl)['label'][0]
-
-                #build PtsInCurFrm trj labels (-1 : not interest PtsInCurFrm)
-                for idx,ID in enumerate(mask):  # ID=mask[idx], the content, trj ID
-                    mlabels[int(ID)] = np.int32(labels[int(idx)])
-            else:
-                IDintrunk = trunkTrjFile['mask'][0]
-                for idx,ID in enumerate(IDintrunk):  # i=mask[idx], the content
+            #  get the mlabels for unclustered trjs, just the original global ID
+            if not isClustered:
+                for idx,ID in enumerate(IDintrunk):  
                     mlabels[int(ID)] = np.int32(IDintrunk[int(idx)])
-
 
 
             #  get the vctime
             labinT = list(set(mlabels[IDintrunk])) # label in this trunk
             for k in np.unique(labinT):
                 k = np.int32(k)
-                if k !=-1:                             
+                if k !=-1:      
                     t1list=startT[mlabels[IDintrunk]==k]  # consider all IDs in the trunk, not only alive in curFrm
                     t2list=endT[mlabels[IDintrunk]==k]
                     t1 = t1list[t1list!=-999]
                     t2 = t2list[t2list!=-999]
-
                     if len(t1)*len(t2)!=0:
                         startfrm=np.int32(min(t1[t1!=-999])) # earliest appering time in this trj group
                         endfrm=np.int32(max(t2[t2!=-999]))   # latest disappering time in this trj group
@@ -134,8 +134,6 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
                             pdb.set_trace() 
-
-        
         # current frame index is: (frame_idx%trunclen)
         PtsInCurFrm = xtrj[:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
@@ -163,26 +161,42 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
             visualize_trj(axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx)
             
 
-        if isSave:    
-            if frame_idx>=599 and ((frame_idx+1) % trunclen == 0):
-                savePath = "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
-                savenameT = os.path.join(savePath,'vctime_'+str(frame_idx/trunclen).zfill(3))+'.p'
-                savenameX = os.path.join(savePath,'vcxtrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
-                savenameY = os.path.join(savePath,'vcytrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
-                print "Save the dictionary into a pickle file, trunk:", str(frame_idx/trunclen)
-                save_vctime = {}
-                save_vcxtrj = {}
-                save_vcytrj = {}
-                for i in np.unique(IDintrunk): 
-                    save_vctime[i] = np.array(vctime[i])
-                    save_vcxtrj[i] = np.array(vcxtrj[i])
-                    save_vcytrj[i] = np.array(vcytrj[i])
-                pickle.dump( save_vctime, open( savenameT, "wb" ) )
-                pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
-                pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
+        if isSave:
+            savenameT = os.path.join(savePath,'vctime_'+str(frame_idx/trunclen).zfill(3))+'.p'
+            savenameX = os.path.join(savePath,'vcxtrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
+            savenameY = os.path.join(savePath,'vcytrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
+            if not isClustered:    
+                if frame_idx>=599 and ((frame_idx+1) % trunclen == 0):
+                    print "Save the dictionary into a pickle file, trunk:", str(frame_idx/trunclen)
+                    save_vctime = {}
+                    save_vcxtrj = {}
+                    save_vcytrj = {}
+                    for i in np.unique(IDintrunk): 
+                        save_vctime[i] = np.array(vctime[i])
+                        save_vcxtrj[i] = np.array(vcxtrj[i])
+                        save_vcytrj[i] = np.array(vcytrj[i])
+                    pickle.dump( save_vctime, open( savenameT, "wb" ) )
+                    pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
+                    pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
 
         frame_idx = frame_idx+1
         # end of while loop
+
+    if isSave:
+        savenameT = os.path.join(savePath,'final_vctime.p')
+        savenameX = os.path.join(savePath,'final_vcxtrj.p')
+        savenameY = os.path.join(savePath,'final_vcytrj.p')
+        if isClustered: # is clustered
+            save_vctime = {}
+            save_vcxtrj = {}
+            save_vcytrj = {}
+            for i in np.unique(labels): 
+                save_vctime[i] = np.array(vctime[i])
+                save_vcxtrj[i] = np.array(vcxtrj[i])
+                save_vcytrj[i] = np.array(vcytrj[i])
+            pickle.dump( save_vctime, open( savenameT, "wb" ) )
+            pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
+            pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
 
 
 def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
@@ -245,6 +259,7 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
             image_listing = left_image_listing
             # final result for vis
             lrsl = '../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left'
+            savePath = "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/"
 
         else:
             matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
@@ -253,15 +268,16 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
             image_listing = right_image_listing
             # final result for vis
             lrsl = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
-
+            savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
     else:
-        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len' +'*.mat'))
+        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
         image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
         # final result for vis
         lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
+        savePath = "../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
 
-    return matfiles,image_listing,lrsl
+    return matfiles,image_listing,lrsl,savePath
 
 
 
@@ -270,16 +286,13 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = True
-    isVisualize      = True
-    useVirtualCenter = False
+    isVisualize      = False
+    useVirtualCenter = True
+    isLeft           = True
+    isSave           = True
+    
 
-    if isAfterWarpping:        
-        isLeft = False
-        isSave = False
-    else:
-        isSave = True
-
-    matfiles,image_listing,lrsl = prepare_data_to_vis(isAfterWarpping,isLeft)
+    matfiles,image_listing,lrsl, savePath = prepare_data_to_vis(isAfterWarpping,isLeft)
 
     firstfrm  = cv2.imread(image_listing[0])
     nrows     = int(np.size(firstfrm,0))
@@ -292,5 +305,5 @@ if __name__ == '__main__':
     im  = plt.imshow(np.zeros([nrows,ncols,3]))
     plt.axis('off')
 
-    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing, isSave, useVirtualCenter)
+    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing, isSave, savePath, useVirtualCenter)
 

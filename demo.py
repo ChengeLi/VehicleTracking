@@ -59,8 +59,11 @@ unify_label.unify_label('../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/','.
 
 
 # visualize the clustered warped trjs in warpped imgs
+# save the final result to dic format 
 execfile('trj2dic.py') 
 
+
+getVehiclePairs.py
 
 
 

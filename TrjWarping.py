@@ -96,7 +96,7 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False,isSave = 
 			if not isClustered:
 				print "build trj obj using raw trjs (x_re and y_re), non-clustered-yet result."
 				print "Load the dictionary into a pickle file, trunk:", str(frame_idx/trunclen)
-				loadPath   = "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
+				loadPath   = "../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
 				loadnameT  = os.path.join(loadPath,'vctime_'+str(frame_idx/trunclen).zfill(3))+'.p'
 				loadnameX  = os.path.join(loadPath,'vcxtrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
 				loadnameY  = os.path.join(loadPath,'vcytrj_'+str(frame_idx/trunclen).zfill(3))+'.p'
@@ -107,6 +107,7 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False,isSave = 
 				trjObj     = raw_trjObj
 
 			else:
+				# fix me======
 				print "build trj obj using the clustered result."
 				vctime           = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vctime.p", "rb" ) )
 				vcxtrj           = pickle.load(open( "../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/vcxtrj.p", "rb" ) )
@@ -184,7 +185,6 @@ def warpTrjs(frame_idx, warpMtxLeft, warpMtxRight, isClustered = False,isSave = 
 			left_warpped  = cv2.perspectiveTransform(np.array(left_locations[:,:,:]),warpMtxLeft)
 			right_warpped = cv2.perspectiveTransform(np.array(right_locations[:,:,:]),warpMtxRight)
 
-			pdb.set_trace()
 			if isSave:
 				print "Save left and right warpped trjs."
 				saveWarpped(frame_idx,left_lane_ID,left_warpped,left_xtrj,left_ytrj,right_lane_ID,right_warpped,right_xtrj,right_ytrj)
