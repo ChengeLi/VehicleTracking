@@ -15,6 +15,10 @@ savePath = '../tempFigs/roi2/'
 print("running KLT...")
 klt.klt_tracker(isVideo,dataPath=dataPath,savePath=savePath)
 
+print("filter the trjs...")
+execfile('trj_filter.py')
+
+
 print("running trjcluster...")
 # trjcluster.trjcluster(dataPath=dataPath,savePath=savePath)
 execfile('trjcluster_func.py')

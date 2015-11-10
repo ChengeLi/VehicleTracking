@@ -53,10 +53,10 @@ def trj_filter(x, y, t, xspeed, yspeed, speed, ptsidx, Numsample , minspdth = 15
 
 
 def prepare_input_data():
-    matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-    # matfilepath = './tempFigs/roi2/'
-    # savePath = './tempFigs/roi2/' 
+    # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+    # savePath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+    matfilepath = '../tempFigs/roi2/'
+    savePath = '../tempFigs/roi2/filtered/' 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
     return matfiles,savePath

@@ -114,7 +114,6 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
 	gkk  = 0
 	for gkk in range(np.size(cooccur_ran)):
 		temp = []
-		# pdb.set_trace()
 		temp.append(ID111)
 		temp.append(cooccur_ran[gkk])
 		# print gkk
@@ -144,10 +143,10 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 	dots = []
 	# color1 = colors()
 	# color2 = colors()
+	pdb.set_trace()
 	for k in range(np.size(cooccur_ran)):
-	# pdb.set_trace()
 		frame_idx = cooccur_ran[k]
-		print "frame_idx: " ,frame_idx
+		# print "frame_idx: " ,frame_idx
 		tmpName= image_listing[frame_idx]
 		frame=cv2.imread(tmpName)
 		im.set_data(frame[:,:,::-1])
@@ -160,7 +159,6 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
 		# dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=50, color=(1,0,0),edgecolor='none'))
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(0,1,0),edgecolor='none'))
-		# pdb.set_trace()
 		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
 		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=10, color=(color[k2].T)/255.,edgecolor='none'))
 
@@ -168,12 +166,13 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 		plt.show()
 		# pdb.set_trace()
 
-		del dots[:]
-		plt.show()
+		# del dots[:]
+		# plt.show()
 		# pdb.set_trace()
 		# for i in dots:
 		#     i.remove()
-		# plt.show()
+		dots = []
+		plt.show()
 
 		if saveflag == 1:
 			name = './figures/'+str(frame_idx).zfill(6)+'.jpg'
@@ -192,11 +191,10 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color , savef
 	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
 	if coorccurStatus and np.size(cooccur_ran)>=3:
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop) #get xy and write to file
-		# pdb.set_trace()
 		if np.size(cooccur_ran)>=15:
 			saveflag = 0
+			# pdb.set_trace()
 			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2, saveflag) #visualize
-
 
 
 if __name__ == '__main__':
@@ -236,29 +234,32 @@ if __name__ == '__main__':
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 
 	clean_vctime = {key: value for key, value in test_vctime.items() 
-	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
+	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
 	clean_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
+	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
 	clean_vcytrj = {key: value for key, value in test_vcytrj.items() 
-	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
+	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
+
+	print "trj remaining: ", str(len(clean_vctime))
 
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	print obj_pair2.bad_IDs2 == []
-
+	print obj_pair2.globalID
 	# pickle.dump(obj_pair2,open("./mat/20150222_Mat/obj_pair2.p","wb"))
 
 
 	obj2write = obj_pair2
 	savename  = os.path.join(savePath,'Trj_with_ID_frm.csv')
 	writer    = csv.writer(open(savename,'wb'))
+	writer.writerow(['trj ID','frame','x','y','y direction','x direction'])
 	temp      = []
 	for kk in range(np.size(obj2write.Trj_with_ID_frm,0)):
 		temp   =  obj2write.Trj_with_ID_frm[kk]
-		curkey = obj2write.Trj_with_ID_frm[kk][0]
+		curkey =  obj2write.Trj_with_ID_frm[kk][0]
 		temp.append(obj2write.Ydir[curkey])
 		temp.append(obj2write.Xdir[curkey])
 		writer.writerow(temp)
+
 
 
 	# pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
@@ -279,18 +280,19 @@ if __name__ == '__main__':
 	frame   = np.zeros([nrows,ncols,3]).astype('uint8')
 	im      = plt.imshow(np.zeros([nrows,ncols,3]))
 	plt.axis('off')
-	color_choice = np.array([np.random.randint(0,255) for _ in range(3*int(200))]).reshape(int(200),3)
+	color_choice = np.array([np.random.randint(0,255) for _ in range(3*int(max(obj_pair2.globalID)))]).reshape(int(max(obj_pair2.globalID)),3)
 	# colors  = lambda: np.random.rand(50)
-
 
 	savenameCooccur = os.path.join(savePath,'pair_relationship.csv')
 	writerCooccur   = csv.writer(open(savenameCooccur,'wb'))
+	writerCooccur.writerow(['trj1 ID','frame','x','y','y direction','x direction','trj2 ID','frame','x','y','y direction','x direction'])
 	obj_pair2loop   = obj_pair2
 
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, len(obj_pair2loop.globalID)):
 			loopVehicleID1 = obj_pair2loop.globalID[ind1]
 			loopVehicleID2 = obj_pair2loop.globalID[ind2]
+			print "pairing: ",loopVehicleID1,' & ',loopVehicleID2
 			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, color = color_choice)
 
 
@@ -311,7 +313,6 @@ if __name__ == '__main__':
 	for frame_idx in range(framenum):
 		IDs_in_frame[frame_idx] = []
 		for ind111 in range(len(obj_pair2loop.globalID)):
-			# pdb.set_trace()
 			loopVehicleID111 = obj_pair2loop.globalID[ind111]
 			VehicleObj111 = VehicleObj(obj_pair2loop,loopVehicleID111)
 			In_fram_Status22 = in_this_frame(VehicleObj111, frame_idx)

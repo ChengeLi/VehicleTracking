@@ -9,9 +9,9 @@ import numpy as np
 def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
     savename = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' ):
 
-    num = 0
-    atmp = []
-    flab = []  #final labels
+    num   = 0
+    atmp  = []
+    flab  = []  #final labels
     fmask = [] #final mask
 
     matfiles = sorted(glob(matfilePath +'*.mat'))
@@ -26,6 +26,7 @@ def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@Bax
             M1 = M2
 
         L2 = loadmat(matfiles[matidx+1])['label'][0]
+        L2 = L2+1
         M2 = loadmat(matfiles[matidx+1])['mask'][0]
 
 

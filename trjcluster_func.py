@@ -91,9 +91,14 @@ def construct_adj_thresholding(NumGoodsample, x_re, y_re):
     print('Building Binary adj mtx after thresholing the speed and spatial location differences.')
     adj     = np.zeros([NumGoodsample,NumGoodsample])
     spdfile = open('./mdis.txt', 'wb')
-    dth     = 300 #30*1.5
-    yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
-    xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
+    # dth     = 300 #30*1.5
+    # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
+    # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
+    
+    dth     = 30*1.5
+    yspdth  = 5 #y speed threshold
+    xspdth  = 5 #x speed threshold
+
     num     = np.arange(fnum)
     # build adjacent mtx
     for i in range(NumGoodsample):
@@ -143,9 +148,9 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
     else:
         # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        matfilepath = '../tempFigs/roi2/'
+        matfilepath = '../tempFigs/roi2/filtered/'
         savePath    = '../tempFigs/roi2/' 
-        matfiles    = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+        matfiles    = sorted(glob.glob(matfilepath + 'len*.mat'))
 
     return matfiles,savePath
 
@@ -220,8 +225,8 @@ if __name__ == '__main__':
 
         print('building adj mtx ....')
         NumGoodsample = len(x_re)
-        # adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
-        adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
+        adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
+        # adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
         # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
         pdb.set_trace()
 
