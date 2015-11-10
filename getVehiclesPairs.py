@@ -1,10 +1,11 @@
 # consider the pair-wise relationship between each two cars
+import os
 import csv
 import pdb
 import cv2
 import random
 import numpy as np
-from glob import glob
+import glob as glob
 import cPickle as pickle
 import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
@@ -16,17 +17,30 @@ def prepare_data(isAfterWarpping,isLeft=True):
 			test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
 			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
 
+			left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
+			image_listing = left_image_listing
+			savePath = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
+
         else:
 			test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vctime.p", "rb" ) )
 			test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcxtrj.p", "rb" ) )
 			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcytrj.p", "rb" ) )
+
+			right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
+			image_listing = right_image_listing
+			savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
+
     else:
 		# load and check
-		test_vctime = pickle.load( open( "./mat/20150222_Mat/Fullvctime.p", "rb" ) )
-		test_vcxtrj = pickle.load( open( "./mat/20150222_Mat/Fullvcxtrj.p", "rb" ) )
-		test_vcytrj = pickle.load( open( "./mat/20150222_Mat/Fullvcytrj.p", "rb" ) )
+		test_vctime = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
+		test_vcxtrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
+		test_vcytrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
 
-    return test_vctime,test_vcxtrj,test_vcytrj
+		image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+		savePath = "../tempFigs/roi2/"
+
+    return test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath
+
 
 
 def in_this_frame(VehicleObj,frame_idx):
@@ -44,17 +58,17 @@ def in_this_frame(VehicleObj,frame_idx):
         
 
 def get_Co_occur(VehicleObj1, VehicleObj2):
-	if not VehicleObj1.frame or not VehicleObj2.frame:
-		print "error! current frame range empty!"
+	if len(VehicleObj1.frame)==0 or len(VehicleObj2.frame)==0:
+		print "error! trj time is empty!"
 		return
 	else:
 		appeartime1 = VehicleObj1.frame[0]
-		gonetime1 = VehicleObj1.frame[1]
+		gonetime1   = VehicleObj1.frame[1]
 		appeartime2 = VehicleObj2.frame[0]
-		gonetime2 = VehicleObj2.frame[1]
+		gonetime2   = VehicleObj2.frame[1]
 
-	if appeartime1>= appeartime2: ## swap 1 and 2, s.t. 1 always <=2
-		temp = appeartime2
+	if appeartime1 >= appeartime2: ## swap 1 and 2, s.t. 1 always <=2
+		temp        = appeartime2
 		appeartime2 = appeartime1
 		appeartime1 = temp
 
@@ -63,33 +77,33 @@ def get_Co_occur(VehicleObj1, VehicleObj2):
 			cooccur_ran = range(appeartime2, gonetime1+1)
 		else:
 			cooccur_ran = range(appeartime2, gonetime2+1)
-		cooccur_IDs = [VehicleObj1.VehicleID, VehicleObj2.VehicleID]
+		cooccur_IDs    = [VehicleObj1.VehicleID, VehicleObj2.VehicleID]
 		coorccurStatus = 1	
 
 
 	if gonetime1 < appeartime2:
-		print "no cooccurance!"
+		print "no co-occurance!"
 		coorccurStatus = 0
-		cooccur_ran = []
-		cooccur_IDs = []
+		cooccur_ran    = []
+		cooccur_IDs    = []
 
 	return coorccurStatus, cooccur_ran, cooccur_IDs
 
 
 def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
-	ID111 = cooccur_IDs[0]
-	ID222 = cooccur_IDs[1]
-
-	xTrj = obj_pair2loop.xTrj[ID111]  
-
-
+	ID111      = cooccur_IDs[0]
+	ID222      = cooccur_IDs[1]
+	
+	xTrj       = obj_pair2loop.xTrj[ID111]  
+	
+	
 	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1)
-	startind1 = fullrange1.index(cooccur_ran[0])
-	endind1 = fullrange1.index(cooccur_ran[-1])
+	startind1  = fullrange1.index(cooccur_ran[0])
+	endind1    = fullrange1.index(cooccur_ran[-1])
 	
 	fullrange2 = range(obj_pair2loop.frame[ID222][0], obj_pair2loop.frame[ID222][1]+1)
-	startind2 = fullrange2.index(cooccur_ran[0])
-	endind2 = fullrange2.index(cooccur_ran[-1])	
+	startind2  = fullrange2.index(cooccur_ran[0])
+	endind2    = fullrange2.index(cooccur_ran[-1])	
 
 
 	co1X = obj_pair2loop.xTrj[ID111][startind1:endind1+1]
@@ -97,7 +111,7 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
 
 	co2X = obj_pair2loop.xTrj[ID222][startind2:endind2+1]
 	co2Y = obj_pair2loop.yTrj[ID222][startind2:endind2+1]
-	gkk = 0
+	gkk  = 0
 	for gkk in range(np.size(cooccur_ran)):
 		temp = []
 		# pdb.set_trace()
@@ -122,18 +136,18 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop):
 
 
 
-def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, saveflag):
+def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 	vcxtrj1 = co1X
 	vcytrj1 = co1Y
 	vcxtrj2 = co2X
 	vcytrj2 = co2Y
 	dots = []
-	color1 = colors()
-	color2 = colors()
+	# color1 = colors()
+	# color2 = colors()
 	for k in range(np.size(cooccur_ran)):
 	# pdb.set_trace()
 		frame_idx = cooccur_ran[k]
-		print frame_idx
+		print "frame_idx: " ,frame_idx
 		tmpName= image_listing[frame_idx]
 		frame=cv2.imread(tmpName)
 		im.set_data(frame[:,:,::-1])
@@ -146,9 +160,9 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, saveflag):
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
 		# dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=50, color=(1,0,0),edgecolor='none'))
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(0,1,0),edgecolor='none'))
-
-		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=40, color=color1,edgecolor='none')) 
-		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=40, color=color2,edgecolor='none'))
+		# pdb.set_trace()
+		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
+		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=10, color=(color[k2].T)/255.,edgecolor='none'))
 
 		plt.draw()
 		plt.show()
@@ -156,6 +170,7 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, saveflag):
 
 		del dots[:]
 		plt.show()
+		# pdb.set_trace()
 		# for i in dots:
 		#     i.remove()
 		# plt.show()
@@ -167,7 +182,7 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, saveflag):
 
 
 
-def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, saveflag):
+def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color , saveflag = 0):
 
 	VehicleObj1 = VehicleObj(obj_pair2loop,loopVehicleID1)
 	VehicleObj2 = VehicleObj(obj_pair2loop,loopVehicleID2)
@@ -177,9 +192,11 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, saveflag):
 	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
 	if coorccurStatus and np.size(cooccur_ran)>=3:
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop) #get xy and write to file
+		# pdb.set_trace()
 		if np.size(cooccur_ran)>=15:
-			saveflag = 1
-			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, saveflag) #visualize
+			saveflag = 0
+			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2, saveflag) #visualize
+
 
 
 if __name__ == '__main__':
@@ -212,113 +229,85 @@ if __name__ == '__main__':
 	"""
 
 	
-	isAfterWarpping = True
-	isLeft          = False
-	test_vctime,test_vcxtrj,test_vcytrj = prepare_data(isAfterWarpping,isLeft)
-
+	isAfterWarpping = False
+	isLeft          = True
+	test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath = prepare_data(isAfterWarpping,isLeft)
 
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 
-	pdb.set_trace()
 	clean_vctime = {key: value for key, value in test_vctime.items() 
-	             if key not in obj_pair.bad_IDs}
+	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
 	clean_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-	             if key not in obj_pair.bad_IDs}
+	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
 	clean_vcytrj = {key: value for key, value in test_vcytrj.items() 
-	             if key not in obj_pair.bad_IDs}
-
-	# clean_vctime = test_vctime
-	# clean_vcytrj = test_vcxtrj
-	# clean_vcytrj = test_vcytrj
-	# for badk in obj_pair.bad_IDs:
-	#     del clean_vctime[badk]
-	#     del clean_vcxtrj[badk]
-	#     del clean_vcytrj[badk]   
-
-
-	# pickle.dump(obj_pair,open("./mat/20150222_Mat/obj_pair.p","wb"))
+	             if key not in obj_pair.bad_IDs2+obj_pair.bad_IDs3}
 
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	print obj_pair2.bad_IDs == []
 	print obj_pair2.bad_IDs2 == []
 
-	pickle.dump(obj_pair2,open("./mat/20150222_Mat/obj_pair2.p","wb"))
+	# pickle.dump(obj_pair2,open("./mat/20150222_Mat/obj_pair2.p","wb"))
 
-	obj2write = obj_pair
-	writer = csv.writer(open('./mat/20150222_Mat/Trj_with_ID_frm_NOTclean22.csv', 'wb'))
-	temp = []
+
+	obj2write = obj_pair2
+	savename  = os.path.join(savePath,'Trj_with_ID_frm.csv')
+	writer    = csv.writer(open(savename,'wb'))
+	temp      = []
 	for kk in range(np.size(obj2write.Trj_with_ID_frm,0)):
-	    temp =  obj2write.Trj_with_ID_frm[kk]
-	    curkey = obj2write.Trj_with_ID_frm[kk][0]
-	    temp.append(obj2write.Ydir[curkey])
-	    temp.append(obj2write.Xdir[curkey])
-	    writer.writerow(temp)
+		temp   =  obj2write.Trj_with_ID_frm[kk]
+		curkey = obj2write.Trj_with_ID_frm[kk][0]
+		temp.append(obj2write.Ydir[curkey])
+		temp.append(obj2write.Xdir[curkey])
+		writer.writerow(temp)
 
 
-	pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
-	singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
-
-
-
-
-
-	# pickle.dump( obj_pair, open( "./mat/20150222_Mat/obj_pair.p", "wb" ) )
-	# test_obj = pickle.load(open("./mat/20150222_Mat/obj_pair.p", "rb" ))
-
-
-
+	# pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
+	# singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
 
 
 	#=======visualize the pair relationship==============================================
 	# for plottting
-	image_listing = sorted(glob('../VideoData/20150222/*.jpg'))
-	firstfrm=cv2.imread(image_listing[0])
+	firstfrm =cv2.imread(image_listing[0])
 	framenum = int(len(image_listing))
-	nrows = int(np.size(firstfrm,0))
-	ncols = int(np.size(firstfrm,1))
+	nrows    = int(np.size(firstfrm,0))
+	ncols    = int(np.size(firstfrm,1))
+	
+	# plt.figure(1,figsize =[10,12])
+	plt.figure()
 
-
-
-	plt.figure(1,figsize=[10,12])
-	axL = plt.subplot(1,1,1)
-	frame = np.zeros([nrows,ncols,3]).astype('uint8')
-	im = plt.imshow(np.zeros([nrows,ncols,3]))
+	axL     = plt.subplot(1,1,1)
+	frame   = np.zeros([nrows,ncols,3]).astype('uint8')
+	im      = plt.imshow(np.zeros([nrows,ncols,3]))
 	plt.axis('off')
-	# color = np.asarray([random.randint(0,255) for _ in np.asarray(range(12000)).reshape(4000,3)])
-	colors = lambda: np.random.rand(50)
+	color_choice = np.array([np.random.randint(0,255) for _ in range(3*int(200))]).reshape(int(200),3)
+	# colors  = lambda: np.random.rand(50)
 
 
+	savenameCooccur = os.path.join(savePath,'pair_relationship.csv')
+	writerCooccur   = csv.writer(open(savenameCooccur,'wb'))
+	obj_pair2loop   = obj_pair2
 
-	writerCooccur = csv.writer(open('./mat/20150222_Mat/pair_relationship2.csv', 'wb'))
-	obj_pair2loop = obj_pair
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, len(obj_pair2loop.globalID)):
 			loopVehicleID1 = obj_pair2loop.globalID[ind1]
 			loopVehicleID2 = obj_pair2loop.globalID[ind2]
-			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, 0)
+			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, color = color_choice)
 
 
 
+	# pdb.set_trace()
+	# fix me  want to see this
+	# # testing: visualize given ID1 and ID2
+	# visual_givenID(3255,3255, obj_pair2loop, color_choice,0)
+	# visual_givenID(2534,2538, obj_pair2loop, color_choice,0)
+	# visual_givenID(4510,4510, obj_pair2loop, color_choice,0)
+	# visual_givenID(1787,1787, obj_pair2loop, color_choice,0)
+	# visual_givenID(2322,2322, obj_pair2loop, color_choice,0)
 
-	# testing: visualize given ID1 and ID2
-	visual_givenID(3255,3255, obj_pair2loop, 0)
-
-	visual_givenID(2534,2538, obj_pair2loop, 1)
 
 
-
-
-	visual_givenID(4510,4510, obj_pair2loop, 0)
-
-	  
-	visual_givenID(1787,1787, obj_pair2loop, 1)
-	# visual_givenID(2322,2322, obj_pair2loop, 0)
 
 	IDs_in_frame = {}
-	obj_pair2loop = obj_pair ## not clean full list
-
-
 	for frame_idx in range(framenum):
 		IDs_in_frame[frame_idx] = []
 		for ind111 in range(len(obj_pair2loop.globalID)):
@@ -332,20 +321,15 @@ if __name__ == '__main__':
 			else: continue
 
 
-	pickle.dump( obj_pair.Trj_with_ID_frm, open( "./mat/20150222_Mat/singleListTrj.p", "wb" ) ) 
-	singleListTrj = pickle.load(open( "./mat/20150222_Mat/singleListTrj.p", "rb" ) )
+	# # saving as csv is really slow, and the file is very big (4.9 G)
+	# # writer = csv.writer(open('./mat/20150222_Mat/IDs_in_frame.csv', 'wb'))
+	# # temp = []
+	# # for kk in range(len(IDs_in_frame)):
+	# #     temp.append(kk)
+	# #     temp.append(IDs_in_frame[kk])
+	# #     writer.writerow(temp)
 
-
-
-	# saving as csv is really slow, and the file is very big (4.9 G)
-	# writer = csv.writer(open('./mat/20150222_Mat/IDs_in_frame.csv', 'wb'))
-	# temp = []
-	# for kk in range(len(IDs_in_frame)):
-	#     temp.append(kk)
-	#     temp.append(IDs_in_frame[kk])
-	#     writer.writerow(temp)
-
-	pickle.dump(IDs_in_frame, open("./mat/20150222_Mat/IDs_in_frame.p","wb"))
+	# pickle.dump(IDs_in_frame, open("./mat/20150222_Mat/IDs_in_frame.p","wb"))
 
 
 

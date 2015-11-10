@@ -19,6 +19,7 @@ def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@Bax
     for matidx in range(len(matfiles)-1): 
         if matidx == 0:
             L1 = loadmat(matfiles[matidx])['label'][0]
+            L1 = L1+1 # class label starts from 1 instead of 0
             M1 = loadmat(matfiles[matidx])['mask'][0]
         else:
             L1 = L2
@@ -26,6 +27,7 @@ def unify_label(matfilePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@Bax
 
         L2 = loadmat(matfiles[matidx+1])['label'][0]
         M2 = loadmat(matfiles[matidx+1])['mask'][0]
+
 
         labelnum = max(L1)  ## not duplicate
         L2[:] = L2 + labelnum+1 # to make sure there're no duplicate labels

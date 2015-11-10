@@ -133,19 +133,19 @@ def construct_adj_thresholding(NumGoodsample, x_re, y_re):
 def prepare_input_data(isAfterWarpping,isLeft=True):
     if isAfterWarpping:
         if isLeft:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+            matPath  = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
         else:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+            matPath  = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # matfilepath = './tempFigs/roi2/'
-        # savePath = './tempFigs/roi2/' 
-        matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        matfilepath = '../tempFigs/roi2/'
+        savePath    = '../tempFigs/roi2/' 
+        matfiles    = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 
     return matfiles,savePath
 
@@ -156,8 +156,7 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
 # def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
 #     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
 if __name__ == '__main__':
-
-    isAfterWarpping   = True
+    isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
 

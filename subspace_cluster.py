@@ -276,14 +276,16 @@ def prepare_input_data(isAfterWarpping,isLeft):
         # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'*.mat'))
         # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'_adj_withT_'+'*.mat'))
         # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len4' +'*.mat'))
-        # matfiles = sorted(glob.glob('./tempFigs/roi2/len4' +'*.mat'))
+        
+        # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len4' +'*.mat'))
+        matfiles = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
 
         # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_'
         # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_withT_'
         # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
-        savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
-        # savePath = './tempFigs/roi2/sscConstructedAdj_CC' 
+        
+        # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
+        savePath = '../tempFigs/roi2/ssc_' 
 
     return matfiles, savePath
 
@@ -293,11 +295,11 @@ def prepare_input_data(isAfterWarpping,isLeft):
 
 if __name__ == '__main__':   
     """With constructed adjacency matrix """
-    isAfterWarpping   = True
+    isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
     isSave            = True
-    isVisualize       = True
+    isVisualize       = False
 
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)

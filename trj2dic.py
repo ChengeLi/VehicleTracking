@@ -270,12 +270,17 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
             lrsl = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
             savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
     else:
-        matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
-        image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
-        # image_listing = sorted(glob('./tempFigs/roi2/*.jpg'))
+        # matfiles      = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
+        # image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # final result for vis
-        lrsl = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
-        savePath = "../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/"
+        # lrsl          = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
+        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/''
+
+        matfiles      = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
+        image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+        lrsl          = '../tempFigs/roi2/Result' 
+        savePath      = '../tempFigs/roi2/dic/'
+
 
     return matfiles,image_listing,lrsl,savePath
 
@@ -285,10 +290,10 @@ if __name__ == '__main__':
     frame_idx        = 0
     trunclen         = 600
     isClustered      = True
-    isAfterWarpping  = True
+    isAfterWarpping  = False
     isVisualize      = False
     useVirtualCenter = True
-    isLeft           = True
+    isLeft           = False
     isSave           = True
     
 
