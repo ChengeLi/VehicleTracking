@@ -17,9 +17,9 @@ def prepare_data(isAfterWarpping,isLeft=True):
 			test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
 			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
 
-			left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-			image_listing = left_image_listing
-			savePath = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
+			left_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
+			image_listing      = left_image_listing
+			savePath           = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
 
         else:
 			test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vctime.p", "rb" ) )
@@ -27,17 +27,17 @@ def prepare_data(isAfterWarpping,isLeft=True):
 			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcytrj.p", "rb" ) )
 
 			right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-			image_listing = right_image_listing
-			savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
+			image_listing       = right_image_listing
+			savePath            = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
 
     else:
 		# load and check
 		test_vctime = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
 		test_vcxtrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
 		test_vcytrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
-
+		
 		image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
-		savePath = "../tempFigs/roi2/"
+		savePath      = "../tempFigs/roi2/"
 
     return test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath
 
@@ -143,7 +143,6 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 	dots = []
 	# color1 = colors()
 	# color2 = colors()
-	pdb.set_trace()
 	for k in range(np.size(cooccur_ran)):
 		frame_idx = cooccur_ran[k]
 		# print "frame_idx: " ,frame_idx
@@ -193,7 +192,7 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color , savef
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop) #get xy and write to file
 		if np.size(cooccur_ran)>=15:
 			saveflag = 0
-			# pdb.set_trace()
+			# writer2.writerow([loopVehicleID1,loopVehicleID2])
 			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2, saveflag) #visualize
 
 
@@ -274,12 +273,11 @@ if __name__ == '__main__':
 	ncols    = int(np.size(firstfrm,1))
 	
 	# plt.figure(1,figsize =[10,12])
-	plt.figure()
-
-	axL     = plt.subplot(1,1,1)
-	frame   = np.zeros([nrows,ncols,3]).astype('uint8')
-	im      = plt.imshow(np.zeros([nrows,ncols,3]))
-	plt.axis('off')
+	# plt.figure()
+	# axL     = plt.subplot(1,1,1)
+	# frame   = np.zeros([nrows,ncols,3]).astype('uint8')
+	# im      = plt.imshow(np.zeros([nrows,ncols,3]))
+	# plt.axis('off')
 	color_choice = np.array([np.random.randint(0,255) for _ in range(3*int(max(obj_pair2.globalID)))]).reshape(int(max(obj_pair2.globalID)),3)
 	# colors  = lambda: np.random.rand(50)
 
@@ -288,23 +286,43 @@ if __name__ == '__main__':
 	writerCooccur.writerow(['trj1 ID','frame','x','y','y direction','x direction','trj2 ID','frame','x','y','y direction','x direction'])
 	obj_pair2loop   = obj_pair2
 
+
+
+	savename2  = os.path.join(savePath,'pairs_ID.csv')
+	writer2    = csv.writer(open(savename2,'wb'))
+	writer2.writerow(['trj2 ID','trj2 ID'])
+
+
+	plt.figure('testing')
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, len(obj_pair2loop.globalID)):
 			loopVehicleID1 = obj_pair2loop.globalID[ind1]
 			loopVehicleID2 = obj_pair2loop.globalID[ind2]
 			print "pairing: ",loopVehicleID1,' & ',loopVehicleID2
+			plt.cla()
+			axL   = plt.subplot(1,1,1)
+			frame = np.zeros([nrows,ncols,3]).astype('uint8')
+			im    = plt.imshow(np.zeros([nrows,ncols,3]))
+			plt.axis('off')
 			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, color = color_choice)
 
+
+	# plt.figure('testing')
+	# axL     = plt.subplot(1,1,1)
+	# frame   = np.zeros([nrows,ncols,3]).astype('uint8')
+	# im      = plt.imshow(np.zeros([nrows,ncols,3]))
+	# plt.axis('off')
+	# visual_givenID(4, 28, obj_pair2loop, color = color_choice)
 
 
 	# pdb.set_trace()
 	# fix me  want to see this
 	# # testing: visualize given ID1 and ID2
-	# visual_givenID(3255,3255, obj_pair2loop, color_choice,0)
-	# visual_givenID(2534,2538, obj_pair2loop, color_choice,0)
-	# visual_givenID(4510,4510, obj_pair2loop, color_choice,0)
-	# visual_givenID(1787,1787, obj_pair2loop, color_choice,0)
-	# visual_givenID(2322,2322, obj_pair2loop, color_choice,0)
+	# visual_givenID(3255,3255, obj_pair2loop, color_choice)
+	# visual_givenID(2534,2538, obj_pair2loop, color_choice)
+	# visual_givenID(4510,4510, obj_pair2loop, color_choice)
+	# visual_givenID(1787,1787, obj_pair2loop, color_choice)
+	# visual_givenID(2322,2322, obj_pair2loop, color_choice)
 
 
 
@@ -331,9 +349,6 @@ if __name__ == '__main__':
 	# #     writer.writerow(temp)
 
 	# pickle.dump(IDs_in_frame, open("./mat/20150222_Mat/IDs_in_frame.p","wb"))
-
-
-
 
 
 
