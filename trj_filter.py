@@ -58,16 +58,17 @@ def prepare_input_data():
     matfilepath = '../tempFigs/roi2/'
     savePath = '../tempFigs/roi2/filtered/' 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-
-    return matfiles,savePath
+    start_position = 16 #already processed 10 files
+    matfiles = matfiles[start_position:]
+    return matfiles,savePath,start_position
 
 
 
 if __name__ == '__main__':
-    matfiles,savePath = prepare_input_data()
+    matfiles,savePath, start_position= prepare_input_data()
 
     for matidx,matfile in enumerate(matfiles):
-        print "Processing truncation...", str(matidx+1)
+        print "Processing truncation...", str(matidx+1+start_position)
         ptstrj = loadmat(matfile)
         x = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
@@ -125,6 +126,6 @@ if __name__ == '__main__':
         result['xspd']    = xspd
         result['yspd']    = yspd
 
-        savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+1).zfill(3))
+        savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+start_position+1).zfill(3))
         savemat(savename,result)
 

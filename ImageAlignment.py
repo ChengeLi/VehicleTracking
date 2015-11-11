@@ -1,8 +1,7 @@
 import cv2
+import pdb
 import numpy as np
 from matplotlib import pyplot as plt
-import pdb
-
 
 def getPerspectiveMtx(img):
 
@@ -36,45 +35,14 @@ def getPerspectiveMtx(img):
 
 
 	M = cv2.getPerspectiveTransform(pts1,pts2)
-	 
 	return M
 
-def perspectiveWarp(img, M,frame_idx):
+def perspectiveWarp(img, M,frame_idx,isSave):
 	dst = cv2.warpPerspective(img,M,(400,1100))
-	# plt.subplot(121),plt.imshow(img[:,:,::-1]),plt.title('Input')
-	# plt.subplot(122),plt.imshow(dst[:,:,::-1]),plt.title('ROI Output')
-	# plt.show()
-
-
-	# plt.imshow(dst[:,:,::-1])
-	name = './tempFigs/roi2/'+str(frame_idx).zfill(6)+'.jpg'
-	# plt.savefig(name) ##save figure'
-	cv2.imwrite(name, dst)
-
-	'''
-	# 2 step way, (not so good)
-	pts1_step1 = np.float32([[161, 147],[224,147], [132,229],[271,220]])  # canal st
-	pts2_step1 = np.float32([[0,0],[350,0],[0,200],[350,200]]) 
-
-	pts1_step2 = np.float32([[132,229],[271,220],[76,513],[408,410]]) 
-	pts2_step2 = np.float32([[0,200],[350,200],[0,1000],[350,1000]]) 
-
-	M1 = cv2.getPerspectiveTransform(pts1_step1,pts2_step1)
-	M2 = cv2.getPerspectiveTransform(pts1_step2,pts2_step2)
-
-	# dst = cv2.warpPerspective(img_small,M,(300,300))
-	dst1 = cv2.warpPerspective(img,M1,(350,200))
-	dst2 = cv2.warpPerspective(img,M2,(350,1000))
-
-	plt.subplot(121),plt.imshow(dst1),plt.title('step1')
-	plt.subplot(122),plt.imshow(dst2),plt.title('step2')
-	plt.show()
-
-
-	'''
-
-
-
+	if isSave:
+		name = '../tempFigs/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
+		cv2.imwrite(name, dst)
+	return dst
 
 
 if __name__ == '__main__':
@@ -86,20 +54,20 @@ if __name__ == '__main__':
 	nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 	ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	    
+	framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
 
-	start_position = 4801
+	start_position = 0  #4000
 	print 'reading buffer...'
-	for ii in range(start_position):
-	    print(ii)
-	    rval, img = cap.read()
-
-
-	# status, frame = cap.read()
-	# plt.imshow(frame[:,:,::-1])
+	# for ii in range(start_position):
+	# 	print(ii)
+	# 	rval, img = cap.read()
+	cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
+	print 'warp image...read frame',str(start_position)
+	st, img = cap.read()
 	warpMtx = getPerspectiveMtx(img)
 	
-	for frame_idx in range(1801):
+	for frame_idx in range(int(nframe/2)):
+		print "frame_idx ",str(start_position+1+frame_idx)
+		isSave        = 1
 		status, frame = cap.read()
-		perspectiveWarp(frame, warpMtx, start_position+frame_idx)
-		# pdb.set_trace()
+		dst           = perspectiveWarp(frame, warpMtx, start_position+1+frame_idx,isSave)

@@ -31,7 +31,6 @@ def prepare_data(isAfterWarpping,isLeft=True):
 			savePath            = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
 
     else:
-		# load and check
 		test_vctime = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
 		test_vcxtrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
 		test_vcytrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )

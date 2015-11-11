@@ -90,12 +90,12 @@ def construct_adj_cosine(NumGoodsample, x_re, y_re):
 def construct_adj_thresholding(NumGoodsample, x_re, y_re):
     print('Building Binary adj mtx after thresholing the speed and spatial location differences.')
     adj     = np.zeros([NumGoodsample,NumGoodsample])
-    spdfile = open('./mdis.txt', 'wb')
+    # spdfile = open('./mdis.txt', 'wb')
     # dth     = 300 #30*1.5
     # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
     # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
     
-    dth     = 30*1.5
+    dth     = 50+200
     yspdth  = 5 #y speed threshold
     xspdth  = 5 #x speed threshold
 
@@ -103,34 +103,33 @@ def construct_adj_thresholding(NumGoodsample, x_re, y_re):
     # build adjacent mtx
     for i in range(NumGoodsample):
         # plt.cla()
-        # pdb.set_trace()
-        for j in range(NumGoodsample):
-            if i<=j:
-                tmp1 = x_re[i,:]!=0
-                tmp2 = x_re[j,:]!=0
-                idx  = num[tmp1&tmp2]
-                if len(idx)>0: # has overlapping
-                # if len(idx)>=30: # at least overlap for 100 frames
-                    sidx     = idx[1:-1]
-                    sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                    sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
-                    # spdfile.write(str(i)+' '+str(sxdiff)+'\n')
+        for j in range(i+1, min(NumGoodsample,i+1500)):
+            tmp1 = x_re[i,:]!=0
+            tmp2 = x_re[j,:]!=0
+            idx  = num[tmp1&tmp2]
+            if len(idx)>5: # has overlapping
+            # if len(idx)>=30: # at least overlap for 100 frames
+                sidx     = idx[1:-1]
+                sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
+                # spdfile.write(str(i)+' '+str(sxdiff)+'\n')
 
-                    if (sxdiff <xspdth ) & (sydiff<yspdth ):
-                        mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
-                        # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
-                        #mahhattan distance
-                        if mdis < dth:
-                            adj[i,j] = 1
-                            # adj[i,j] = construct_adj(sxdiff, sydiff, mdis)
-                            """visualize the neighbours"""
-                            # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
-                            # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
-                            # fig888.canvas.draw()
-                            # plt.pause(0.0001)
-            else:
-                adj[i,j] = adj[j,i]
-    spdfile.close()
+                if (sxdiff <xspdth ) & (sydiff<yspdth ):
+                    mdis = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx]))
+                    # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
+                    # print "mdis: ", mdis
+                    #mahhattan distance
+                    if mdis < dth:
+                        adj[i,j] = 1
+                        # adj[i,j] = construct_adj(sxdiff, sydiff, mdis)
+                        """visualize the neighbours"""
+                        # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
+                        # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
+                        # fig888.canvas.draw()
+                        # plt.pause(0.0001)
+    # spdfile.close()
+    adj = adj + adj.transpose()
+    np.fill_diagonal(adj, 1)
     return adj
 
 
@@ -225,10 +224,11 @@ if __name__ == '__main__':
 
         print('building adj mtx ....')
         NumGoodsample = len(x_re)
+        print "NumGoodsample: ", NumGoodsample
         adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)
         # adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
         # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
-        pdb.set_trace()
+        # pdb.set_trace()
 
         sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label

@@ -7,17 +7,16 @@ import unify_label_func as unify_label
 import visualization_func as visual
 
 
-isVideo = False
-
-dataPath = '../tempFigs/roi2/'
-savePath = '../tempFigs/roi2/'
+isVideo   = False
+# videopath = '../tempFigs/roi2/roi2.avi'
+dataPath  = '../tempFigs/roi2/imgs/'
+savePath  = '../tempFigs/roi2/'
 
 print("running KLT...")
 klt.klt_tracker(isVideo,dataPath=dataPath,savePath=savePath)
 
 print("filter the trjs...")
 execfile('trj_filter.py')
-
 
 print("running trjcluster...")
 # trjcluster.trjcluster(dataPath=dataPath,savePath=savePath)

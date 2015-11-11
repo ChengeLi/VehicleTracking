@@ -3,7 +3,7 @@ import cv2
 import pdb
 import numpy as np
 import pickle as pkl
-from glob import glob
+import glob as glob
 from time import clock
 from scipy.io import savemat
 from scipy.sparse import csr_matrix
@@ -15,12 +15,12 @@ def klt_tracker(isVideo, \
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
     """ new jay st """
-    lk_params = dict(winSize=(10, 10), maxLevel=2, 
+    lk_params = dict(winSize=(5, 5), maxLevel=2, 
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
-                                10, 0.03)) 
+                                10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 
-    feature_params = dict(maxCorners=800, qualityLevel=0.2, minDistance=3, 
-                          blockSize=3)  
+    feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, 
+                          blockSize=3)  #qualityLevel, below which dots will be rejected
 
     """ canal st """
     # lk_params = dict(winSize=(15, 15), maxLevel=2, 
@@ -31,17 +31,18 @@ def klt_tracker(isVideo, \
     #                       blockSize=7)  
     # feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
     #                       blockSize=5)  # old jayst 
-    idx       = 0
-    tdic      = [0]
-    start     = []
-    end       = []
-    dicidx    = 0
-    track_len = 10
-    tracksdic = {} 
-    frame_idx = 0
-    pregood   = []
-    trunclen  = 600
-    lenoffset = 0
+    idx             = 0
+    tdic            = [0]
+    start           = []
+    end             = []
+    track_len       = 10
+    tracksdic       = {} 
+    frame_idx_bias  = 1200  #===============don't forget to set me!
+    dicidx          = 0 
+    frame_idx       = 0 + frame_idx_bias #start processing in the middle of the image folder 
+    pregood         = []
+    trunclen        = 600
+    lenoffset       = 0
     detect_interval = 5
 
     if isVideo:
@@ -54,8 +55,8 @@ def klt_tracker(isVideo, \
    
     if not isVideo:  # -- get the full image list
         imagepath = dataPath
-        imlist    = sorted(glob(imagepath + '*.jpg'))
-        nframe    = len(imlist)
+        imlist    = sorted(glob.glob(imagepath + '*.jpg'))
+        nframe    = len(imlist)-frame_idx_bias
         # -- read in first frame and set dimensions
         frame     = cv2.imread(imlist[0])
 
@@ -66,8 +67,7 @@ def klt_tracker(isVideo, \
     mask = 255*np.ones_like(frameL)
 
     # -- set low number of frames for testing
-    nframe = 1801
-#    nframe = 601
+    # nframe = 1801
 
 
     while (frame_idx < nframe):
@@ -193,7 +193,7 @@ def klt_tracker(isVideo, \
 
             # put tracks into sparse matrix
             trk ={}
-            
+            Ttracks = Ttracks+frame_idx_bias # use the actual frame index as the key, to save data
             trk['xtracks'] = csr_matrix(Xtracks)
             trk['ytracks'] = csr_matrix(Ytracks)
             trk['Ttracks'] = csr_matrix(Ttracks)
