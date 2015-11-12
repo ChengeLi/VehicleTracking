@@ -44,7 +44,7 @@ def find_blob():
 
 if __name__ == '__main__':
 	# img = cv2.imread('/home/chengeli/CUSP/park/papers/BackGroundModelling/incPCP/AIG/Canal/Canal__0100.jpg')	 
-	mask_list = sorted(glob.glob('/home/chengeli/CUSP/park/papers/BackGroundModelling/incPCP/AIG/Canal_filled_hole/*.jpg'))
+	mask_list = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_filled_hole/*.jpg'))
 	ori_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 	nframe    = min(len(mask_list),len(ori_list))
 	frame_idx = 0
