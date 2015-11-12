@@ -38,7 +38,7 @@ def Virctr(x,y):
 
 
 
-def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
+def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_list ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
     # applicable to both clustered and non-clustered trj datas
     # If non-clustered trjs, the input mlabels are just the trj ID (mask)
     
@@ -156,7 +156,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
         if isVisualize:
             # Get the frame and visualize!
             # ret, frame[:] = cam.read()
-            tmpName = image_listing[frame_idx]
+            tmpName = image_list[frame_idx]
             frame   = cv2.imread(tmpName)
             visualize_trj(axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx)
             
@@ -255,8 +255,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
         if isLeft:
             matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            left_image_listing  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-            image_listing = left_image_listing
+            left_image_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
+            image_list = left_image_list
             # final result for vis
             lrsl = '../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left'
             savePath = "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/"
@@ -264,25 +264,26 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
         else:
             matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-            image_listing = right_image_listing
+            right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
+            image_list = right_image_list
             # final result for vis
             lrsl = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
             savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
     else:
         # matfiles      = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
-        # image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
+        # image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # final result for vis
         # lrsl          = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
         # savePath      = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/''
 
         matfiles      = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
-        image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+        # image_list = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+        image_list = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
         lrsl          = '../tempFigs/roi2/Result' 
         savePath      = '../tempFigs/roi2/dic/'
 
 
-    return matfiles,image_listing,lrsl,savePath
+    return matfiles,image_list,lrsl,savePath
 
 
 
@@ -297,12 +298,12 @@ if __name__ == '__main__':
     isSave           = True
     
 
-    matfiles,image_listing,lrsl, savePath = prepare_data_to_vis(isAfterWarpping,isLeft)
+    matfiles,image_list,lrsl, savePath = prepare_data_to_vis(isAfterWarpping,isLeft)
 
-    firstfrm  = cv2.imread(image_listing[0])
+    firstfrm  = cv2.imread(image_list[0])
     nrows     = int(np.size(firstfrm,0))
     ncols     = int(np.size(firstfrm,1))
-    framenum  = int(len(image_listing))
+    framenum  = int(len(image_list))
     framerate = 5
 
     fig = plt.figure(1111111)
@@ -310,5 +311,5 @@ if __name__ == '__main__':
     im  = plt.imshow(np.zeros([nrows,ncols,3]))
     plt.axis('off')
 
-    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_listing, isSave, savePath, useVirtualCenter)
+    get_XYT_inDic(matfiles, frame_idx, isClustered, lrsl, trunclen, isVisualize, axL, im, image_list, isSave, savePath, useVirtualCenter)
 

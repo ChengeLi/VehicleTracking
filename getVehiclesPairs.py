@@ -34,8 +34,8 @@ def prepare_data(isAfterWarpping,isLeft=True):
 		test_vctime = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
 		test_vcxtrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
 		test_vcytrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
-		
-		image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+		# image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+		image_listing = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
 		savePath      = "../tempFigs/roi2/"
 
     return test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath

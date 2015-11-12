@@ -191,7 +191,7 @@ if __name__ == '__main__':
                 startPt[tt] =  np.mod( np.nanmin(t[tt,:]), 600) #ignore all nans
                 endPt[tt]   =  np.mod( np.nanmax(t[tt,:]), 600) 
             else:
-                startPt[tt] =  np.min(np.where(x[tt,:]!=0))
+                startPt[tt] =  np.min(np.where(t,:]!=0))
                 endPt[tt]   =  np.max(np.where(x[tt,:]!=0))
 
 
