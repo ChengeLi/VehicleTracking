@@ -2,6 +2,7 @@ import os
 import cv2
 import math
 import pdb
+import pickle
 import numpy as np
 import glob as glob
 from scipy.sparse import csr_matrix
@@ -53,7 +54,7 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
 
 
 # same blob score (SBS) for two trajectories
-def sameBlobScore(trj1,trj2,blobColorImgList,common_idx):
+def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
     SBS = 0
     x1  = trj1[0]
     y1  = trj1[1]
@@ -73,21 +74,33 @@ def sameBlobScore(trj1,trj2,blobColorImgList,common_idx):
     #     else:
     #         pass
 
-
-    color1List = []
-    color2List = []
-    for (k,frame_idx) in enumerate(common_idx):
-        blobImg = cv2.imread(blobColorImgList[frame_idx])
-        color1  =  blobImg[y1[k],x1[k],:]
-        color2  =  blobImg[y2[k],x2[k],:]
-        if (np.sum(color1)!=0) and (np.sum(color2)!=0):
-            color1List.append(color1)
-            color2List.append(color2)
+# ================a slightly faster loop==========================
+    # color1List = []
+    # color2List = []
+    # for (k,frame_idx) in enumerate(common_idx):
+    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
+    #     color1  =  blobImg[y1[k],x1[k],:]
+    #     color2  =  blobImg[y2[k],x2[k],:]
+    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
+    #         color1List.append(color1)
+    #         color2List.append(color2)
     
-    if len(color1List)>0:
-        SBS = np.sum(np.sum(np.array(color1List)==np.array(color2List),1)==3)
-    else:
-        SBS = 0
+    # if len(color1List)>0:
+    #     SBS = np.sum(np.sum(np.array(color1List)==np.array(color2List),1)==3)
+    # else:
+    #     SBS = 0
+# ===============use sparse list===========================
+# faster than loading images, still slow
+    for (k,frame_idx) in enumerate(common_idx):
+        blobIndexMatrix = csr_matrix(blob_sparse_list[frame_idx])
+        if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
+            SBS = SBS+1
+
+# use approximate
+    for (k,frame_idx) in enumerate(common_idx):
+        blobIndexMatrix = csr_matrix(blob_sparse_list[frame_idx])
+        if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
+            SBS = SBS+1
 
 
     return SBS
@@ -126,10 +139,13 @@ if __name__ == '__main__':
     # adj_element = "Thresholding"
     # adj_element = "Gaussian"
     # adj_element = "Cosine"
+
+    # linux local:
+    blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
     # linux:
     # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
     # Mac
-    blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
+    # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
 
 
     # """to visualize the neighbours"""
@@ -137,6 +153,10 @@ if __name__ == '__main__':
     ax     = plt.subplot(1,1,1)
 
 
+    # blobListPath = '../DoT/CanalSt@BaxterSt-96.106/'
+    blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
+    blobname             = os.path.join(blobListPath,'blobTensorList.p')
+    blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -189,6 +209,13 @@ if __name__ == '__main__':
         yspd = yspeed
         mask = ptsidx
         NumGoodsample = len(x_re)
+
+        print "load foreground blob index matrix file...."
+        blobLists = []
+        blobListfile = blob_sparse_matrices[matidx]
+        blobLists    = pickle.load( open( blobListfile, "rb" ) )
+
+
         # construct adjacency matrix
         print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
         adj = np.zeros([NumGoodsample,NumGoodsample])
@@ -215,7 +242,7 @@ if __name__ == '__main__':
                     """counting the sharing blob numbers of two trjs"""
                     trj1 = [x_re[i,idx],y_re[i,idx]]
                     trj2 = [x_re[j,idx],y_re[j,idx]]
-                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,sidx)
+                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
 
 
                     # if adj_element =="Thresholding":
