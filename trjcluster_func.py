@@ -1,11 +1,14 @@
 import os
+import cv2
+import math
+import pdb
+import numpy as np
+import glob as glob
+from scipy.sparse import csr_matrix
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
-from scipy.sparse import csr_matrix
-import numpy as np
-import pdb,glob
 import matplotlib.pyplot as plt
-import math
+
 
 
 def adj_gaussian_element(sxdiff, sydiff, mdis):
@@ -49,6 +52,47 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
     return adj_element
 
 
+# same blob score (SBS) for two trajectories
+def sameBlobScore(trj1,trj2,blobColorImgList,common_idx):
+    SBS = 0
+    x1  = trj1[0]
+    y1  = trj1[1]
+    x2  = trj2[0]
+    y2  = trj2[1]
+
+    #### loop is too slow
+    # for (k,frame_idx) in enumerate(common_idx):
+    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
+    #     color1  = blobImg[y1[k],x1[k],:]
+    #     color2  = blobImg[y2[k],x2[k],:]
+
+    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
+    #         if np.sum(color1 == color2)==3:
+    #             # pdb.set_trace()
+    #             SBS = SBS+1
+    #     else:
+    #         pass
+
+
+    color1List = []
+    color2List = []
+    for (k,frame_idx) in enumerate(common_idx):
+        blobImg = cv2.imread(blobColorImgList[frame_idx])
+        color1  =  blobImg[y1[k],x1[k],:]
+        color2  =  blobImg[y2[k],x2[k],:]
+        if (np.sum(color1)!=0) and (np.sum(color2)!=0):
+            color1List.append(color1)
+            color2List.append(color2)
+    
+    if len(color1List)>0:
+        SBS = np.sum(np.sum(np.array(color1List)==np.array(color2List),1)==3)
+    else:
+        SBS = 0
+
+
+    return SBS
+
+
 
 
 def prepare_input_data(isAfterWarpping,isLeft=True):
@@ -62,13 +106,13 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        matfilepath = '../tempFigs/roi2/filtered/'
-        savePath    = '../tempFigs/roi2/' 
-        matfiles    = sorted(glob.glob(matfilepath + 'len*.mat'))
+        matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+        savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # matfilepath = '../tempFigs/roi2/filtered/'
+        # savePath    = '../tempFigs/roi2/' 
+        matfiles      = sorted(glob.glob(matfilepath + 'len*.mat'))
 
-    return matfiles,savePath
+    return matfiles,savePath,
 
 
 
@@ -78,9 +122,14 @@ if __name__ == '__main__':
     isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
+    adj_element = nan
     # adj_element = "Thresholding"
-    adj_element = "Gaussian"
+    # adj_element = "Gaussian"
     # adj_element = "Cosine"
+    # linux:
+    # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
+    # Mac
+    blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
 
 
     # """to visualize the neighbours"""
@@ -143,11 +192,13 @@ if __name__ == '__main__':
         # construct adjacency matrix
         print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
         adj = np.zeros([NumGoodsample,NumGoodsample])
+        SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
         # build adjacent mtx
         for i in range(NumGoodsample):
             # plt.cla()
-            for j in range(i+1, min(NumGoodsample,i+1500)):
+            for j in range(i+1, min(NumGoodsample,i+30)):
+                print "i", i, "j",j
                 tmp1 = x_re[i,:]!=0
                 tmp2 = x_re[j,:]!=0
                 idx  = num[tmp1&tmp2]
@@ -161,19 +212,23 @@ if __name__ == '__main__':
                     # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
                     # print "mdis: ", mdis
 
-                    if adj_element =="Thresholding":
-                        adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
-
-                    if adj_element == "Cosine":
-                        i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
-                        j_trj    = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
-                        adj[i,j] = adj_cosine_element(i_trj,j_trj)
-
-                    if adj_element =="Gaussian":
-                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
+                    """counting the sharing blob numbers of two trjs"""
+                    trj1 = [x_re[i,idx],y_re[i,idx]]
+                    trj2 = [x_re[j,idx],y_re[j,idx]]
+                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,sidx)
 
 
+                    # if adj_element =="Thresholding":
+                    #     adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
 
+                    # if adj_element == "Cosine":
+                    #     i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
+                    #     j_trj    = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
+                    #     adj[i,j] = adj_cosine_element(i_trj,j_trj)
+
+                    # if adj_element =="Gaussian":
+                    #     adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
+        SBS = SBS + SBS.transpose()
         adj = adj + adj.transpose()
         np.fill_diagonal(adj, 1)
 
