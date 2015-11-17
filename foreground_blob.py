@@ -92,7 +92,7 @@ if __name__ == '__main__':
 	mask_list = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_filled_hole/*.jpg'))
 	ori_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 	nframe    = min(len(mask_list),len(ori_list))
-	frame_idx = 0
+	frame_idx = 7800 #resume here, from 7800
 	trunclen  = 600
 	plt.figure()
 

@@ -55,6 +55,7 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
 
 # same blob score (SBS) for two trajectories
 def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
+    trunlen = 600
     SBS = 0
     x1  = trj1[0]
     y1  = trj1[1]
@@ -92,16 +93,21 @@ def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
 # ===============use sparse list===========================
 # faster than loading images, still slow
     for (k,frame_idx) in enumerate(common_idx):
-        blobIndexMatrix = csr_matrix(blob_sparse_list[frame_idx])
+        blobIndexMatrix = csr_matrix(blob_sparse_list[np.mod(frame_idx,trunlen)])
         if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
             SBS = SBS+1
 
 # use approximate
-    for (k,frame_idx) in enumerate(common_idx):
-        blobIndexMatrix = csr_matrix(blob_sparse_list[frame_idx])
-        if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-            SBS = SBS+1
+    # trj1_index_sum = 0
+    # trj2_index_sum = 0
 
+    # for (k,frame_idx) in enumerate(common_idx):
+        
+    #     blobIndexMatrix = (blob_sparse_list[np.mod(frame_idx,trunlen)]).todense()
+    #     trj1_index_sum = trj1_index_sum+blobIndexMatrix[y1[k],x1[k]]
+    #     trj2_index_sum = trj2_index_sum+blobIndexMatrix[y2[k],x2[k]]
+
+    # SBS = (trj1_index_sum-trj2_index_sum)
 
     return SBS
 
@@ -119,12 +125,12 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # matfilepath = '../tempFigs/roi2/filtered/'
-        # savePath    = '../tempFigs/roi2/' 
-        matfiles      = sorted(glob.glob(matfilepath + 'len*.mat'))
-
+        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        matfilepath = '../tempFigs/roi2/filtered/'
+        savePath    = '../tempFigs/roi2/' 
+        matfiles    = sorted(glob.glob(matfilepath + 'len*.mat'))
+        matfiles    = matfiles[26:]
     return matfiles,savePath,
 
 
@@ -135,8 +141,8 @@ if __name__ == '__main__':
     isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
-    adj_element = nan
-    # adj_element = "Thresholding"
+    # adj_element = nan
+    adj_element = "Thresholding"
     # adj_element = "Gaussian"
     # adj_element = "Cosine"
 
@@ -155,7 +161,6 @@ if __name__ == '__main__':
 
     # blobListPath = '../DoT/CanalSt@BaxterSt-96.106/'
     blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-    blobname             = os.path.join(blobListPath,'blobTensorList.p')
     blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
@@ -210,10 +215,10 @@ if __name__ == '__main__':
         mask = ptsidx
         NumGoodsample = len(x_re)
 
-        print "load foreground blob index matrix file...."
-        blobLists = []
-        blobListfile = blob_sparse_matrices[matidx]
-        blobLists    = pickle.load( open( blobListfile, "rb" ) )
+        # print "load foreground blob index matrix file...."
+        # blobLists = []
+        # blobListfile = blob_sparse_matrices[matidx]
+        # blobLists    = pickle.load( open( blobListfile, "rb" ) )
 
 
         # construct adjacency matrix
@@ -224,8 +229,8 @@ if __name__ == '__main__':
         # build adjacent mtx
         for i in range(NumGoodsample):
             # plt.cla()
-            for j in range(i+1, min(NumGoodsample,i+30)):
-                print "i", i, "j",j
+            for j in range(i+1, min(NumGoodsample,i+1000)):
+                # print "i", i, "j",j
                 tmp1 = x_re[i,:]!=0
                 tmp2 = x_re[j,:]!=0
                 idx  = num[tmp1&tmp2]
@@ -242,11 +247,11 @@ if __name__ == '__main__':
                     """counting the sharing blob numbers of two trjs"""
                     trj1 = [x_re[i,idx],y_re[i,idx]]
                     trj2 = [x_re[j,idx],y_re[j,idx]]
-                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
+                    # SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
 
 
-                    # if adj_element =="Thresholding":
-                    #     adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
+                    if adj_element =="Thresholding":
+                        adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
 
                     # if adj_element == "Cosine":
                     #     i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
@@ -264,7 +269,7 @@ if __name__ == '__main__':
         # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
         
         print "saving adj..."
-        pdb.set_trace()
+        # pdb.set_trace()
         sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
         result    = {}
@@ -278,31 +283,33 @@ if __name__ == '__main__':
         result['yspd']    = yspd
 
         if not isAfterWarpping:
-            savename = os.path.join(savePath,'Adj_'+str(matidx).zfill(3))
+            # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
+            savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
+
             savemat(savename,result)
         else:
-            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx).zfill(3))
+            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
             savemat(savename,result)
             
 
-        """ visualization """
-        pdb.set_trace()        
-        s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        color     = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
-        fig888    = plt.figure(888)
-        ax        = plt.subplot(1,1,1)
-        # im = plt.imshow(np.zeros([528,704,3]))
-        for i in range(s111):
-            ind = np.where(c111==i)[0]
-            print ind
-            for jj in range(len(ind)):
-                startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
-                endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
-                # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-                lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                fig888.canvas.draw()
-            plt.pause(0.0001) 
-        pdb.set_trace()
+        # """ visualization """
+        # pdb.set_trace()        
+        # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # color     = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
+        # fig888    = plt.figure(888)
+        # ax        = plt.subplot(1,1,1)
+        # # im = plt.imshow(np.zeros([528,704,3]))
+        # for i in range(s111):
+        #     ind = np.where(c111==i)[0]
+        #     print ind
+        #     for jj in range(len(ind)):
+        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
+        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
+        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+        #         fig888.canvas.draw()
+        #     plt.pause(0.0001) 
+        # pdb.set_trace()
 
 
 

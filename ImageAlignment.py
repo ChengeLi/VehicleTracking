@@ -40,14 +40,15 @@ def getPerspectiveMtx(img):
 def perspectiveWarp(img, M,frame_idx,isSave):
 	dst = cv2.warpPerspective(img,M,(400,1100))
 	if isSave:
-		name = '../tempFigs/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
+		# name = '../tempFigs/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
+		name = '/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
 		cv2.imwrite(name, dst)
 	return dst
 
 
 if __name__ == '__main__':
-	linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4'
-	# mac_video_src = '/Volumes/TOSHIBA/DoTdata/VideoFromCUSP/C0007.avi'
+	linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4' #complete
+	# mac_video_src = '/Volumes/TOSHIBA/DoTdata/VideoFromCUSP/C0007.avi' #partial
 	# test_video_src = '/Users/Chenge/Desktop/C0007.avi'
 
 	cap       = cv2.VideoCapture(linux_video_src)
@@ -56,7 +57,7 @@ if __name__ == '__main__':
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 	framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
 
-	start_position = 0  #4000
+	start_position = 57150  #4000
 	print 'reading buffer...'
 	# for ii in range(start_position):
 	# 	print(ii)
@@ -65,7 +66,7 @@ if __name__ == '__main__':
 	print 'warp image...read frame',str(start_position)
 	st, img = cap.read()
 	warpMtx = getPerspectiveMtx(img)
-	
+	pdb.set_trace()
 	for frame_idx in range(int(nframe/2)):
 		print "frame_idx ",str(start_position+1+frame_idx)
 		isSave        = 1

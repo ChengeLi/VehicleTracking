@@ -361,7 +361,7 @@ if __name__ == '__main__':
             # labelsave['label']   = np.array(newlabels)
             labelsave['label']   = labels
             labelsave['mask']    = mask
-            savename = savePath+'ssc_'+ str(matidx).zfill(3)
+            savename = savePath + str(matidx+1).zfill(3)
             savemat(savename,labelsave)
 
     """SSC clustering Andy Project"""

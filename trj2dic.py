@@ -70,8 +70,9 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
             vcytrj[i]=[]
             vctime[i]=[]
 
+    global notconnectedLabel
     notconnectedLabel =[]
-    while frame_idx < 1800:
+    while frame_idx < len(matfiles)*600:
         print "frame = ", str(frame_idx)
         if (frame_idx % trunclen == 0):
             
@@ -133,7 +134,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
-                            pdb.set_trace() 
+                            # pdb.set_trace() 
         # current frame index is: (frame_idx%trunclen)
         PtsInCurFrm = xtrj[:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm = IDintrunk[PtsInCurFrm] #select IDs in this frame
@@ -171,6 +172,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
                     save_vctime = {}
                     save_vcxtrj = {}
                     save_vcytrj = {}
+                    print notconnectedLabel
                     for i in np.unique(IDintrunk): 
                         save_vctime[i] = np.array(vctime[i])
                         save_vcxtrj[i] = np.array(vcxtrj[i])
@@ -182,18 +184,22 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
         frame_idx = frame_idx+1
         # end of while loop
 
-    if isSave:
+    if isSave and isClustered:
+        print "notconnectedLabel:",notconnectedLabel
         savenameT = os.path.join(savePath,'final_vctime.p')
         savenameX = os.path.join(savePath,'final_vcxtrj.p')
         savenameY = os.path.join(savePath,'final_vcytrj.p')
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
-            save_vcytrj = {}
-            for i in np.unique(labels): 
-                save_vctime[i] = np.array(vctime[i])
-                save_vcxtrj[i] = np.array(vcxtrj[i])
-                save_vcytrj[i] = np.array(vcytrj[i])
+            save_vcytrj = {}            
+            clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel}
+            clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel}
+            clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
+            for i in np.int16(np.unique(list(set(labels)-set(notconnectedLabel)))): 
+                save_vctime[i] = np.array(clean_vctime[i])
+                save_vcxtrj[i] = np.array(clean_vcxtrj[i])
+                save_vcytrj[i] = np.array(clean_vcytrj[i])
             pickle.dump( save_vctime, open( savenameT, "wb" ) )
             pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
             pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
@@ -253,35 +259,35 @@ def visualize_trj(axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_data_to_vis(isAfterWarpping,isLeft=True):
     if isAfterWarpping:
         if isLeft:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            left_image_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-            image_list = left_image_list
+            matPath         = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
+            matfiles        = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            left_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
+            image_list      = left_image_list
             # final result for vis
-            lrsl = '../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left'
-            savePath = "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/"
+            lrsl            = '../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left'
+            savePath        = "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/"
 
         else:
-            matPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
+            matPath          = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
+            matfiles         = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-            image_list = right_image_list
+            image_list       = right_image_list
             # final result for vis
-            lrsl = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
-            savePath = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
+            lrsl             = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
+            savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
     else:
         # matfiles      = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
         # image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
         # final result for vis
         # lrsl          = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
         # savePath      = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/''
-
-        matfiles      = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
+        
+        matfiles     = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
         # image_list = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
-        image_list = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
-        lrsl          = '../tempFigs/roi2/Result' 
-        savePath      = '../tempFigs/roi2/dic/'
-
+        image_list   = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
+        lrsl         = '../tempFigs/roi2/Result' 
+        savePath     = '../tempFigs/roi2/dic/'
+        
 
     return matfiles,image_list,lrsl,savePath
 

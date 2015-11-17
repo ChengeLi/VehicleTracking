@@ -58,7 +58,7 @@ def prepare_input_data():
     matfilepath = '../tempFigs/roi2/'
     savePath = '../tempFigs/roi2/filtered/' 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-    start_position = 16 #already processed 10 files
+    start_position = 0 #already processed 10 files
     matfiles = matfiles[start_position:]
     return matfiles,savePath,start_position
 
@@ -126,6 +126,7 @@ if __name__ == '__main__':
         result['xspd']    = xspd
         result['yspd']    = yspd
 
-        savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+start_position+1).zfill(3))
+        # savename = os.path.join(savePath,'len4overlap1trj_'+str(matidx+start_position+1).zfill(3))
+        savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
         savemat(savename,result)
 

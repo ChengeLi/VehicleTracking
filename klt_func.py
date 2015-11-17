@@ -37,7 +37,7 @@ def klt_tracker(isVideo, \
     end             = []
     track_len       = 10
     tracksdic       = {} 
-    frame_idx_bias  = 1200  #===============don't forget to set me!
+    frame_idx_bias  = 60600#1200  #===============don't forget to set me!
     dicidx          = 0 
     frame_idx       = 0 + frame_idx_bias #start processing in the middle of the image folder 
     pregood         = []
@@ -51,12 +51,15 @@ def klt_tracker(isVideo, \
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        start_position = frame_idx_bias
+        print 'reading buffer...'
+        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position-1))
         status, frame = cap.read()
    
     if not isVideo:  # -- get the full image list
         imagepath = dataPath
         imlist    = sorted(glob.glob(imagepath + '*.jpg'))
-        nframe    = len(imlist)-frame_idx_bias
+        nframe    = len(imlist)
         # -- read in first frame and set dimensions
         frame     = cv2.imread(imlist[0])
 

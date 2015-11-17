@@ -17,28 +17,28 @@ def prepare_data(isAfterWarpping,isLeft=True):
 			test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
 			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
 
-			left_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-			image_listing      = left_image_listing
-			savePath           = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
+			left_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
+			image_list      = left_image_list
+			savePath        = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
 
         else:
-			test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vctime.p", "rb" ) )
-			test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcxtrj.p", "rb" ) )
-			test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcytrj.p", "rb" ) )
-
-			right_image_listing = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-			image_listing       = right_image_listing
-			savePath            = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
+			test_vctime      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vctime.p", "rb" ) )
+			test_vcxtrj      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcxtrj.p", "rb" ) )
+			test_vcytrj      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcytrj.p", "rb" ) )
+			
+			right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
+			image_list       = right_image_list
+			savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
 
     else:
-		test_vctime = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
-		test_vcxtrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
-		test_vcytrj = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
-		# image_listing = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
-		image_listing = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
-		savePath      = "../tempFigs/roi2/"
+		test_vctime  = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
+		test_vcxtrj  = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
+		test_vcytrj  = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
+		# image_list = sorted(glob.glob('../tempFigs/roi2/*.jpg'))
+		image_list   = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
+		savePath     = "../tempFigs/roi2/"
 
-    return test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath
+    return test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath
 
 
 
@@ -145,7 +145,7 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 	for k in range(np.size(cooccur_ran)):
 		frame_idx = cooccur_ran[k]
 		# print "frame_idx: " ,frame_idx
-		tmpName= image_listing[frame_idx]
+		tmpName= image_list[frame_idx]
 		frame=cv2.imread(tmpName)
 		im.set_data(frame[:,:,::-1])
 		plt.draw()
@@ -171,6 +171,7 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2, saveflag = 0):
 		#     i.remove()
 		dots = []
 		plt.show()
+		plt.pause(0.00001)
 
 		if saveflag == 1:
 			name = './figures/'+str(frame_idx).zfill(6)+'.jpg'
@@ -191,7 +192,7 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color , savef
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop) #get xy and write to file
 		if np.size(cooccur_ran)>=15:
 			saveflag = 0
-			# writer2.writerow([loopVehicleID1,loopVehicleID2])
+			writer2.writerow([loopVehicleID1,loopVehicleID2])
 			visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2, saveflag) #visualize
 
 
@@ -227,7 +228,7 @@ if __name__ == '__main__':
 	
 	isAfterWarpping = False
 	isLeft          = True
-	test_vctime,test_vcxtrj,test_vcytrj,image_listing,savePath = prepare_data(isAfterWarpping,isLeft)
+	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,isLeft)
 
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 
@@ -266,8 +267,8 @@ if __name__ == '__main__':
 
 	#=======visualize the pair relationship==============================================
 	# for plottting
-	firstfrm =cv2.imread(image_listing[0])
-	framenum = int(len(image_listing))
+	firstfrm =cv2.imread(image_list[0])
+	framenum = int(len(image_list))
 	nrows    = int(np.size(firstfrm,0))
 	ncols    = int(np.size(firstfrm,1))
 	
@@ -294,7 +295,7 @@ if __name__ == '__main__':
 
 	plt.figure('testing')
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
-		for ind2 in range(ind1+1, len(obj_pair2loop.globalID)):
+		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):
 			loopVehicleID1 = obj_pair2loop.globalID[ind1]
 			loopVehicleID2 = obj_pair2loop.globalID[ind2]
 			print "pairing: ",loopVehicleID1,' & ',loopVehicleID2
@@ -306,12 +307,12 @@ if __name__ == '__main__':
 			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop, color = color_choice)
 
 
-	# plt.figure('testing')
-	# axL     = plt.subplot(1,1,1)
-	# frame   = np.zeros([nrows,ncols,3]).astype('uint8')
-	# im      = plt.imshow(np.zeros([nrows,ncols,3]))
-	# plt.axis('off')
-	# visual_givenID(4, 28, obj_pair2loop, color = color_choice)
+	plt.figure('testing')
+	axL     = plt.subplot(1,1,1)
+	frame   = np.zeros([nrows,ncols,3]).astype('uint8')
+	im      = plt.imshow(np.zeros([nrows,ncols,3]))
+	plt.axis('off')
+	visual_givenID(273, 214, obj_pair2loop, color = color_choice)
 
 
 	# pdb.set_trace()
