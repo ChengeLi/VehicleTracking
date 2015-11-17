@@ -72,7 +72,7 @@ def get_XYT_inDic(matfiles,frame_idx, isClustered, lrsl, trunclen, isVisualize, 
 
     global notconnectedLabel
     notconnectedLabel =[]
-    while frame_idx < len(matfiles)*600:
+    while frame_idx < np.int8(matfiles[-1][-7:-4])*600:
         print "frame = ", str(frame_idx)
         if (frame_idx % trunclen == 0):
             
@@ -294,7 +294,6 @@ def prepare_data_to_vis(isAfterWarpping,isLeft=True):
 
 
 if __name__ == '__main__':
-    frame_idx        = 0
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
@@ -302,9 +301,11 @@ if __name__ == '__main__':
     useVirtualCenter = True
     isLeft           = False
     isSave           = True
-    
-
     matfiles,image_list,lrsl, savePath = prepare_data_to_vis(isAfterWarpping,isLeft)
+    frame_idx        = (np.int8(matfiles[0][-7:-4])-1)*600
+    pdb.set_trace()
+
+
 
     firstfrm  = cv2.imread(image_list[0])
     nrows     = int(np.size(firstfrm,0))

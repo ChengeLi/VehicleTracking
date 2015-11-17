@@ -1,3 +1,12 @@
+"""
+This is duplicated from the trjcluster_func.py!!!!!
+Used for debugging the SBS score. 
+Please merge it back to the trjcluster_func after success. 
+
+"""
+
+
+
 import os
 import cv2
 import math
@@ -102,23 +111,20 @@ def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
     # trj2_index_sum = 0
 
     # for (k,frame_idx) in enumerate(common_idx):
-    if len(common_idx)>=30:
-        print "long"
-        for k in range(0,len(common_idx),3): #sub sample
+    if len(common_idx)>=50:
+        # print "long"
+        for k in range(0,len(common_idx),5): #sub sample
             frame_idx = common_idx[k]    
             blobIndexMatrix = (blob_sparse_list[np.mod(frame_idx,trunlen)]).todense()
             # trj1_index_sum = trj1_index_sum+blobIndexMatrix[y1[k],x1[k]]
             # trj2_index_sum = trj2_index_sum+blobIndexMatrix[y2[k],x2[k]]
             # SBS = (trj1_index_sum-trj2_index_sum)
-
-        if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-            SBS = SBS+1
+            if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
+                SBS = SBS+1
+        SBS = min(SBS*5,len(common_idx))
     else: #for short sharing trjs
-        print "short"
+        # print "short"
         SBS = 0
-
-
-
     return SBS
 
 
@@ -135,10 +141,10 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        matfilepath = '../tempFigs/roi2/filtered/'
-        savePath    = '../tempFigs/roi2/' 
+        matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+        savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # matfilepath = '../tempFigs/roi2/filtered/'
+        # savePath    = '../tempFigs/roi2/' 
         matfiles    = sorted(glob.glob(matfilepath + 'len*.mat'))
         matfiles    = matfiles[0:]
     return matfiles,savePath,
@@ -151,8 +157,8 @@ if __name__ == '__main__':
     isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
-    # adj_element = nan
-    adj_element = "Thresholding"
+    adj_element = np.nan
+    # adj_element = "Thresholding"
     # adj_element = "Gaussian"
     # adj_element = "Cosine"
 
@@ -168,8 +174,6 @@ if __name__ == '__main__':
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
 
-
-    # blobListPath = '../DoT/CanalSt@BaxterSt-96.106/'
     blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
     blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
     for matidx,matfile in enumerate(matfiles):
@@ -225,10 +229,10 @@ if __name__ == '__main__':
         mask = ptsidx
         NumGoodsample = len(x_re)
 
-        # print "load foreground blob index matrix file...."
-        # blobLists = []
-        # blobListfile = blob_sparse_matrices[matidx]
-        # blobLists    = pickle.load( open( blobListfile, "rb" ) )
+        print "load foreground blob index matrix file...."
+        blobLists = []
+        blobListfile = blob_sparse_matrices[matidx]
+        blobLists    = pickle.load( open( blobListfile, "rb" ) )
 
 
         # construct adjacency matrix
@@ -238,9 +242,9 @@ if __name__ == '__main__':
         num = np.arange(fnum)
         # build adjacent mtx
         for i in range(NumGoodsample):
+            print "i", i
             # plt.cla()
-            for j in range(i+1, min(NumGoodsample,i+1000)):
-                # print "i", i, "j",j
+            for j in range(i+1, min(NumGoodsample,i+600)):
                 tmp1 = x_re[i,:]!=0
                 tmp2 = x_re[j,:]!=0
                 idx  = num[tmp1&tmp2]
@@ -257,11 +261,11 @@ if __name__ == '__main__':
                     """counting the sharing blob numbers of two trjs"""
                     trj1 = [x_re[i,idx],y_re[i,idx]]
                     trj2 = [x_re[j,idx],y_re[j,idx]]
-                    # SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
+                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
 
 
-                    if adj_element =="Thresholding":
-                        adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
+                    # if adj_element =="Thresholding":
+                    #     adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
 
                     # if adj_element == "Cosine":
                     #     i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
@@ -279,7 +283,7 @@ if __name__ == '__main__':
         # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
         
         print "saving adj..."
-        # pdb.set_trace()
+        pdb.set_trace()
         sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
         result    = {}
@@ -320,6 +324,7 @@ if __name__ == '__main__':
         #         fig888.canvas.draw()
         #     plt.pause(0.0001) 
         # pdb.set_trace()
+
 
 
 
