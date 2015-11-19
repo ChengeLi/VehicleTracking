@@ -141,6 +141,23 @@ if __name__ == '__main__':
         adj = np.zeros([NumGoodsample,NumGoodsample])
         SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
+        # compute SBS seperately
+        for i in range(NumGoodsample):
+            for j in range(i, min(NumGoodsample,i+1000)):
+                SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+
+        # mean_sbs = np.mean(SBS[SBS!=0])
+        # std_sbs  = np.std(SBS[SBS!=0])
+        mean_sbs = np.mean(SBS)
+        std_sbs  = np.std(SBS)
+
+        SBS      = SBS + SBS.transpose()
+        np.fill_diagonal(SBS, diagonal(SBS)/2)
+
+        SBS = (SBS-mean_sbs)/std_sbs
+        print 'SBS normalization is done!'
+        pdb.set_trace()
+
         # build adjacent mtx
         for i in range(NumGoodsample):
             print "i", i
@@ -159,10 +176,11 @@ if __name__ == '__main__':
                     # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
                     # print "mdis: ", mdis
 
-                    """counting the sharing blob numbers of two trjs"""
+                    
                     trj1     = [x[i,idx],y[i,idx]]
                     trj2     = [x[j,idx],y[j,idx]]
-                    SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                    """counting the sharing blob numbers of two trjs"""
+                    # SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                     if adj_element =="Thresholding":
                         adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis)
 
@@ -175,15 +193,15 @@ if __name__ == '__main__':
                         adj[i,j] = adj_cosine_element(i_trj,j_trj)
                 else: # overlapping too short
                     if i==j:
-                        SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                        # SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                         adj[i,j] =  adj_gaussian_element(0, 0, 0,SBS[i,j],useSBS)
                     else:
-                        SBS[i,j] = 0
+                        # SBS[i,j] = 0
                         adj[i,j] = 0
 
-        # SBS = SBS + SBS.transpose()
-        mean_sbs = np.mean(SBS[SBS!=0])
-        std_sbs  = np.std(SBS[SBS!=0])
+        # # SBS = SBS + SBS.transpose()
+        # mean_sbs = np.mean(SBS[SBS!=0])
+        # std_sbs  = np.std(SBS[SBS!=0])
         adj = adj + adj.transpose() #add diag twice
         np.fill_diagonal(adj, diagonal(adj)/2)
         pdb.set_trace()
