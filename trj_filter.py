@@ -6,6 +6,7 @@ import pdb,glob
 import numpy as np
 from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
+import matplotlib.pyplot as plt
 
 def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 15, fps = 23):
     # fps for DoT Canal is 23
@@ -48,7 +49,6 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth =
                 pass
     # spdfile.close()
     # stoptimefile.close()
-    pdb.set_trace()
     x_re          = np.array(x_re)
     y_re          = np.array(y_re)
     t_re          = np.array(t_re)
@@ -61,8 +61,9 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth =
 
 def prepare_input_data():
     # for linux
-    matfilepath = '/media/My Book/CUSP/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-    savePath    = '/media/My Book/CUSP/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+    matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+    savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+    
     # for mac
     # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
@@ -80,7 +81,8 @@ if __name__ == '__main__':
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
-        mask = ptstrj['mask'][0]
+        # mask = ptstrj['mask'][0]
+        mask = ptstrj['trjID'][0]
         x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
@@ -113,27 +115,26 @@ if __name__ == '__main__':
 
         for ii in range(Numsample):
             if math.isnan(startPt[ii]) or math.isnan(endPt[ii]):
-                pdb.set_trace()
                 xspeed[ii, :] = 0 # discard
                 yspeed[ii, :] = 0 
             else:
-                pdb.set_trace()
-                xspeed[ii, int(max(startPt[ii]-1,0))] = 0 
-                xspeed[ii, int(endPt[ii]-1)] = 0 
-                yspeed[ii, int(max(startPt[ii]-1,0))] = 0 
-                yspeed[ii, int(endPt[ii]-1)] = 0 
+                # pdb.set_trace()
+                xspeed[ii, int(max(startPt[ii]-1,0))]      = 0 
+                xspeed[ii, int(min(endPt[ii],trunclen-2))] = 0 
+                yspeed[ii, int(max(startPt[ii]-1,0))]      = 0 
+                yspeed[ii, int(min(endPt[ii],trunclen-2))] = 0 
         
         
         
         print "Num of original samples is " , Numsample
         mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 1, fps = 4)
-        print('initialization finished....')
+        # print('initialization finished....')
         
         NumGoodsample = len(x_re)
         print "Num of Good samples is" , NumGoodsample
 
         result    = {}
-        result['mask']          = mask_re
+        result['trjID']         = mask_re
         result['xtracks']       = x_re       
         result['ytracks']       = y_re
         result['Ttracks']       = t_re

@@ -21,11 +21,16 @@ import matplotlib.pyplot as plt
 
 
 
-def adj_gaussian_element(sxdiff, sydiff, mdis):
+def adj_gaussian_element(sxdiff, sydiff, mdis,SBS,useSBS = True):
     sigma_xspd_diff = 0.7
     sigma_yspd_diff = 0.7
     sigma_spatial_distance = 200
-    adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
+    if useSBS:
+        adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2) + SBS)
+    else:
+        adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
+    if math.isnan(adj_element):
+        pdb.set_trace()
     return adj_element
 
 
@@ -52,8 +57,8 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
         adj_element = 1
         # adj[i,j] = construct_adj(sxdiff, sydiff, mdis)
         """visualize the neighbours"""
-        # lines = ax.plot(x_re[i,idx], y_re[i,idx],color = (color[i-1].T)/255.,linewidth=2)
-        # lines = ax.plot(x_re[j,idx], y_re[j,idx],color = (color[j-1].T)/255.,linewidth=2)
+        # lines = ax.plot(x[i,idx], y[i,idx],color = (color[i-1].T)/255.,linewidth=2)
+        # lines = ax.plot(x[j,idx], y[j,idx],color = (color[j-1].T)/255.,linewidth=2)
         # fig888.canvas.draw()
         # plt.pause(0.0001)
         # spdfile.close()
@@ -63,68 +68,9 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
 
 
 # same blob score (SBS) for two trajectories
-def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
-    trunlen = 600
-    SBS = 0
-    x1  = trj1[0]
-    y1  = trj1[1]
-    x2  = trj2[0]
-    y2  = trj2[1]
+def sameBlobScore(fgBlobInd1,fgBlobInd2):
+    SBS = np.sum(fgBlobInd1 == fgBlobInd2)
 
-    #### loop is too slow
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
-    #     color1  = blobImg[y1[k],x1[k],:]
-    #     color2  = blobImg[y2[k],x2[k],:]
-
-    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
-    #         if np.sum(color1 == color2)==3:
-    #             # pdb.set_trace()
-    #             SBS = SBS+1
-    #     else:
-    #         pass
-
-# ================a slightly faster loop==========================
-    # color1List = []
-    # color2List = []
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
-    #     color1  =  blobImg[y1[k],x1[k],:]
-    #     color2  =  blobImg[y2[k],x2[k],:]
-    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
-    #         color1List.append(color1)
-    #         color2List.append(color2)
-    
-    # if len(color1List)>0:
-    #     SBS = np.sum(np.sum(np.array(color1List)==np.array(color2List),1)==3)
-    # else:
-    #     SBS = 0
-# ===============use sparse list===========================
-# faster than loading images, still slow
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobIndexMatrix = csr_matrix(blob_sparse_list[np.mod(frame_idx,trunlen)])
-    #     if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-    #         SBS = SBS+1
-
-# use approximate
-    # trj1_index_sum = 0
-    # trj2_index_sum = 0
-
-    # for (k,frame_idx) in enumerate(common_idx):
-    if len(common_idx)>=50:
-        # print "long"
-        for k in range(0,len(common_idx),5): #sub sample
-            frame_idx = common_idx[k]    
-            blobIndexMatrix = (blob_sparse_list[np.mod(frame_idx,trunlen)]).todense()
-            # trj1_index_sum = trj1_index_sum+blobIndexMatrix[y1[k],x1[k]]
-            # trj2_index_sum = trj2_index_sum+blobIndexMatrix[y2[k],x2[k]]
-            # SBS = (trj1_index_sum-trj2_index_sum)
-            if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-                SBS = SBS+1
-        SBS = min(SBS*5,len(common_idx))
-    else: #for short sharing trjs
-        # print "short"
-        SBS = 0
     return SBS
 
 
@@ -141,12 +87,16 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # for linux
+        matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/'
+        # for mac
+        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # matfilepath = '../tempFigs/roi2/filtered/'
         # savePath    = '../tempFigs/roi2/' 
-        matfiles    = sorted(glob.glob(matfilepath + 'len*.mat'))
-        matfiles    = matfiles[0:]
+        matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
+        matfiles = matfiles[0:]
     return matfiles,savePath,
 
 
@@ -157,84 +107,35 @@ if __name__ == '__main__':
     isAfterWarpping   = False
     isLeft            = False
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
-    adj_element = np.nan
+    # adj_element = np.nan
     # adj_element = "Thresholding"
-    # adj_element = "Gaussian"
+    adj_element = "Gaussian"
     # adj_element = "Cosine"
-
-    # linux local:
-    blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-    # linux:
-    # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-    # Mac
-    # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-
 
     # """to visualize the neighbours"""
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
+    useSBS = True
 
-    blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-    blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
+        ptsidx = ptstrj['trjID'][0]
         x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        if len(t)>0: 
-            t[t==0]=np.nan
+        xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
+        yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
+        FgBlobIndex   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+        FgBlobIndex[FgBlobIndex==0]=np.nan
 
-        ptsidx    = ptstrj['mask'][0]
+
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
-        color     = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
-        
-        startPt   = np.zeros((Numsample,1))
-        endPt     = np.zeros((Numsample,1))
-
-        for tt in range(Numsample):
-            if len(t)>0:
-                startPt[tt] =  np.mod( np.nanmin(t[tt,:]), 600) #ignore all nans
-                endPt[tt]   =  np.mod( np.nanmax(t[tt,:]), 600) 
-            else:
-                startPt[tt] =  np.min(np.where(x[tt,:]!=0))
-                endPt[tt]   =  np.max(np.where(x[tt,:]!=0))
 
 
-        # xspeed = np.diff(x)*((x!=0)[:,1:])  # wrong!
-        # yspeed = np.diff(y)*((y!=0)[:,1:])
-        
-        xspeed = np.diff(x) 
-        yspeed = np.diff(y)
-
-        for ii in range(Numsample):
-            if math.isnan(startPt[ii]) or math.isnan(endPt[ii]):
-                xspeed[ii, :] = 0 # discard
-                yspeed[ii, :] = 0 
-            else:
-                xspeed[ii, int(max(startPt[ii]-1,0))] = 0 
-                xspeed[ii, int(endPt[ii]-1)]          = 0 
-                yspeed[ii, int(max(startPt[ii]-1,0))] = 0 
-                yspeed[ii, int(endPt[ii]-1)]          = 0 
-        
-        speed = np.abs(xspeed)+np.abs(yspeed)
-        
-        # fix me====duplicate
-        x_re = x
-        y_re = y
-        t_re = []
-        xspd = xspeed
-        yspd = yspeed
-        mask = ptsidx
-        NumGoodsample = len(x_re)
-
-        print "load foreground blob index matrix file...."
-        blobLists = []
-        blobListfile = blob_sparse_matrices[matidx]
-        blobLists    = pickle.load( open( blobListfile, "rb" ) )
-
-
+        color         = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
+        NumGoodsample = len(x)
         # construct adjacency matrix
         print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
         adj = np.zeros([NumGoodsample,NumGoodsample])
@@ -244,66 +145,75 @@ if __name__ == '__main__':
         for i in range(NumGoodsample):
             print "i", i
             # plt.cla()
-            for j in range(i+1, min(NumGoodsample,i+600)):
-                tmp1 = x_re[i,:]!=0
-                tmp2 = x_re[j,:]!=0
+            for j in range(i, min(NumGoodsample,i+1000)):
+                tmp1 = x[i,:]!=0
+                tmp2 = x[j,:]!=0
                 idx  = num[tmp1&tmp2]
                 if len(idx)>5: # has overlapping
                 # if len(idx)>=30: # at least overlap for 100 frames
-                    sidx     = idx[1:-1]
-                    sxdiff   = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                    sydiff   = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
+                    sidx   = idx[0:-1] # for speed
+                    sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                    sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
                     # spdfile.write(str(i)+' '+str(sxdiff)+'\n')
-                    mdis     = np.mean(np.abs(x_re[i,idx]-x_re[j,idx])+np.abs(y_re[i,idx]-y_re[j,idx])) #mahhattan distance
+                    mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
                     # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
                     # print "mdis: ", mdis
 
                     """counting the sharing blob numbers of two trjs"""
-                    trj1 = [x_re[i,idx],y_re[i,idx]]
-                    trj2 = [x_re[j,idx],y_re[j,idx]]
-                    SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
+                    trj1     = [x[i,idx],y[i,idx]]
+                    trj2     = [x[j,idx],y[j,idx]]
+                    SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                    if adj_element =="Thresholding":
+                        adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis)
 
+                    if adj_element =="Gaussian":
+                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis,SBS[i,j],useSBS)
 
-                    # if adj_element =="Thresholding":
-                    #     adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
+                    if adj_element == "Cosine":
+                        i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
+                        j_trj    = np.concatenate((x[j,idx], xspd[j,sidx],y[j,idx],yspd[j,sidx]), axis=1)
+                        adj[i,j] = adj_cosine_element(i_trj,j_trj)
+                else: # overlapping too short
+                    if i==j:
+                        SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                        adj[i,j] =  adj_gaussian_element(0, 0, 0,SBS[i,j],useSBS)
+                    else:
+                        SBS[i,j] = 0
+                        adj[i,j] = 0
 
-                    # if adj_element == "Cosine":
-                    #     i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
-                    #     j_trj    = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
-                    #     adj[i,j] = adj_cosine_element(i_trj,j_trj)
+        # SBS = SBS + SBS.transpose()
+        mean_sbs = np.mean(SBS[SBS!=0])
+        std_sbs  = np.std(SBS[SBS!=0])
+        adj = adj + adj.transpose() #add diag twice
+        np.fill_diagonal(adj, diagonal(adj)/2)
+        pdb.set_trace()
 
-                    # if adj_element =="Gaussian":
-                    #     adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
-        SBS = SBS + SBS.transpose()
-        adj = adj + adj.transpose()
-        np.fill_diagonal(adj, 1)
+        adj = np.multiply(adj.transpose(),(1/diagonal(adj)))
+        # np.fill_diagonal(adj, 1)
 
-        # adj = construct_adj_thresholding(NumGoodsample, x_re, y_re)        
-        # adj = construct_adj_gaussian(NumGoodsample, x_re, y_re)
-        # adj = construct_adj_cosine(NumGoodsample, x_re, y_re)
         
         print "saving adj..."
-        pdb.set_trace()
-        sparsemtx = csr_matrix(adj)
-        s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        result    = {}
-        result['adj']     = adj
-        result['c']       = c
-        result['mask']    = mask
-        result['xtracks'] = x_re       
-        result['ytracks'] = y_re
-        result['Ttracks'] = t_re
-        result['xspd']    = xspd
-        result['yspd']    = yspd
+        # pdb.set_trace()
+        # sparsemtx = csr_matrix(adj)
+        # s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # result    = {}
+        # result['adj']     = adj
+        # result['c']       = c
+        # result['trjID']   = ptsidx
+        # result['xtracks'] = x       
+        # result['ytracks'] = y
+        # result['Ttracks'] = t
+        # result['xspd']    = xspd
+        # result['yspd']    = yspd
 
-        if not isAfterWarpping:
-            # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
-            savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
+        # if not isAfterWarpping:
+        #     # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
+        #     savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
 
-            savemat(savename,result)
-        else:
-            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
-            savemat(savename,result)
+        #     savemat(savename,result)
+        # else:
+        #     savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
+        #     savemat(savename,result)
             
 
         # """ visualization """
@@ -317,10 +227,10 @@ if __name__ == '__main__':
         #     ind = np.where(c111==i)[0]
         #     print ind
         #     for jj in range(len(ind)):
-        #         startlimit = np.min(np.where(x_re[ind[jj],:]!=0))
-        #         endlimit = np.max(np.where(x_re[ind[jj],:]!=0))
-        #         # lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-        #         lines = ax.plot(x_re[ind[jj],startlimit:endlimit], y_re[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+        #         startlimit = np.min(np.where(x[ind[jj],:]!=0))
+        #         endlimit = np.max(np.where(x[ind[jj],:]!=0))
+        #         # lines = ax.plot(x[ind[jj],startlimit:endlimit], y[ind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+        #         lines = ax.plot(x[ind[jj],startlimit:endlimit], y[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
         #         fig888.canvas.draw()
         #     plt.pause(0.0001) 
         # pdb.set_trace()

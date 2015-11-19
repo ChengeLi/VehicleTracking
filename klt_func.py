@@ -19,8 +19,7 @@ if __name__ == '__main__':
         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
     else:
         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '/media/My Book/CUSP/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-
+    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
     """ new jay st """
@@ -269,7 +268,7 @@ if __name__ == '__main__':
             trk['xtracks']       = csr_matrix(Xtracks)
             trk['ytracks']       = csr_matrix(Ytracks)
             trk['Ttracks']       = Ttracks
-            trk['trjID']          = tracksdic.keys()
+            trk['trjID']         = tracksdic.keys()
             trk['fg_blob_index'] = csr_matrix(Blobtracks)
             
             # for dead tracks, remove them.  for alive tracks, remove all
