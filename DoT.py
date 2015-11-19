@@ -60,7 +60,7 @@ if __name__ == '__main__':
     # video_name = '/home/chengeli/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms_3.avi'
     im = plt.imshow(np.zeros([528,704,3]))
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
-    video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.mp4'
+    video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
     # video_name = '../DoT/ASF_files/Canal St @ Baxter St - 96.106_2015-06-18_09h00min00s000ms.asf'
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_16h04min40s686ms\ 2.avi'
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_18h00min00s002ms.asf'
