@@ -29,8 +29,8 @@ def adj_gaussian_element(sxdiff, sydiff, mdis,SBS,useSBS = True):
         adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2) + SBS)
     else:
         adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
-    if math.isnan(adj_element):
-        pdb.set_trace()
+    # if math.isnan(adj_element):
+    #     pdb.set_trace()
     return adj_element
 
 
@@ -70,7 +70,6 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
 # same blob score (SBS) for two trajectories
 def sameBlobScore(fgBlobInd1,fgBlobInd2):
     SBS = np.sum(fgBlobInd1 == fgBlobInd2)
-
     return SBS
 
 
@@ -142,21 +141,17 @@ if __name__ == '__main__':
         SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
         # compute SBS seperately
-        for i in range(NumGoodsample):
-            for j in range(i, min(NumGoodsample,i+1000)):
-                SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+        # for i in range(NumGoodsample):
+        #     for j in range(i, min(NumGoodsample,i+1000)):
+        #         SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
 
-        # mean_sbs = np.mean(SBS[SBS!=0])
-        # std_sbs  = np.std(SBS[SBS!=0])
-        mean_sbs = np.mean(SBS)
-        std_sbs  = np.std(SBS)
-
-        SBS      = SBS + SBS.transpose()
-        np.fill_diagonal(SBS, diagonal(SBS)/2)
-
-        SBS = (SBS-mean_sbs)/std_sbs
-        print 'SBS normalization is done!'
-        pdb.set_trace()
+        # # mean_sbs = np.mean(SBS[SBS!=0])
+        # # std_sbs  = np.std(SBS[SBS!=0])
+        # mean_sbs = np.mean(SBS)
+        # std_sbs  = np.std(SBS)
+        # SBS = SBS + SBS.transpose()
+        # np.fill_diagonal(SBS, diagonal(SBS)/2)
+        # SBS = (SBS-mean_sbs)/std_sbs
 
         # build adjacent mtx
         for i in range(NumGoodsample):
@@ -180,7 +175,7 @@ if __name__ == '__main__':
                     trj1     = [x[i,idx],y[i,idx]]
                     trj2     = [x[j,idx],y[j,idx]]
                     """counting the sharing blob numbers of two trjs"""
-                    # SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                    SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                     if adj_element =="Thresholding":
                         adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis)
 
@@ -193,45 +188,49 @@ if __name__ == '__main__':
                         adj[i,j] = adj_cosine_element(i_trj,j_trj)
                 else: # overlapping too short
                     if i==j:
-                        # SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                        SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                         adj[i,j] =  adj_gaussian_element(0, 0, 0,SBS[i,j],useSBS)
                     else:
-                        # SBS[i,j] = 0
+                        SBS[i,j] = 0
                         adj[i,j] = 0
+        
+        SBS = SBS + SBS.transpose()
+        np.fill_diagonal(SBS, np.diagonal(SBS)/2)
 
-        # # SBS = SBS + SBS.transpose()
-        # mean_sbs = np.mean(SBS[SBS!=0])
-        # std_sbs  = np.std(SBS[SBS!=0])
         adj = adj + adj.transpose() #add diag twice
-        np.fill_diagonal(adj, diagonal(adj)/2)
-        pdb.set_trace()
-
-        adj = np.multiply(adj.transpose(),(1/diagonal(adj)))
-        # np.fill_diagonal(adj, 1)
+        np.fill_diagonal(adj, np.diagonal(adj)/2)
 
         
+
+        temp = np.multiply(adj.transpose(),(1/np.diagonal(adj)))
+        adj_new = temp.transpose()
+        adj_new = adj_new + adj_new.transpose() #add diag twice
+        np.fill_diagonal(adj_new, np.diagonal(adj_new)/2)
+
+        adj_new[adj_new<10**(-4)]=0
+
         print "saving adj..."
-        # pdb.set_trace()
-        # sparsemtx = csr_matrix(adj)
-        # s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        # result    = {}
-        # result['adj']     = adj
-        # result['c']       = c
-        # result['trjID']   = ptsidx
-        # result['xtracks'] = x       
-        # result['ytracks'] = y
-        # result['Ttracks'] = t
-        # result['xspd']    = xspd
-        # result['yspd']    = yspd
+        print "use adj_new......"
+        sparsemtx = csr_matrix(adj_new)
+        s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        result    = {}
+        result['adj']     = sparsemtx
+        result['c']       = c
+        result['trjID']   = ptsidx
+        result['xtracks'] = x       
+        result['ytracks'] = y
+        result['Ttracks'] = t
+        result['xspd']    = xspd
+        result['yspd']    = yspd
 
-        # if not isAfterWarpping:
-        #     # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
-        #     savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
+        if not isAfterWarpping:
+            # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
+            savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
 
-        #     savemat(savename,result)
-        # else:
-        #     savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
-        #     savemat(savename,result)
+            savemat(savename,result)
+        else:
+            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
+            savemat(savename,result)
             
 
         # """ visualization """

@@ -63,15 +63,15 @@ def prepare_input_data():
     # for linux
     matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
     savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
-    
+
     # for mac
     # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
     # matfilepath = '../tempFigs/roi2/'
     # savePath = '../tempFigs/roi2/filtered/' 
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-    # start_position = 0 #already processed 10 files
-    # matfiles = matfiles[start_position:]
+    start_position = 80 #already processed 10 files
+    matfiles = matfiles[start_position:]
     return matfiles,savePath
 
 

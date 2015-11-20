@@ -53,76 +53,6 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
     return adj_element
 
 
-# same blob score (SBS) for two trajectories
-def sameBlobScore(trj1,trj2,blobColorImgList,blob_sparse_list,common_idx):
-    trunlen = 600
-    SBS = 0
-    x1  = trj1[0]
-    y1  = trj1[1]
-    x2  = trj2[0]
-    y2  = trj2[1]
-
-    #### loop is too slow
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
-    #     color1  = blobImg[y1[k],x1[k],:]
-    #     color2  = blobImg[y2[k],x2[k],:]
-
-    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
-    #         if np.sum(color1 == color2)==3:
-    #             # pdb.set_trace()
-    #             SBS = SBS+1
-    #     else:
-    #         pass
-
-# ================a slightly faster loop==========================
-    # color1List = []
-    # color2List = []
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobImg = cv2.imread(blobColorImgList[frame_idx])
-    #     color1  =  blobImg[y1[k],x1[k],:]
-    #     color2  =  blobImg[y2[k],x2[k],:]
-    #     if (np.sum(color1)!=0) and (np.sum(color2)!=0):
-    #         color1List.append(color1)
-    #         color2List.append(color2)
-    
-    # if len(color1List)>0:
-    #     SBS = np.sum(np.sum(np.array(color1List)==np.array(color2List),1)==3)
-    # else:
-    #     SBS = 0
-# ===============use sparse list===========================
-# faster than loading images, still slow
-    # for (k,frame_idx) in enumerate(common_idx):
-    #     blobIndexMatrix = csr_matrix(blob_sparse_list[np.mod(frame_idx,trunlen)])
-    #     if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-    #         SBS = SBS+1
-
-# use approximate
-    # trj1_index_sum = 0
-    # trj2_index_sum = 0
-
-    # for (k,frame_idx) in enumerate(common_idx):
-    if len(common_idx)>=30:
-        print "long"
-        for k in range(0,len(common_idx),3): #sub sample
-            frame_idx = common_idx[k]    
-            blobIndexMatrix = (blob_sparse_list[np.mod(frame_idx,trunlen)]).todense()
-            # trj1_index_sum = trj1_index_sum+blobIndexMatrix[y1[k],x1[k]]
-            # trj2_index_sum = trj2_index_sum+blobIndexMatrix[y2[k],x2[k]]
-            # SBS = (trj1_index_sum-trj2_index_sum)
-
-        if (blobIndexMatrix[y1[k],x1[k]]!=0) and (blobIndexMatrix[y1[k],x1[k]]==blobIndexMatrix[y2[k],x2[k]]):
-            SBS = SBS+1
-    else: #for short sharing trjs
-        print "short"
-        SBS = 0
-
-
-
-    return SBS
-
-
-
 
 def prepare_input_data(isAfterWarpping,isLeft=True):
     if isAfterWarpping:
@@ -155,15 +85,6 @@ if __name__ == '__main__':
     adj_element = "Thresholding"
     # adj_element = "Gaussian"
     # adj_element = "Cosine"
-
-    # linux local:
-    blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-    # linux:
-    # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-    # Mac
-    # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-
-
     # """to visualize the neighbours"""
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
@@ -224,13 +145,6 @@ if __name__ == '__main__':
         yspd = yspeed
         mask = ptsidx
         NumGoodsample = len(x_re)
-
-        # print "load foreground blob index matrix file...."
-        # blobLists = []
-        # blobListfile = blob_sparse_matrices[matidx]
-        # blobLists    = pickle.load( open( blobListfile, "rb" ) )
-
-
         # construct adjacency matrix
         print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
         adj = np.zeros([NumGoodsample,NumGoodsample])
@@ -257,20 +171,18 @@ if __name__ == '__main__':
                     """counting the sharing blob numbers of two trjs"""
                     trj1 = [x_re[i,idx],y_re[i,idx]]
                     trj2 = [x_re[j,idx],y_re[j,idx]]
-                    # SBS[i,j] = sameBlobScore(trj1,trj2,blobColorImgList,blobLists,sidx)
 
 
                     if adj_element =="Thresholding":
                         adj[i,j] =  adj_thresholding_element(sxdiff, sydiff,mdis)
 
-                    # if adj_element == "Cosine":
-                    #     i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
-                    #     j_trj    = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
-                    #     adj[i,j] = adj_cosine_element(i_trj,j_trj)
+                    if adj_element == "Cosine":
+                        i_trj    = np.concatenate((x_re[i,idx], xspd[i,sidx],y_re[i,idx],yspd[i,sidx]), axis=1)
+                        j_trj    = np.concatenate((x_re[j,idx], xspd[j,sidx],y_re[j,idx],yspd[j,sidx]), axis=1)
+                        adj[i,j] = adj_cosine_element(i_trj,j_trj)
 
-                    # if adj_element =="Gaussian":
-                    #     adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
-        SBS = SBS + SBS.transpose()
+                    if adj_element =="Gaussian":
+                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis)
         adj = adj + adj.transpose()
         np.fill_diagonal(adj, 1)
 
