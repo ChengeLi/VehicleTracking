@@ -189,15 +189,15 @@ if __name__ == '__main__':
                             tracksdic[dicidx].append((x,y,frame_idx))
                     except: # when this ID key is new, create the dic item
                         tracksdic[dicidx] = [] 
+                        start[dicidx]     = frame_idx
+                        end[dicidx]       = -1
                         if useSameBlockScore:
                             tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
                         else:
                             tracksdic[dicidx].append((x,y,frame_idx))
-                    start[dicidx] = frame_idx
-                    end[dicidx]   = -1
-                    dicidx        += 1
-                # start  = start + [frame_idx]*corners.shape[0] # expand the list 
-                # end    = end + [-1]*corners.shape[0]
+
+                    dicidx += 1
+
 
 
 
