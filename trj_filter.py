@@ -9,8 +9,6 @@ from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 
 def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 15, fps = 23):
-    # fps for DoT Canal is 23
-    # Jay & Johnson is 30
 
     transth  = 100*fps   #transition time (red light time) 100 seconds
     mask_re       = []
@@ -67,8 +65,10 @@ def prepare_input_data():
     # for mac
     # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+    """Jay & Johnson"""
     # matfilepath = '../tempFigs/roi2/'
     # savePath = '../tempFigs/roi2/filtered/' 
+    
     matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
     start_position = 80 #already processed 10 files
     matfiles = matfiles[start_position:]
@@ -77,6 +77,10 @@ def prepare_input_data():
 
 
 if __name__ == '__main__':
+    fps = 23
+    # fps for DoT Canal is 23
+    # Jay & Johnson is 30
+
     matfiles,savePath= prepare_input_data()
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
@@ -127,12 +131,12 @@ if __name__ == '__main__':
         
         
         print "Num of original samples is " , Numsample
-        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 1, fps = 4)
+        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 1, fps = fps)
         # print('initialization finished....')
         
         NumGoodsample = len(x_re)
         print "Num of Good samples is" , NumGoodsample
-
+        pdb.set_trace()
         result    = {}
         result['trjID']         = mask_re
         result['xtracks']       = x_re       
@@ -142,6 +146,6 @@ if __name__ == '__main__':
         result['yspd']          = yspd
         result['fg_blob_index'] = blob_index_re
 
-        savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
-        savemat(savename,result)
+        # savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
+        # savemat(savename,result)
 

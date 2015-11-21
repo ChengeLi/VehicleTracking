@@ -39,13 +39,11 @@ if __name__ == '__main__':
                           blockSize=7)  
     feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
                           blockSize=5)  # old jayst 
+    
     idx             = 0
-    tdic            = [0]
     start           = {}
     end             = {}
     track_len       = 10
-    frame_idx_bias  = 0 #1200  #===============don't forget to set me!
-    frame_idx       = 0 + frame_idx_bias #start processing in the middle of the image folder 
     pregood         = []
     trunclen        = 600
     # lenoffset       = 0
@@ -54,14 +52,23 @@ if __name__ == '__main__':
 
     previousLastFile = sorted(glob.glob(savePath+'*klt_*'))
     if len(previousLastFile)>0:
-        previousLastFile = previousLastFile[-1]
-        lastTrj   = loadmat(previousLastFile)
+        if len(previousLastFile) >1:
+            previousLastFile = previousLastFile[-1]
+        
+        lastTrj   = loadmat(previousLastFile[0])
         lastID    = lastTrj['trjID'][0][-1]
         dicidx    = lastID+1 #counting from the last biggest global ID
-        tracksdic = lastTrj['lastPt'] 
+        tracksdic = {} 
+        for kk in range((lastTrj['lastPtsKey'][0]).shape[0]):
+            key = lastTrj['lastPtsKey'][0][kk]
+            tracksdic[key] = []
+            tracksdic[key].append(tuple(lastTrj['lastPtsValue'][kk,:]))
     else:
         dicidx    = 0 # start from 0
         tracksdic = {} 
+    
+    frame_idx_bias = len(previousLastFile)*600
+    frame_idx      = 0 + frame_idx_bias 
 
 
     useSameBlockScore = True
@@ -104,7 +111,6 @@ if __name__ == '__main__':
     # -- set low number of frames for testing
     # nframe = 1801
 
-
     while (frame_idx < nframe):
         if useSameBlockScore and ((frame_idx % trunclen) == 0):
             print "load foreground blob index matrix file...."
@@ -127,11 +133,15 @@ if __name__ == '__main__':
 
         frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         # for visulization
-        vis = frame.copy() 
-        
+        vis = frame.copy()
+
+        """Tracking"""
         if len(tracksdic) > 0:
-            pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic]) \
-                .reshape(-1, 1, 2)
+            try:
+                pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic.keys()]).reshape(-1, 1, 2)
+            except: 
+                pnts_old = np.float32([tracksdic[i][:2] for i in tracksdic.keys()]).reshape(-1, 1, 2)
+
             pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
                                                           pnts_old, None, 
                                                           **lk_params)
@@ -141,8 +151,7 @@ if __name__ == '__main__':
             dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
             good = dist < 1
      
-            for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, 
-                                              tracksdic.keys()):
+            for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, tracksdic.keys()):
                 x = min(x,frameLp.shape[1]-1)
                 y = min(y,frameLp.shape[0]-1)
                 if not good_flag:
@@ -161,7 +170,8 @@ if __name__ == '__main__':
                 cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
 
 
-        if frame_idx % detect_interval == 0:
+        """Detecting new points"""
+        if frame_idx % detect_interval == 0: 
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
             mask[:,:] = 255
@@ -281,8 +291,8 @@ if __name__ == '__main__':
                     tracksdic.pop(i)
                 else:
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
-            trk['lastPt'] = np.array(tracksdic.values())[:,0,:]
-
+            trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
+            trk['lastPtsKey']   = np.array(tracksdic.keys())
             # save as matlab file... :-/
             # savename = './klt/20150222_Mat/HR_w_T______test_' + \
                 # str(frame_idx/trunclen).zfill(3)

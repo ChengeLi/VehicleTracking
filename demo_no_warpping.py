@@ -28,8 +28,8 @@ print("running subspace_cluster...")
 execfile('subspace_cluster.py')
 
 print("running unify_label...")
-unify_label.unify_label('../tempFigs/roi2/ssc_','../tempFigs/roi2/Result_89-115.mat')
-
+# unify_label.unify_label('../tempFigs/roi2/ssc_','../tempFigs/roi2/Result_89-115.mat')
+execfile('unify_label_func.py')
 
 # visualize 
 # save the final result to dic format 

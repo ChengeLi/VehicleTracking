@@ -145,7 +145,7 @@ def ssc_with_Adj_CC(file):
     
     feature      =(file['adj'] > 0).astype('float')  ## adj mtx
     CClabel      = file['c']  #labels from connected Component 
-    mask         = file['mask']
+    trjID        = file['trjID']
     labels       = np.zeros(CClabel.size)
     color_choice = np.array([np.random.randint(0,255) \
        for _ in range(3*int(CClabel.size))])\
@@ -186,7 +186,7 @@ def ssc_with_Adj_CC(file):
         labels_new[np.where(labels == unique_array[i])] = j
         j = j+1
     labels = labels_new
-    return mask,labels
+    return trjID,labels
 
 
 def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples except the sample itself
@@ -194,7 +194,7 @@ def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples exce
     ytrj = file['y_re']
     xspd = file['xspd']
     yspd = file['yspd']
-    mask = file['mask']
+    trjID = file['trjID']
     dataFeature       = np.concatenate((xtrj,xspd,ytrj,yspd), axis = 1)
     # dataFeature       = np.concatenate((xtrj,ytrj), axis = 1)
     project_dimension = int(np.floor(dataFeature.shape[0]/10)+1) # assume per group has max 10 trjs???? 
@@ -203,14 +203,14 @@ def sscConstructedAdj_CC(file): # use ssc to construct adj, use any samples exce
     adj    = ssc.adjacency
     ssc.manifold()
     labels = ssc.clustering_connected(threshold = 0,min_sample_cluster = 50,alpha = 0.1)
-    return mask,labels,adj
+    return trjID,labels,adj
 
 def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj choice to be within neighbours
     xtrj    = file['x_re'] 
     ytrj    = file['y_re']
     xspd    = file['xspd']
     yspd    = file['yspd']
-    mask    = file['mask']
+    trjID   = file['trjID']
     feature =(file['adj'] > 0).astype('float')  ## adj mtx
     CClabel = file['c']  #labels from connected Component 
 
@@ -258,7 +258,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
         j = j+1
     labels = labels_new
 
-    return mask,labels
+    return trjID,labels
 
 
 
@@ -275,18 +275,23 @@ def prepare_input_data(isAfterWarpping,isLeft):
     else:
         # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'*.mat'))
         # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'_adj_withT_'+'*.mat'))
-        # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-        
-        # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/len4' +'*.mat'))
-        matfiles = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
-
         # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_'
         # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_withT_'
+
+        # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
         # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
         
+        # for linux
+        matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_'+ '*.mat'))
+        savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_'
+        # for mac
+        # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
         # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
-        savePath = '../tempFigs/roi2/ssc_' 
 
+        # Jay & Johnson
+        # matfiles = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
+        # savePath = '../tempFigs/roi2/ssc_' 
+        matfiles = matfiles[112:]
     return matfiles, savePath
 
 
@@ -304,22 +309,16 @@ if __name__ == '__main__':
     for matidx,matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
-        mask,labels = ssc_with_Adj_CC(file)
+        trjID,labels = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
-        # mask,labels, adj = sscConstructedAdj_CC(file)
+        # trjID,labels, adj = sscConstructedAdj_CC(file)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
-        # mask,labels = sscAdj_inNeighbour(file)
+        # trjID,labels = sscAdj_inNeighbour(file)
 
         # pdb.set_trace()
         if isVisualize:
             # visualize different classes seperated by SSC for each Connected Component
-            """  use the original trj files  """
-            # TrkFilePath  = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-            # trjfiles     = sorted(glob.glob(TrkFilePath+'klt_*.mat'))
-            # trunkTrjFile = scipy_io.loadmat(trjfiles[matidx])
-            # xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-            # ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             """  use the x_re and y_re from adj mat files  """
             xtrj = file['xtracks'] 
             ytrj = file['ytracks']
@@ -329,18 +328,18 @@ if __name__ == '__main__':
             # plt.ion()
             ax     = plt.subplot(1,1,1)
             
-            # newmask   = list(mask[0])
+            # newtrjID   = list(trjID[0])
             newlabels = list(labels)
             for i in range(int(max(labels))+1):
                 trjind = np.where(labels==i)[0]
                 print "trjind = ", str(trjind)
                 if len(trjind)<=3:
                     newlabels.remove(i)
-                    # newmask.remove()
+                    # newtrjID.remove()
                     continue
                 for jj in range(len(trjind)):
                     startlimit = np.min(np.where(xtrj[trjind[jj],:]!=0))
-                    endlimit = np.max(np.where(xtrj[trjind[jj],:]!=0))
+                    endlimit   = np.max(np.where(xtrj[trjind[jj],:]!=0))
                     # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
                     lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
                     # fig999.canvas.draw()
@@ -357,10 +356,10 @@ if __name__ == '__main__':
         # pdb.set_trace()
         if isSave:
             print "saving the labels..."
-            labelsave            = {}
+            labelsave = {}
             # labelsave['label']   = np.array(newlabels)
-            labelsave['label']   = labels
-            labelsave['mask']    = mask
+            labelsave['label'] = labels
+            labelsave['trjID'] = trjID
             savename = savePath + matfiles[matidx][-7:-4].zfill(3)
             savemat(savename,labelsave)
 
@@ -368,7 +367,7 @@ if __name__ == '__main__':
 #    file = scipy_io.loadmat('ptsTrj_remove_station')
 #    x = file['x']
 #    y = file['y']
-#    mask = file['A']
+#    trjID = file['A']
 #    feature = np.concatenate([x,y],axis = 1)
 #    project_dimension = 20
 #    ssc = sparse_subspace_clustering(1,feature,n_dimension = project_dimension)

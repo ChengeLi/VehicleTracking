@@ -86,16 +86,17 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        # for linux
+        """for linux"""
         matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
         savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/'
-        # for mac
+        """for mac"""
         # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
         # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        """Jay & Johnson"""
         # matfilepath = '../tempFigs/roi2/filtered/'
         # savePath    = '../tempFigs/roi2/' 
         matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
-        matfiles = matfiles[0:]
+        matfiles = matfiles[77:]
     return matfiles,savePath,
 
 
