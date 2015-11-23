@@ -19,7 +19,9 @@ if __name__ == '__main__':
         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
     else:
         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+    # savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/test/'
+
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
     """ new jay st """
@@ -40,36 +42,45 @@ if __name__ == '__main__':
     feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
                           blockSize=5)  # old jayst 
     
-    idx             = 0
-    start           = {}
-    end             = {}
-    track_len       = 10
-    pregood         = []
+    # idx             = 0
+
+    # track_len       = 10
+    # pregood         = []
     trunclen        = 600
     # lenoffset       = 0
     detect_interval = 5
 
 
-    previousLastFile = sorted(glob.glob(savePath+'*klt_*'))
-    if len(previousLastFile)>0:
-        if len(previousLastFile) >1:
-            previousLastFile = previousLastFile[-1]
+    previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
+    if len(previousLastFiles)>0:
+        if len(previousLastFiles) >1:
+            previousLastFile = previousLastFiles[-1]
+        else: previousLastFile = previousLastFiles[0]
         
-        lastTrj   = loadmat(previousLastFile[0])
+        lastTrj   = loadmat(previousLastFile)
         lastID    = lastTrj['trjID'][0][-1]
-        dicidx    = lastID+1 #counting from the last biggest global ID
-        tracksdic = {} 
+
+        dicidx      = lastID+1 #counting from the last biggest global ID
+        lastT       = lastTrj['Ttracks']
+        lastT[lastT == np.max(lastT)]=np.nan
+        tracksdic   = {}
+        start       = {}
+        end         = {}
         for kk in range((lastTrj['lastPtsKey'][0]).shape[0]):
-            key = lastTrj['lastPtsKey'][0][kk]
+            key            = lastTrj['lastPtsKey'][0][kk]
             tracksdic[key] = []
             tracksdic[key].append(tuple(lastTrj['lastPtsValue'][kk,:]))
+            start[key]     = np.nanmin(lastT[kk,:])
+            end[key]       = -1 #all alive trj
     else:
         dicidx    = 0 # start from 0
         tracksdic = {} 
-    
-    frame_idx_bias = len(previousLastFile)*600
-    frame_idx      = 0 + frame_idx_bias 
+        start     = {}
+        end       = {}
 
+    frame_idx_bias = len(previousLastFiles)*600
+    frame_idx      = 0 + frame_idx_bias 
+    start_position = frame_idx_bias
 
     useSameBlockScore = True
     if useSameBlockScore:
@@ -83,27 +94,38 @@ if __name__ == '__main__':
         blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
 
 
-
+    
     if isVideo:
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        start_position = frame_idx_bias
+        
         print 'reading buffer...'
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position-1))
         status, frame = cap.read()
+        frameL        = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
+        if len(previousLastFiles)>0:
+            frameLp = frame[:,:,0] #set the previous to be the last frame in last truncation
+        else:    
+            frameLp = np.zeros_like(frameL)
 
     if not isVideo:  # -- get the full image list
         imagepath = dataPath
         imlist    = sorted(glob.glob(imagepath + '*.jpg'))
         nframe    = len(imlist)
         # -- read in first frame and set dimensions
-        frame     = cv2.imread(imlist[0])
+        frame     = cv2.imread(imlist[max(0,start_position-1)])
+        frameL    = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
+        if len(previousLastFiles)>0:
+            frameLp = frame[:,:,0] #set the previous to be the last frame in last truncation
+        else:    
+            frameLp = np.zeros_like(frameL)
 
-    frameL  = np.zeros_like(frame[:,:,0])
-    frameLp = np.zeros_like(frameL)
+
+
+
 
     # -- set mask, all ones = no mask
     mask = 255*np.ones_like(frameL)
@@ -111,6 +133,7 @@ if __name__ == '__main__':
     # -- set low number of frames for testing
     # nframe = 1801
 
+    if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
     while (frame_idx < nframe):
         if useSameBlockScore and ((frame_idx % trunclen) == 0):
             print "load foreground blob index matrix file...."
@@ -136,6 +159,7 @@ if __name__ == '__main__':
         vis = frame.copy()
 
         """Tracking"""
+        # bad_idx =[]
         if len(tracksdic) > 0:
             try:
                 pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic.keys()]).reshape(-1, 1, 2)
@@ -150,6 +174,7 @@ if __name__ == '__main__':
                                                           **lk_params)
             dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
             good = dist < 1
+
      
             for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, tracksdic.keys()):
                 x = min(x,frameLp.shape[1]-1)
@@ -157,6 +182,7 @@ if __name__ == '__main__':
                 if not good_flag:
                     end[idx] = (frame_idx-1)
                     tracksdic[idx].append((-100,-100,frame_idx))
+                    # bad_idx.append(idx)
                     continue
                 if x != -100:
                     # if x>frameLp.shape[1] or y>frameLp.shape[0]:
@@ -165,8 +191,6 @@ if __name__ == '__main__':
                         tracksdic[idx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
                     else:
                         tracksdic[idx].append((x,y,frame_idx))
-
-
                 cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
 
 
@@ -182,6 +206,7 @@ if __name__ == '__main__':
 
             if corners is not None:
                 for x, y in np.float32(corners).reshape(-1, 2):
+                    # print "dicidx:", dicidx
                     try:
                         if useSameBlockScore:
                             tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
@@ -202,6 +227,7 @@ if __name__ == '__main__':
 
 
         print('{0} - {1}'.format(frame_idx,len(tracksdic)))
+
         # cv2.imshow('klt', vis)
         # cv2.waitKey(5)    
         # plt.imshow(vis[:,:,::-1])
@@ -291,6 +317,7 @@ if __name__ == '__main__':
                     tracksdic.pop(i)
                 else:
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
+            # pdb.set_trace()
             trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
             trk['lastPtsKey']   = np.array(tracksdic.keys())
             # save as matlab file... :-/
