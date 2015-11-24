@@ -19,8 +19,8 @@ if __name__ == '__main__':
         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
     else:
         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    # savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/test/'
+    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+    # savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/test/'
 
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
@@ -58,11 +58,11 @@ if __name__ == '__main__':
         else: previousLastFile = previousLastFiles[0]
         
         lastTrj   = loadmat(previousLastFile)
-        lastID    = lastTrj['trjID'][0][-1]
+        lastID    = np.max(lastTrj['trjID'][0])
 
         dicidx      = lastID+1 #counting from the last biggest global ID
         lastT       = lastTrj['Ttracks']
-        lastT[lastT == np.max(lastT)]=np.nan
+        lastT[lastT==np.max(lastT)] = np.nan
         tracksdic   = {}
         start       = {}
         end         = {}
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         status, frame = cap.read()
         frameL        = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
         if len(previousLastFiles)>0:
-            frameLp = frame[:,:,0] #set the previous to be the last frame in last truncation
+            frameLp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  #set the previous to be the last frame in last truncation
         else:    
             frameLp = np.zeros_like(frameL)
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         frame     = cv2.imread(imlist[max(0,start_position-1)])
         frameL    = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
         if len(previousLastFiles)>0:
-            frameLp = frame[:,:,0] #set the previous to be the last frame in last truncation
+            frameLp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  #set the previous to be the last frame in last truncation
         else:    
             frameLp = np.zeros_like(frameL)
 
@@ -132,7 +132,6 @@ if __name__ == '__main__':
 
     # -- set low number of frames for testing
     # nframe = 1801
-
     if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
     while (frame_idx < nframe):
         if useSameBlockScore and ((frame_idx % trunclen) == 0):
@@ -162,9 +161,9 @@ if __name__ == '__main__':
         # bad_idx =[]
         if len(tracksdic) > 0:
             try:
-                pnts_old = np.float32([tracksdic[i][-1][:2] for i in tracksdic.keys()]).reshape(-1, 1, 2)
+                pnts_old = np.float32([tracksdic[i][-1][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
             except: 
-                pnts_old = np.float32([tracksdic[i][:2] for i in tracksdic.keys()]).reshape(-1, 1, 2)
+                pnts_old = np.float32([tracksdic[i][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
 
             pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
                                                           pnts_old, None, 
@@ -176,9 +175,10 @@ if __name__ == '__main__':
             good = dist < 1
 
      
-            for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, tracksdic.keys()):
+            for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
                 x = min(x,frameLp.shape[1]-1)
                 y = min(y,frameLp.shape[0]-1)
+
                 if not good_flag:
                     end[idx] = (frame_idx-1)
                     tracksdic[idx].append((-100,-100,frame_idx))
@@ -199,15 +199,26 @@ if __name__ == '__main__':
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
             mask[:,:] = 255
-            for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic]:
+            for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in sorted(tracksdic.keys())]:
                 cv2.circle(mask, (x, y), 5, 0, -1)    
 
             corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
-
+            # if frame_idx==69605:
+            #     pdb.set_trace()
             if corners is not None:
                 for x, y in np.float32(corners).reshape(-1, 2):
-                    # print "dicidx:", dicidx
+                    # create new dic item using new dicidx since these are new points:
+                    tracksdic[dicidx] = [] 
+                    start[dicidx]     = frame_idx
+                    end[dicidx]       = -1
+                    if useSameBlockScore:
+                        tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
+                    else:
+                        tracksdic[dicidx].append((x,y,frame_idx))
+                    dicidx += 1
+"""
                     try:
+                        print "alway fail, should always go through except."
                         if useSameBlockScore:
                             tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
                         else:
@@ -220,9 +231,8 @@ if __name__ == '__main__':
                             tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
                         else:
                             tracksdic[dicidx].append((x,y,frame_idx))
-
                     dicidx += 1
-
+"""
 
 
 
@@ -238,7 +248,8 @@ if __name__ == '__main__':
         frame_idx   += 1
 
         # dump trajectories to file
-        if  (frame_idx>0) & ((frame_idx) % trunclen == 0):
+        # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 
+        if  ((frame_idx>0) & ((frame_idx) % trunclen == 0)) or (frame_idx==nframe):
             print "saving===!!!"            
             Xtracks = np.zeros([len(tracksdic),trunclen])
             Ytracks = np.zeros([len(tracksdic),trunclen])
@@ -252,7 +263,7 @@ if __name__ == '__main__':
             offset  = frame_idx - trunclen
 
             # loop through the current trajectories list
-            for ii, trjidx in enumerate(tracksdic.keys()):
+            for ii, trjidx in enumerate(sorted(tracksdic.keys())):
 
                 # set the starting and ending frame index
                 st_ind = start[trjidx]
@@ -281,9 +292,9 @@ if __name__ == '__main__':
                 tstart, tstop = st_ind-offset, en_ind-offset+1
 
                 if en_ind==-1:
-                    Xtracks[ii,:][tstart:] = ttrack[0,:]
-                    Ytracks[ii,:][tstart:] = ttrack[1,:]
-                    Ttracks[ii,:][tstart:] = ttrack[2,:]
+                    Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])] = ttrack[0,:]
+                    Ytracks[ii,:][tstart:tstart+len(ttrack[1,:])] = ttrack[1,:]
+                    Ttracks[ii,:][tstart:tstart+len(ttrack[2,:])] = ttrack[2,:]
                     if useSameBlockScore:
                         Blobtracks[ii,:][tstart:] = ttrack[3,:]
                 else:
@@ -304,7 +315,7 @@ if __name__ == '__main__':
             trk['xtracks']       = csr_matrix(Xtracks)
             trk['ytracks']       = csr_matrix(Ytracks)
             trk['Ttracks']       = Ttracks
-            trk['trjID']         = tracksdic.keys()
+            trk['trjID']         = sorted(tracksdic.keys())
             trk['fg_blob_index'] = csr_matrix(Blobtracks)
             
             # for dead tracks, remove them.  for alive tracks, remove all
@@ -312,14 +323,15 @@ if __name__ == '__main__':
             # frame).
             deadtrj   = np.array(end.keys())[np.array(end.values())>=0]# ==0 is for the case when the tracks ends at 0 frame
             # lenoffset += len(deadtrj)
-            for i in tracksdic.keys():   
+            for i in sorted(tracksdic.keys()):   
                 if i in deadtrj:
                     tracksdic.pop(i)
                 else:
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
             # pdb.set_trace()
             trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
-            trk['lastPtsKey']   = np.array(tracksdic.keys())
+            trk['lastPtsKey']   = np.array(sorted(tracksdic.keys()))
+            # pdb.set_trace()
             # save as matlab file... :-/
             # savename = './klt/20150222_Mat/HR_w_T______test_' + \
                 # str(frame_idx/trunclen).zfill(3)
