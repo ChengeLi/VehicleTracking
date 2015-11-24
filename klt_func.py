@@ -1,6 +1,7 @@
 import os
 import cv2
 import pdb
+import math
 import pickle
 import numpy as np
 import glob as glob
@@ -68,10 +69,15 @@ if __name__ == '__main__':
         end         = {}
         for kk in range((lastTrj['lastPtsKey'][0]).shape[0]):
             key            = lastTrj['lastPtsKey'][0][kk]
+            start[key]     = np.nanmin(lastT[kk,:])
+            if math.isnan(start[key]): 
+                print "key:",key, "kk:",kk
+                pdb.set_trace()
+                start.pop(key)
+                continue
+            end[key]       = -1 #all alive trj
             tracksdic[key] = []
             tracksdic[key].append(tuple(lastTrj['lastPtsValue'][kk,:]))
-            start[key]     = np.nanmin(lastT[kk,:])
-            end[key]       = -1 #all alive trj
     else:
         dicidx    = 0 # start from 0
         tracksdic = {} 
@@ -82,6 +88,7 @@ if __name__ == '__main__':
     frame_idx      = 0 + frame_idx_bias 
     start_position = frame_idx_bias
 
+    # pdb.set_trace()
     useSameBlockScore = True
     if useSameBlockScore:
         # linux local:
@@ -199,7 +206,7 @@ if __name__ == '__main__':
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
             mask[:,:] = 255
-            for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in sorted(tracksdic.keys())]:
+            for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic.keys()]:
                 cv2.circle(mask, (x, y), 5, 0, -1)    
 
             corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
@@ -216,25 +223,6 @@ if __name__ == '__main__':
                     else:
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
-"""
-                    try:
-                        print "alway fail, should always go through except."
-                        if useSameBlockScore:
-                            tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
-                        else:
-                            tracksdic[dicidx].append((x,y,frame_idx))
-                    except: # when this ID key is new, create the dic item
-                        tracksdic[dicidx] = [] 
-                        start[dicidx]     = frame_idx
-                        end[dicidx]       = -1
-                        if useSameBlockScore:
-                            tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
-                        else:
-                            tracksdic[dicidx].append((x,y,frame_idx))
-                    dicidx += 1
-"""
-
-
 
         print('{0} - {1}'.format(frame_idx,len(tracksdic)))
 
@@ -263,7 +251,7 @@ if __name__ == '__main__':
             offset  = frame_idx - trunclen
 
             # loop through the current trajectories list
-            for ii, trjidx in enumerate(sorted(tracksdic.keys())):
+            for ii, trjidx in enumerate(tracksdic.keys()):
 
                 # set the starting and ending frame index
                 st_ind = start[trjidx]
@@ -311,11 +299,11 @@ if __name__ == '__main__':
 
             # put tracks into sparse matrix
             trk ={}
-            Ttracks = Ttracks+frame_idx_bias # use the actual frame index as the key, to save data
+            # Ttracks = Ttracks+frame_idx_bias # use the actual frame index as the key, to save data
             trk['xtracks']       = csr_matrix(Xtracks)
             trk['ytracks']       = csr_matrix(Ytracks)
             trk['Ttracks']       = Ttracks
-            trk['trjID']         = sorted(tracksdic.keys())
+            trk['trjID']         = tracksdic.keys()
             trk['fg_blob_index'] = csr_matrix(Blobtracks)
             
             # for dead tracks, remove them.  for alive tracks, remove all
@@ -330,7 +318,7 @@ if __name__ == '__main__':
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
             # pdb.set_trace()
             trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
-            trk['lastPtsKey']   = np.array(sorted(tracksdic.keys()))
+            trk['lastPtsKey']   = np.array(tracksdic.keys())
             # pdb.set_trace()
             # save as matlab file... :-/
             # savename = './klt/20150222_Mat/HR_w_T______test_' + \

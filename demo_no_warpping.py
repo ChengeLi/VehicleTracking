@@ -12,9 +12,14 @@ linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4'#complete
 # dataPath  = '../tempFigs/roi2/imgs/'
 # dataPath = '/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/'
 savePath = '../tempFigs/roi2/'
-
 print("running KLT...")
 klt.klt_tracker(isVideo,dataPath=linux_video_src,savePath=savePath)
+
+
+"""whole process for Canal"""
+
+print("running KLT...")
+execfile('klt_func.py')
 
 print("filter the trjs...")
 execfile('trj_filter.py')
