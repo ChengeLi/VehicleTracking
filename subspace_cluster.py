@@ -262,7 +262,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
 
 
 
-def prepare_input_data(isAfterWarpping,isLeft):
+def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     if isAfterWarpping:
         if isLeft:
             loadPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
@@ -280,29 +280,34 @@ def prepare_input_data(isAfterWarpping,isLeft):
 
         # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
         # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
-        
-        # for linux
-        matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_'+ '*.mat'))
-        savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_'
-        # for mac
-        # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
-        # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
+        if dataSource == 'DoT':
+            # for linux
+            matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_'+ '*.mat'))
+            savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_'
+            # for mac
+            # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
+            # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
 
-        # Jay & Johnson
-        # matfiles = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
-        # savePath = '../tempFigs/roi2/ssc_' 
-        matfiles = matfiles[112:]
+        if dataSource == 'Johnson':
+            # Jay & Johnson
+            matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/'+'*.mat'))
+            savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_'
+            # matfiles = sorted(glob.glob('../tempFigs/roi2/Adj_' +'*.mat'))
+            # savePath = '../tempFigs/roi2/ssc_' 
+
+        matfiles = matfiles[0:]
     return matfiles, savePath
 
 
 
 
 
-if __name__ == '__main__':   
+# if __name__ == '__main__':
+def ssc_main(dataSource):   
     """With constructed adjacency matrix """
     isAfterWarpping   = False
     isLeft            = False
-    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
+    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft,dataSource)
     isSave            = True
     isVisualize       = False
 

@@ -11,37 +11,36 @@ from scipy.sparse import csr_matrix
 from matplotlib import pyplot as plt
 
 
-# def klt_tracker(isVideo, \
-#  dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-#  savePath = '../DoT/CanalSt@BaxterSt-96.106/klt/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
-if __name__ == '__main__':
-    isVideo  = True
-    if isVideo:
-        dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
-    else:
-        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-    # savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/test/'
+def klt_tracker(isVideo, \
+ dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+ savePath = '../DoT/CanalSt@BaxterSt-96.106/klt/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
+ useSameBlockScore = True,isVisualize = False,dataSource = 'DoT'):
+
+# if __name__ == '__main__':
+#     isVideo  = True
+#     if isVideo:
+#         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+#     else:
+#         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+#     savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
 
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
     """ new jay st """
-    # lk_params = dict(winSize=(5, 5), maxLevel=2, 
-    #                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
-    #                             10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
-
-    # feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, 
-    #                       blockSize=3)  #qualityLevel, below which dots will be rejected
+    if dataSource == 'Johnson':
+        lk_params = dict(winSize=(5, 5), maxLevel=2, 
+                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
+        feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, 
+                              blockSize=3)  #qualityLevel, below which dots will be rejected
 
     """ canal st """
-    lk_params = dict(winSize=(15, 15), maxLevel=2, 
-                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
-                                10, 0.03)) 
-
-    feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
-                          blockSize=7)  
-    feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
-                          blockSize=5)  # old jayst 
+    if dataSource == 'DoT':
+        lk_params = dict(winSize=(15, 15), maxLevel=2, 
+                         criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
+        # feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
+        #                       blockSize=7)  
+        feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
+                              blockSize=5)  # old jayst 
     
     # idx             = 0
 
@@ -88,8 +87,6 @@ if __name__ == '__main__':
     frame_idx      = 0 + frame_idx_bias 
     start_position = frame_idx_bias
 
-    # pdb.set_trace()
-    useSameBlockScore = True
     if useSameBlockScore:
         # linux local:
         blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
@@ -224,12 +221,13 @@ if __name__ == '__main__':
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
 
-        print('{0} - {1}'.format(frame_idx,len(tracksdic)))
+        # print('{0} - {1}'.format(frame_idx,len(tracksdic)))
 
-        # cv2.imshow('klt', vis)
-        # cv2.waitKey(5)    
-        # plt.imshow(vis[:,:,::-1])
-        # plt.pause(0.00001)
+        if isVisualize:
+            # cv2.imshow('klt', vis)
+            # cv2.waitKey(5)    
+            plt.imshow(vis[:,:,::-1])
+            plt.pause(0.00001)
     
         # switch previous frame
         frameLp[:,:] = frameL[:,:]
@@ -238,7 +236,8 @@ if __name__ == '__main__':
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 
         if  ((frame_idx>0) & ((frame_idx) % trunclen == 0)) or (frame_idx==nframe):
-            print "saving===!!!"            
+            print "saving===!!!"   
+            print('{0} - {1}'.format(frame_idx,len(tracksdic)))         
             Xtracks = np.zeros([len(tracksdic),trunclen])
             Ytracks = np.zeros([len(tracksdic),trunclen])
             # initialize T track using numbers that will never appear in reality
@@ -272,7 +271,7 @@ if __name__ == '__main__':
                 # second point.
                 # if st_ind=='fromPre':
                 if st_ind<offset:
-                    print "trj point is from previous truncation======"
+                    # print "trj point is from previous truncation!"
                     st_ind = offset
                     ttrack = ttrack[:,1:] #because the first point is the last point from pre trunc, already saved
 
@@ -304,7 +303,8 @@ if __name__ == '__main__':
             trk['ytracks']       = csr_matrix(Ytracks)
             trk['Ttracks']       = Ttracks
             trk['trjID']         = tracksdic.keys()
-            trk['fg_blob_index'] = csr_matrix(Blobtracks)
+            if useSameBlockScore:
+                trk['fg_blob_index'] = csr_matrix(Blobtracks)
             
             # for dead tracks, remove them.  for alive tracks, remove all
             # points except the last one (in order to track into the next

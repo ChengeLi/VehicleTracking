@@ -79,18 +79,24 @@ def unify_label(matfiles,savename):
 
 
 
-if __name__ == '__main__':
-    # for linux
-    matfilePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/'
-    savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    # for mac
-    # matfilePath = '../DoT/CanalSt@BaxterSt-96.106/...???'
-    # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+# if __name__ == '__main__':
+def unify_label_main(dataSource):
+    if dataSource == 'DoT':
+        # for linux
+        matfilePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/'
+        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # for mac
+        # matfilePath = '../DoT/CanalSt@BaxterSt-96.106/...???'
+        # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+    if dataSource == 'Johnson':
+        # Jay & Johnson
+        matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
+        savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
 
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
 
-    if numTrunc<=1000:
+    if numTrunc<=24:
         savename = os.path.join(savePath,'Complete_result')
         unify_label(matfilesAll,savename)
     else:

@@ -40,9 +40,9 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth =
                         x_re.append(x[i,:])
                         y_re.append(y[i,:])
                         t_re.append(t[i,:])
-                        blob_index_re.append(blob_index[i,:])
                         xspd.append(xspeed[i,:])
                         yspd.append(yspeed[i,:])
+                        blob_index_re.append(blob_index[i,:])
             except:
                 pass
     # spdfile.close()
@@ -55,33 +55,45 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth =
     yspd          = np.array(yspd)
     return mask_re, x_re, y_re, t_re, blob_index_re, xspd, yspd
 
+def FindAllNanRow(aa):
+    index = range(aa.shape[0])
+    allNanRowInd = np.array(index)[np.isnan(aa).all(axis = 1)]
+    return allNanRowInd
 
-
-def prepare_input_data():
-    # for linux
-    matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-    savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
-
-    # for mac
-    # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+def prepare_input_data(dataSource):
+    if dataSource == 'DoT':
+        # for linux
+        matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+        # for mac
+        # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+        useSameBlockScore = True
     """Jay & Johnson"""
-    # matfilepath = '../tempFigs/roi2/'
-    # savePath = '../tempFigs/roi2/filtered/' 
-    
-    matfiles = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-    start_position = 80 #already processed 10 files
-    matfiles = matfiles[start_position:]
-    return matfiles,savePath
+    if dataSource == 'Johnson':
+        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
+        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/'
+        # matfilepath = '../tempFigs/roi2/'
+        # savePath = '../tempFigs/roi2/filtered/' 
+        useSameBlockScore = False
+
+    matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+    start_position = 0 #already processed 10 files
+    matfiles       = matfiles[start_position:]
+    return matfiles,savePath,useSameBlockScore
 
 
 
-if __name__ == '__main__':
-    fps = 23
-    # fps for DoT Canal is 23
-    # Jay & Johnson is 30
+# if __name__ == '__main__':
+#     fps = 23
+#     dataSource = 'DoT'
+#     # fps for DoT Canal is 23
+#     # Jay & Johnson is 30
 
-    matfiles,savePath= prepare_input_data()
+def filtering_main_function(fps,dataSource = 'DoT'):
+    # fps = 30
+    # dataSource = 'Johnson'
+    matfiles,savePath,useSameBlockScore = prepare_input_data(dataSource)
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -90,7 +102,10 @@ if __name__ == '__main__':
         x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        blob_index = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+        if useSameBlockScore:
+            blob_index = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+        else:
+            blob_index = []
         if len(t)>0: 
             t[t==np.max(t)]=np.nan
 
@@ -134,9 +149,23 @@ if __name__ == '__main__':
         mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 1, fps = fps)
         # print('initialization finished....')
         
+        # delete all nan rows 
+        allnanInd = FindAllNanRow(t_re)
+        if allnanInd != []:
+            print "delete all nan rows!!"
+            print allnanInd
+            del mask_re[allnanInd]
+            del x_re[allnanInd]
+            del y_re[allnanInd]
+            del t_re[allnanInd]
+            del blob_index_re[allnanInd]
+            del xspd[allnanInd]
+            del yspd[allnanInd]
+
+
         NumGoodsample = len(x_re)
         print "Num of Good samples is" , NumGoodsample
-        pdb.set_trace()
+        # pdb.set_trace()
         result    = {}
         result['trjID']         = mask_re
         result['xtracks']       = x_re       
@@ -144,8 +173,9 @@ if __name__ == '__main__':
         result['Ttracks']       = t_re
         result['xspd']          = xspd
         result['yspd']          = yspd
-        result['fg_blob_index'] = blob_index_re
+        if useSameBlockScore:
+            result['fg_blob_index'] = blob_index_re
 
-        # savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
-        # savemat(savename,result)
+        savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
+        savemat(savename,result)
 

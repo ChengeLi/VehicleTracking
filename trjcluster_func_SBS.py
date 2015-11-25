@@ -1,12 +1,3 @@
-"""
-This is duplicated from the trjcluster_func.py!!!!!
-Used for debugging the SBS score. 
-Please merge it back to the trjcluster_func after success. 
-
-"""
-
-
-
 import os
 import cv2
 import math
@@ -44,14 +35,20 @@ def adj_cosine_element(i_trj,j_trj):
     return cos_element
 
 
-def adj_thresholding_element(sxdiff, sydiff,mdis):
-    # spdfile = open('./mdis.txt', 'wb')
+def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
     # dth     = 300 #30*1.5
     # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
     # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
-    dth    = 50+200
-    yspdth = 5 #y speed threshold
-    xspdth = 5 #x speed threshold
+
+    if dataSource =='Johnson':
+        dth    = 80
+        yspdth = 0.2 #filtered out 2/3 pairs
+        xspdth = 0.35 
+    if dataSource =='DoT':
+        dth    = 300 #??!!!!
+        yspdth = 5 #y speed threshold
+        xspdth = 5 #x speed threshold
+
 
     if (sxdiff <xspdth ) & (sydiff<yspdth ) & (mdis < dth):
         adj_element = 1
@@ -61,7 +58,6 @@ def adj_thresholding_element(sxdiff, sydiff,mdis):
         # lines = ax.plot(x[j,idx], y[j,idx],color = (color[j-1].T)/255.,linewidth=2)
         # fig888.canvas.draw()
         # plt.pause(0.0001)
-        # spdfile.close()
     else:
         adj_element = 0
     return adj_element
@@ -75,7 +71,7 @@ def sameBlobScore(fgBlobInd1,fgBlobInd2):
 
 
 
-def prepare_input_data(isAfterWarpping,isLeft=True):
+def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     if isAfterWarpping:
         if isLeft:
             matPath  = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
@@ -86,36 +82,42 @@ def prepare_input_data(isAfterWarpping,isLeft=True):
             matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
-        """for linux"""
-        matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
-        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/'
-        """for mac"""
-        # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        """Jay & Johnson"""
-        # matfilepath = '../tempFigs/roi2/filtered/'
-        # savePath    = '../tempFigs/roi2/' 
+        if dataSource == 'DoT':
+            """for linux"""
+            matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+            savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/'
+            """for mac"""
+            # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
+            # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        if dataSource == 'Johnson':
+            """Jay & Johnson"""
+            matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/'
+            savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/'
+            # matfilepath = '../tempFigs/roi2/filtered/'
+            # savePath    = '../tempFigs/roi2/' 
+        
         matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
-        matfiles = matfiles[77:]
-    return matfiles,savePath,
+        # matfiles = matfiles[33:78]
+    return matfiles,savePath
 
 
 
-# def trjcluster(matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-#     savePath = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'):
+# def trjcluster(useSBS,dataSource):
 if __name__ == '__main__':
-    isAfterWarpping   = False
-    isLeft            = False
-    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
+    isAfterWarpping = False
+    isLeft          = False
+    useSBS          = False
+    dataSource      = 'Johnson'
+
+    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft,dataSource)
     # adj_element = np.nan
-    # adj_element = "Thresholding"
-    adj_element = "Gaussian"
+    adj_element = "Thresholding"
+    # adj_element = "Gaussian"
     # adj_element = "Cosine"
 
     # """to visualize the neighbours"""
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
-    useSBS = True
 
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
@@ -126,8 +128,12 @@ if __name__ == '__main__':
         t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
         xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
         yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
-        FgBlobIndex   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
-        FgBlobIndex[FgBlobIndex==0]=np.nan
+        
+        if useSBS:
+            FgBlobIndex   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+            FgBlobIndex[FgBlobIndex==0]=np.nan
+        else:
+            FgBlobIndex = []
 
 
         Numsample = ptstrj['xtracks'].shape[0]
@@ -141,19 +147,11 @@ if __name__ == '__main__':
         adj = np.zeros([NumGoodsample,NumGoodsample])
         SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
-        # compute SBS seperately
-        # for i in range(NumGoodsample):
-        #     for j in range(i, min(NumGoodsample,i+1000)):
-        #         SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
 
-        # # mean_sbs = np.mean(SBS[SBS!=0])
-        # # std_sbs  = np.std(SBS[SBS!=0])
-        # mean_sbs = np.mean(SBS)
-        # std_sbs  = np.std(SBS)
-        # SBS = SBS + SBS.transpose()
-        # np.fill_diagonal(SBS, diagonal(SBS)/2)
-        # SBS = (SBS-mean_sbs)/std_sbs
 
+        # sxdiffAll = []
+        # sydiffAll = []
+        # mdisAll = []
         # build adjacent mtx
         for i in range(NumGoodsample):
             print "i", i
@@ -166,19 +164,20 @@ if __name__ == '__main__':
                 # if len(idx)>=30: # at least overlap for 100 frames
                     sidx   = idx[0:-1] # for speed
                     sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                    sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))
-                    # spdfile.write(str(i)+' '+str(sxdiff)+'\n')
+                    sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
                     mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-                    # spdfile.write(str(i)+' '+str(j)+' '+str(mdis)+'\n')
-                    # print "mdis: ", mdis
 
-                    
+                    # sxdiffAll.append(sxdiff)
+                    # sydiffAll.append(sydiff)
+                    # mdisAll.append(mdis)
+
                     trj1     = [x[i,idx],y[i,idx]]
                     trj2     = [x[j,idx],y[j,idx]]
                     """counting the sharing blob numbers of two trjs"""
-                    SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                    if useSBS:
+                        SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                     if adj_element =="Thresholding":
-                        adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis)
+                        adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis,dataSource)
 
                     if adj_element =="Gaussian":
                         adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis,SBS[i,j],useSBS)
@@ -189,29 +188,34 @@ if __name__ == '__main__':
                         adj[i,j] = adj_cosine_element(i_trj,j_trj)
                 else: # overlapping too short
                     if i==j:
-                        SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                        if useSBS:
+                            SBS[i,j] =  sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                         adj[i,j] =  adj_gaussian_element(0, 0, 0,SBS[i,j],useSBS)
                     else:
                         SBS[i,j] = 0
                         adj[i,j] = 0
-        
+        # pickle.dump( sxdiffAll, open( './roi2_xspdiff'+str(matidx)+'.p', "wb" ) )
+        # pickle.dump( sydiffAll, open( './roi2_yspdiff'+str(matidx)+'.p', "wb" ) )
+        # pickle.dump( mdisAll, open( './roi2_mdis'+str(matidx)+'.p', "wb" ) )
+
         SBS = SBS + SBS.transpose()
         np.fill_diagonal(SBS, np.diagonal(SBS)/2)
 
         adj = adj + adj.transpose() #add diag twice
         np.fill_diagonal(adj, np.diagonal(adj)/2)
 
+        if useSBS:
+            temp = np.multiply(adj.transpose(),(1/np.diagonal(adj)))
+            adj_new = temp.transpose()
+            adj_new = adj_new + adj_new.transpose() #add diag twice
+            np.fill_diagonal(adj_new, np.diagonal(adj_new)/2)
+            adj_new[adj_new<10**(-4)]=0
+        else:
+            adj_new = adj
         
-
-        temp = np.multiply(adj.transpose(),(1/np.diagonal(adj)))
-        adj_new = temp.transpose()
-        adj_new = adj_new + adj_new.transpose() #add diag twice
-        np.fill_diagonal(adj_new, np.diagonal(adj_new)/2)
-
-        adj_new[adj_new<10**(-4)]=0
-
+        # pdb.set_trace()
         print "saving adj..."
-        print "use adj_new......"
+        # print "use adj_new......"
         sparsemtx = csr_matrix(adj_new)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
         result    = {}
@@ -226,8 +230,7 @@ if __name__ == '__main__':
 
         if not isAfterWarpping:
             # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
-            savename = os.path.join(savePath,'Adj_'+matfiles[matidx][-7:-4].zfill(3))
-
+            savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
             savemat(savename,result)
         else:
             savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
