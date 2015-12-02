@@ -22,11 +22,12 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     kkthInterval =  skipChunk      #start to get dark from 26th
 
     Frmrate = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
-    Numfrm=readlength
+    # Numfrm=readlength
     frameH = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     frameW = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    # vid = np.zeros([15350,480,640,3],dtype = uint8)
-    vid = np.zeros([Numfrm,frameH,frameW,3], dtype = np.uint8)
+    
+    
+    # vid = np.zeros([Numfrm,frameH,frameW,3], dtype = np.uint8)
     
     start_position = 0+skipChunk
     # start_position = int(skipTime*(Frmrate))
@@ -43,15 +44,19 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
 
 
     print 'reading frames...'
-    for ii in range(Numfrm):
+    for ii in range(0,Numfrm,2):
         true_position = ii+start_position
 
         print(true_position)
-        rval, vid[ii] = cap.read()
+        # rval, vid[ii] = cap.read()
+        rval, frm = cap.read()
+        rval, frm = cap.read()
         # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        cv2.imwrite(name,vid[ii])
-    return vid, start_position
+        # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
+        name = '/media/My Passport/DoTimgs/Canal/'+str(true_position).zfill(8)+'.jpg'
+        # cv2.imwrite(name,vid[ii])
+        cv2.imwrite(name,frm)
+    return start_position
 
 
 
@@ -66,8 +71,8 @@ if __name__ == '__main__':
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_18h00min00s002ms.asf'
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
 
-    readlength = 2000
-    vid, start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 2000)
+    readlength = 20000
+    start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
     
 
 
@@ -94,3 +99,13 @@ if __name__ == '__main__':
 
 
 
+
+
+import glob as glob
+imgList = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
+for iii in range(0,len(imgList),3):
+    print iii
+    imgName = imgList[iii][46:-4]
+    newname = '/media/My Passport/DoTimgs/Jay_Johnson/'+str(imgName)+'.jpg'
+    # cv2.imwrite(name,vid[ii])
+    cv2.imwrite(newname,cv2.imread(imgList[iii]))

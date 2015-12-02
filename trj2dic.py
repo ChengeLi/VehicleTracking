@@ -164,7 +164,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         PtsInCurFrm = xtrj[:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf      = list(set(mlabels[IDinCurFrm])) # label in current frame
-        print "labinf: ",labinf
+        # print "labinf: ",labinf
 
         for k in np.unique(labinf):
             if k != -1:
@@ -342,17 +342,18 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
 
 if __name__ == '__main__':
 # def trj2dic_main(isVideo, dataSource):
-    isVideo    = True
-    dataSource = 'DoT'
-
+    # isVideo    = True
+    # dataSource = 'DoT'
+    isVideo = False
+    dataSource = 'Johnson'
 
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
     isLeft           = False
-    isSave           = False
+    isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     start_frame_idx = (np.int8(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
     print "start_frame_idx: ",start_frame_idx

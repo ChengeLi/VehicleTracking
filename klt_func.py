@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 def klt_tracker(isVideo, \
  dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
  savePath = '../DoT/CanalSt@BaxterSt-96.106/klt/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
- useSameBlockScore = True,isVisualize = False,dataSource = 'DoT'):
+ useBlobCenter = True,isVisualize = False,dataSource = 'DoT'):
 
 # if __name__ == '__main__':
 #     isVideo  = True
@@ -87,15 +87,18 @@ def klt_tracker(isVideo, \
     frame_idx      = 0 + frame_idx_bias 
     start_position = frame_idx_bias
 
-    if useSameBlockScore:
+    if useBlobCenter:
         # linux local:
-        blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
+        # blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
         # linux:
         # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
         # Mac
         # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-        blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-        blob_sparse_matrices = sorted(glob.glob(blobPath + 'blob*.p'))
+        # blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
+        blobindPath                 = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/'
+        blob_ind_sparse_matrices    = sorted(glob.glob(blobindPath + 'blob*.p'))
+        blobCenterPath              = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/'
+        blob_center_sparse_lists = sorted(glob.glob(blobCenterPath + 'blob*.p'))
 
 
     
@@ -138,11 +141,17 @@ def klt_tracker(isVideo, \
     # nframe = 1801
     if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
     while (frame_idx < nframe):
-        if useSameBlockScore and ((frame_idx % trunclen) == 0):
+        if useBlobCenter and ((frame_idx % trunclen) == 0):
             print "load foreground blob index matrix file...."
-            blobLists = []
-            blobListfile = blob_sparse_matrices[frame_idx % trunclen]
-            blobLists    = pickle.load( open( blobListfile, "rb" ) )
+            blobIndLists       = []
+            blobIndListfile    = blob_ind_sparse_matrices[frame_idx % trunclen]
+            blobIndLists       = pickle.load( open( blobIndListfile, "rb" ) )
+            
+            blobCenterLists    = []
+            blobCenterListfile = blob_center_sparse_lists[frame_idx % trunclen]
+            blobCenterLists    = pickle.load( open( blobCenterListfile, "rb" ) )
+
+            
         if not isVideo:
             frame[:,:,:] = cv2.imread(imlist[frame_idx])
         if isVideo:
@@ -153,9 +162,9 @@ def klt_tracker(isVideo, \
                 frame_idx = nframe
                 continue
 
-        if useSameBlockScore:
-            blobIndexMatrix = (blobLists[np.mod(frame_idx,trunclen)]).todense()
-
+        if useBlobCenter:
+            BlobIndMatrixCurFrm = (blobIndLists[np.mod(frame_idx,trunclen)]).todense()
+            BlobCenterCurFrm    = blobCenterLists[np.mod(frame_idx,trunclen)]
 
         frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         # for visulization
@@ -191,8 +200,14 @@ def klt_tracker(isVideo, \
                 if x != -100:
                     # if x>frameLp.shape[1] or y>frameLp.shape[0]:
                     #     print x, y
-                    if useSameBlockScore:
-                        tracksdic[idx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
+                    if useBlobCenter:
+                        blobInd    = BlobIndMatrixCurFrm[y,x]
+                        if blobInd!=0:
+                            blobCenter = BlobCenterCurFrm[blobInd-1]
+                            tracksdic[idx].append((x,y,frame_idx,np.int8(blobInd),blobCenter))
+                        else:
+                            tracksdic[idx].append((x,y,frame_idx,0,np.NaN,np.NaN))
+
                     else:
                         tracksdic[idx].append((x,y,frame_idx))
                 cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
@@ -215,8 +230,10 @@ def klt_tracker(isVideo, \
                     tracksdic[dicidx] = [] 
                     start[dicidx]     = frame_idx
                     end[dicidx]       = -1
-                    if useSameBlockScore:
-                        tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobIndexMatrix[y,x])))
+                    if useBlobCenter:
+                        blobInd    = BlobIndMatrixCurFrm[y,x]
+                        blobCenter = BlobCenterCurFrm[blobInd]
+                        tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobInd),blobCenter))
                     else:
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
@@ -244,7 +261,7 @@ def klt_tracker(isVideo, \
             # "won't-appear" fillers": frame_idx+3*trunclen
             # this way, we won't lose the REAL 0's, i.e. starts from 0 frame, when filtering in the trj_filter.py
             Ttracks = np.ones([len(tracksdic),trunclen])*(frame_idx+3*trunclen)
-            if useSameBlockScore:
+            if useBlobCenter:
                 Blobtracks = np.zeros([len(tracksdic),trunclen]) #blob index starts from 1
             # set first frame in this chunk
             offset  = frame_idx - trunclen
@@ -282,13 +299,13 @@ def klt_tracker(isVideo, \
                     Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])] = ttrack[0,:]
                     Ytracks[ii,:][tstart:tstart+len(ttrack[1,:])] = ttrack[1,:]
                     Ttracks[ii,:][tstart:tstart+len(ttrack[2,:])] = ttrack[2,:]
-                    if useSameBlockScore:
+                    if useBlobCenter:
                         Blobtracks[ii,:][tstart:] = ttrack[3,:]
                 else:
                     Xtracks[ii,:][tstart:tstop] = ttrack[0,:]
                     Ytracks[ii,:][tstart:tstop] = ttrack[1,:]
                     Ttracks[ii,:][tstart:tstop] = ttrack[2,:]
-                    if useSameBlockScore:
+                    if useBlobCenter:
                         Blobtracks[ii,:][tstart:tstop] = ttrack[3,:]
 
 
@@ -303,7 +320,7 @@ def klt_tracker(isVideo, \
             trk['ytracks']       = csr_matrix(Ytracks)
             trk['Ttracks']       = Ttracks
             trk['trjID']         = tracksdic.keys()
-            if useSameBlockScore:
+            if useBlobCenter:
                 trk['fg_blob_index'] = csr_matrix(Blobtracks)
             
             # for dead tracks, remove them.  for alive tracks, remove all

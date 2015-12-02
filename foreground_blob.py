@@ -8,7 +8,7 @@ import glob as glob
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
 
-import scipy as scipy 
+import scipy.ndimage as ndimg 
 
 
 
@@ -55,7 +55,7 @@ def find_blob(ori_img):
 	return keypoints
 """
 
-def blobImg2blobmatrix(mask,ori_img):
+def ContourBlob(mask,ori_img):
 	maskgray            = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
 	ret,thresh          = cv2.threshold(maskgray,127,255,0)
 	contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -70,15 +70,12 @@ def blobImg2blobmatrix(mask,ori_img):
 	cnts       = sorted(contours, key = cv2.contourArea, reverse = True)[:40] 
 	blobImage  = np.zeros(ori_img.shape)
 	blobMatrix = np.zeros(ori_img.shape[:-1])
-	color      = np.array([np.random.randint(0,255) for _ in range(3*int(len(cnts)))]).reshape(int(len(cnts)),3)
 
 	for k in range(len(cnts)):
 		if cv2.contourArea(cnts[k])<20:
 			break
 		# draw in class number, starts from 1
 		cv2.drawContours(blobImage, cnts, k,(k+1,k+1,k+1),thickness = cv2.cv.CV_FILLED) # fill the contour for the blob
-		# draw in real color
-		# cv2.drawContours(blobImage, cnts, k,(color[k]),thickness = cv2.cv.CV_FILLED) # fill the contour for the blob
 		blobMatrix = np.sum(blobImage,2)/3
 		# if want to save the colored img
 		# blobname = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/'+str(frame_idx).zfill(7)+'.jpg'
@@ -86,18 +83,18 @@ def blobImg2blobmatrix(mask,ori_img):
 	# plt.imshow(blobImagee)
 	# plt.pause(0.00001)
 
-
-
-	labelMatrix = scipy.ndimage.measurements.label(mask)
-	 = scipy.ndimage.measurements.center_of_mass(mask)
-
-
-
-
-
 	return blobMatrix
 
 
+
+
+def blobImg2blobmatrix(mask):
+	maskgray                 = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
+	ret,thresh               = cv2.threshold(maskgray,127,255,0)
+	(blobMatrix, numFgPixel) = ndimg.measurements.label(maskgray)
+	BlobCenters              = np.array(ndimg.measurements.center_of_mass(maskgray,blobMatrix,range(1,numFgPixel+1)))
+
+	return blobMatrix, BlobCenters
 
 
 
@@ -107,13 +104,14 @@ if __name__ == '__main__':
 	mask_list = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_filled_hole/*.jpg'))
 	ori_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 	nframe    = min(len(mask_list),len(ori_list))
-	frame_idx = 7800 #resume here, from 7800
+	frame_idx = 0 #resume here, from 7800
 	trunclen  = 600
 	plt.figure()
 
 	# temp_img   = cv2.imread(ori_list[0])
 	# blobTensor = np.zeros((temp_img.shape[0],temp_img.shape[1],nframe))
 	blob_sparse_list = []
+	blobCenterList = []
 	while frame_idx <nframe:
 		print "frame_idx: ", frame_idx
 		mask    = cv2.imread(mask_list[frame_idx])	
@@ -122,20 +120,35 @@ if __name__ == '__main__':
 		"""blob detector doesn't work..."""
 		# keypoints = find_blob(ori_img)
 		"""use cv2.findContours, and then fill the contours..."""
-		blobMatrix = blobImg2blobmatrix(mask,ori_img)
+		# blobMatrix = blobImg2blobmatrix(mask,ori_img)
 		# blobTensor[:,:,frame_idx] = blobMatrix
+
+		"""use ndimage.measurements"""
+		blobMatrix, BlobCenters = blobImg2blobmatrix(mask)
 		sparse_slice = csr_matrix(blobMatrix)
 		blob_sparse_list.append(sparse_slice)
+
+		blobCenterList.append(BlobCenters)
 
 		frame_idx = frame_idx+1
 		#end of while loop
 		if frame_idx>0 and np.mod(frame_idx,trunclen)==0:
-			print "Save the blob index tensor into a pickle file:"
-			# savePath = '../DoT/CanalSt@BaxterSt-96.106/'
-			savePath = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-			savename = os.path.join(savePath,'blobTensorList'+str(frame_idx/trunclen).zfill(3)+'.p')
-			pickle.dump(blob_sparse_list, open( savename, "wb" ))
-			blob_sparse_list = []
+			# print "Save the blob index tensor into a pickle file:"
+			# # savePath = '../DoT/CanalSt@BaxterSt-96.106/'
+			# # savePath = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
+			# savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/'
+			# savename = os.path.join(savePath,'blobTensorList'+str(frame_idx/trunclen).zfill(3)+'.p')
+			# pickle.dump(blob_sparse_list, open( savename, "wb" ))
+			# blob_sparse_list = []
+
+			print "Save the blob centers..."
+			savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/'
+			savename = os.path.join(savePath,'blobCenterList'+str(frame_idx/trunclen).zfill(3)+'.p')
+			pickle.dump(blobCenterList, open( savename, "wb" ))
+			blobCenterList = []
+
+
+
 
 
 

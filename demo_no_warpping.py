@@ -8,7 +8,7 @@ import unify_label_func as unify_label
 import trj2dic as trj2dic
 
 
-import visualization_func as visual
+# import visualization_func as visual
 
 """whole process for Jay&Johnson"""
 # linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4'#complete

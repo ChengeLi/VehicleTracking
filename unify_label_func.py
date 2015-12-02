@@ -41,7 +41,7 @@ def unify_label(matfiles,savename):
                 idx2      = np.where(L2==label2)
                 tmp1      = np.intersect1d(M1[idx1],commonidx) # appear in both trunks and label is label1 
                 tmp2      = np.intersect1d(M2[idx2],commonidx)
-                
+                # pdb.set_trace()
                 L1idx     =list(idx1[0])
                 L2idx     =list(idx2[0])
                 diff1     = np.setdiff1d(tmp1,tmp2)  # this difference only accounts for elements in tmp1
@@ -91,7 +91,7 @@ def unify_label_main(dataSource):
     if dataSource == 'Johnson':
         # Jay & Johnson
         matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
-        savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
+        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
 
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
