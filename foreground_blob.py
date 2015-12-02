@@ -8,6 +8,10 @@ import glob as glob
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
 
+import scipy as scipy 
+
+
+
 """blob detector doesn't work..."""
 """
 def find_blob(ori_img):
@@ -83,7 +87,18 @@ def blobImg2blobmatrix(mask,ori_img):
 	# plt.pause(0.00001)
 
 
+
+	labelMatrix = scipy.ndimage.measurements.label(mask)
+	 = scipy.ndimage.measurements.center_of_mass(mask)
+
+
+
+
+
 	return blobMatrix
+
+
+
 
 
 
