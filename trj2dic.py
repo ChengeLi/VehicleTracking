@@ -95,10 +95,12 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     global notconnectedLabel
     notconnectedLabel =[]
     frame_idx = start_frame_idx
-    while frame_idx < np.int8(matfiles[-1][-7:-4])*600:
+    while frame_idx < 20*600: #np.int8(matfiles[-1][-7:-4])*600:
+        if frame_idx == 13200:
+            pdb.set_trace()
         print "frame = ", str(frame_idx)
         if (frame_idx % trunclen == 0):
-            trunkTrjFile = loadmat(matfiles[(frame_idx-start_frame_idx)/trunclen])
+            trunkTrjFile = loadmat(matfiles[(frame_idx)/trunclen])
             xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             IDintrunk    = trunkTrjFile['trjID'][0]
@@ -108,8 +110,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             # pdb.set_trace()
 
             startT = np.int32(np.ones([Nsample,1])*-999)
-            endT = np.int32(np.ones([Nsample,1])*-999)
-
+            endT   = np.int32(np.ones([Nsample,1])*-999)
             for i in range(Nsample):  # for the ith sample## get the time T (where the pt appears and disappears)
                 havePt  = np.array(np.where(xtrj[i,:]!=0))[0]
                 if len(havePt)!=0:
@@ -118,8 +119,9 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     """only for check, can delete trj"""
                     if startT[i]!=np.nanmin(ttrj[i,:])or endT[i]!=np.nanmax(ttrj[i,:]):
                         print "wrong time===========!!!, want to delete this trj?"
+                        # fix me..... delete the trj
                         pdb.set_trace()
-            
+            pdb.set_trace()
             #  get the mlabels for unclustered trjs, just the original global ID
             if not isClustered:
                 for idx,ID in enumerate(IDintrunk):  
@@ -142,8 +144,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     else:
                         print "!!!!error!!!!!!there are no trjs in class", str(k)
                         print "It's Ok to skip these...Now only consider left lane"
-                        startfrm=-888
-                        endfrm=-888
+                        startfrm =-888
+                        endfrm   =-888
                         continue
 
                     if not vctime[k]:
@@ -215,6 +217,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # end of while loop
 
     if isSave and isClustered:
+        pdb.set_trace()
         print "notconnectedLabel:",notconnectedLabel
         savenameT = os.path.join(savePath,'final_vctime.p')
         savenameX = os.path.join(savePath,'final_vcxtrj.p')
@@ -344,7 +347,7 @@ if __name__ == '__main__':
 # def trj2dic_main(isVideo, dataSource):
     # isVideo    = True
     # dataSource = 'DoT'
-    isVideo = False
+    isVideo    = False
     dataSource = 'Johnson'
 
     trunclen         = 600
@@ -355,7 +358,8 @@ if __name__ == '__main__':
     isLeft           = False
     isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
-    start_frame_idx = (np.int8(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
+    # start_frame_idx = (np.int8(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
+    start_frame_idx = 0
     print "start_frame_idx: ",start_frame_idx
     matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     pdb.set_trace()
