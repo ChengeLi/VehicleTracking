@@ -68,19 +68,19 @@ def prepare_input_data(dataSource):
         # for mac
         # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        useSameBlockScore = True
+        useBlobCenter = True
     """Jay & Johnson"""
     if dataSource == 'Johnson':
         matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
         savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/'
         # matfilepath = '../tempFigs/roi2/'
         # savePath = '../tempFigs/roi2/filtered/' 
-        useSameBlockScore = False
+        useBlobCenter = False
 
     matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
     start_position = 0 #already processed 10 files
     matfiles       = matfiles[start_position:]
-    return matfiles,savePath,useSameBlockScore
+    return matfiles,savePath,useBlobCenter
 
 
 
@@ -93,7 +93,7 @@ def prepare_input_data(dataSource):
 def filtering_main_function(fps,dataSource = 'DoT'):
     # fps = 30
     # dataSource = 'Johnson'
-    matfiles,savePath,useSameBlockScore = prepare_input_data(dataSource)
+    matfiles,savePath,useBlobCenter = prepare_input_data(dataSource)
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -102,8 +102,15 @@ def filtering_main_function(fps,dataSource = 'DoT'):
         x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        if useSameBlockScore:
-            blob_index = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+        if useBlobCenter:
+            blob_index   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+            blob_centerY = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
+            blob_centerX = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
+
+
+
+
+
         else:
             blob_index = []
         if len(t)>0: 
@@ -173,7 +180,7 @@ def filtering_main_function(fps,dataSource = 'DoT'):
         result['Ttracks']       = t_re
         result['xspd']          = xspd
         result['yspd']          = yspd
-        if useSameBlockScore:
+        if useBlobCenter:
             result['fg_blob_index'] = blob_index_re
 
         savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))

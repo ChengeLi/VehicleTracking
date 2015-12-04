@@ -18,7 +18,7 @@ import trj2dic as trj2dic
 dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
 savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
 print("running KLT...")
-klt.klt_tracker(isVideo= False,dataPath=dataPath,savePath=savePath,useSameBlockScore = False,isVisualize = False,dataSource = 'Johnson')
+klt.klt_tracker(isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
 
 print("filter the trjs...")
 # execfile('trj_filter.py')
@@ -52,7 +52,7 @@ else:
 savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
 
 print("running KLT...")
-klt.klt_tracker(isVideo = True,dataPath=dataPath,savePath=savePath)
+klt.klt_tracker(isVideo = True,dataPath=dataPath,savePath=savePath, useBlobCenter = True)
 
 print("filter the trjs...")
 # execfile('trj_filter.py')
