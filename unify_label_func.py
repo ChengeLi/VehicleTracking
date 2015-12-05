@@ -29,14 +29,18 @@ def unify_label(matfiles,savename):
         labelnum = max(L1)  ## not duplicate
         L2[:]    = L2 + labelnum+1 # to make sure there're no duplicate labels
 
+        pdb.set_trace()
         commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
         
         print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))
    
         for i in commonidx:
             if i not in atmp:
-                label1    = L1[np.where((M1 == i)!=0)[0][0]]  # use np.arange(len(M1))[M1 == i]
-                label2    = L2[np.where((M2 == i)!=0)[0][0]]
+                # label1    = L1[np.where((M1 == i)!=0)[0][0]]  # use np.arange(len(M1))[M1 == i]
+                # label2    = L2[np.where((M2 == i)!=0)[0][0]]
+                label1 = L1[M1==i][0]
+                label2 = L2[M2==i][0]
+
                 idx1      = np.where(L1==label1)
                 idx2      = np.where(L2==label2)
                 tmp1      = np.intersect1d(M1[idx1],commonidx) # appear in both trunks and label is label1 
@@ -50,7 +54,7 @@ def unify_label(matfiles,savename):
                 L1[L1idx] = label1  ## keep the first appearing label
                 L2[L2idx] = label1   
 
-
+        pdb.set_trace()
         if matidx == 0 :
             flab[:]   = flab + list(L1) 
             ftrjID[:] = ftrjID + list(M1)
@@ -79,8 +83,9 @@ def unify_label(matfiles,savename):
 
 
 
-# if __name__ == '__main__':
-def unify_label_main(dataSource):
+if __name__ == '__main__':
+    dataSource = 'Johnson'
+# def unify_label_main(dataSource):
     if dataSource == 'DoT':
         # for linux
         matfilePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/'
@@ -96,7 +101,7 @@ def unify_label_main(dataSource):
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
 
-    if numTrunc<=24:
+    if numTrunc<=100:
         savename = os.path.join(savePath,'Complete_result')
         unify_label(matfilesAll,savename)
     else:
