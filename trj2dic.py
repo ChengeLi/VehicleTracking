@@ -75,7 +75,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     
 
     if isClustered:
-        trjID   = np.uint16(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
+        trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
         mlabels = np.int32(np.ones(max(trjID)+1)*-1)  #initial to be -1
         labels  = loadmat(clustered_result)['label'][0]
         for idx,ID in enumerate(trjID):  # ID=trjID[idx], the content, trj ID
@@ -95,9 +95,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     global notconnectedLabel
     notconnectedLabel =[]
     frame_idx = start_frame_idx
-    while frame_idx < 20*600: #np.int8(matfiles[-1][-7:-4])*600:
-        if frame_idx == 13200:
-            pdb.set_trace()
+    while frame_idx < np.int32(matfiles[-1][-7:-4])*600:
         print "frame = ", str(frame_idx)
         if (frame_idx % trunclen == 0):
             trunkTrjFile = loadmat(matfiles[(frame_idx)/trunclen])
@@ -121,7 +119,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                         print "wrong time===========!!!, want to delete this trj?"
                         # fix me..... delete the trj
                         pdb.set_trace()
-            pdb.set_trace()
             #  get the mlabels for unclustered trjs, just the original global ID
             if not isClustered:
                 for idx,ID in enumerate(IDintrunk):  
@@ -183,14 +180,13 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 vcxtrj[k].append(vx) 
                 vcytrj[k].append(vy)
 
-        if isVisualize & (frame_idx==1000):
-            # pdb.set_trace()
+        if isVisualize:
             if isVideo:
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
                 status, frame = cap.read()
             else:
                 frame   = cv2.imread(image_list[frame_idx])
-            
+            pdb.set_trace()
             visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx,start_frame_idx)
             
 
@@ -204,7 +200,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     save_vctime = {}
                     save_vcxtrj = {}
                     save_vcytrj = {}
-                    print notconnectedLabel
+                    print "notconnectedLabel:", notconnectedLabel
                     for i in np.unique(IDintrunk): 
                         save_vctime[i] = np.array(vctime[i])
                         save_vcxtrj[i] = np.array(vcxtrj[i])
@@ -217,7 +213,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # end of while loop
 
     if isSave and isClustered:
-        pdb.set_trace()
         print "notconnectedLabel:",notconnectedLabel
         savenameT = os.path.join(savePath,'final_vctime.p')
         savenameX = os.path.join(savePath,'final_vcxtrj.p')
@@ -229,7 +224,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel}
             clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel}
             clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
-            for i in np.int16(np.unique(list(set(labels)-set(notconnectedLabel)))): 
+
+            for i in np.int32(np.unique(list(set(vctime.keys())-set(notconnectedLabel)))): 
                 save_vctime[i] = np.array(clean_vctime[i])
                 save_vcxtrj[i] = np.array(clean_vcxtrj[i])
                 save_vcytrj[i] = np.array(clean_vcytrj[i])
@@ -247,9 +243,9 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start
 
     for k in np.unique(labinf):
         if k !=-1:
-            # pdb.set_trace()
             # if (len(list(vcxtrj[k][frame_idx-start_frame_idx]))==1) and (len(np.array(vcytrj[k][frame_idx-start_frame_idx]))==1): #only the virtual center
             print "x,y",vcxtrj[k],vcytrj[k]
+            pdb.set_trace()
             line       = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
                 # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
@@ -354,13 +350,13 @@ if __name__ == '__main__':
     isClustered      = True
     isAfterWarpping  = False
     isVisualize      = False
+    # isVisualize = True
     useVirtualCenter = True
     isLeft           = False
     isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
-    # start_frame_idx = (np.int8(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
+    # start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
     start_frame_idx = 0
     print "start_frame_idx: ",start_frame_idx
     matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
-    pdb.set_trace()
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)

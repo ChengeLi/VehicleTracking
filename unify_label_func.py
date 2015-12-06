@@ -26,10 +26,9 @@ def unify_label(matfiles,savename):
         M2 = loadmat(matfiles[matidx+1])['trjID'][0]
 
 
-        labelnum = max(L1)  ## not duplicate
-        L2[:]    = L2 + labelnum+1 # to make sure there're no duplicate labels
+        L1max = max(L1)  ## not duplicate
+        L2[:] = L2 + L1max + 1 # to make sure there're no duplicate labels
 
-        pdb.set_trace()
         commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
         
         print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))
@@ -40,6 +39,10 @@ def unify_label(matfiles,savename):
                 # label2    = L2[np.where((M2 == i)!=0)[0][0]]
                 label1 = L1[M1==i][0]
                 label2 = L2[M2==i][0]
+                if label2<=L1max: # already been united with a previous chunk label1
+                    # print "previous split, now as one."
+                    L1[M1==i] = label2
+                    continue
 
                 idx1      = np.where(L1==label1)
                 idx2      = np.where(L2==label2)
@@ -48,17 +51,15 @@ def unify_label(matfiles,savename):
                 # pdb.set_trace()
                 L1idx     =list(idx1[0])
                 L2idx     =list(idx2[0])
-                diff1     = np.setdiff1d(tmp1,tmp2)  # this difference only accounts for elements in tmp1
-                diff      = np.union1d(np.setdiff1d(tmp1,np.intersect1d(tmp1,tmp2)) , np.setdiff1d(tmp2,np.intersect1d(tmp1,tmp2) ))
+                # diff1     = np.setdiff1d(tmp1,tmp2)  # this difference only accounts for elements in tmp1
+                # diff      = np.union1d(np.setdiff1d(tmp1,np.intersect1d(tmp1,tmp2)) , np.setdiff1d(tmp2,np.intersect1d(tmp1,tmp2) ))
                 atmp      = np.unique(np.hstack((tmp1,tmp2)))
                 L1[L1idx] = label1  ## keep the first appearing label
                 L2[L2idx] = label1   
 
-        pdb.set_trace()
         if matidx == 0 :
             flab[:]   = flab + list(L1) 
             ftrjID[:] = ftrjID + list(M1)
-        
         flab[:]   = flab +list(L2)
         ftrjID[:] = ftrjID + list(M2)
 
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
 
-    if numTrunc<=100:
+    if numTrunc<=200:
         savename = os.path.join(savePath,'Complete_result')
         unify_label(matfilesAll,savename)
     else:
