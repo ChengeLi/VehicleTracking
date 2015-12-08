@@ -7,6 +7,7 @@ import time
 # from scipy.ndimage.filters import median_filter as mf
 
 
+import csv
 
 def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     # cap = cv2.VideoCapture('../Videos/TLC00005.AVI')
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_18h00min00s002ms.asf'
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
 
-    readlength = 20000
+    readlength = 2000
     start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
     
 
@@ -101,11 +102,78 @@ if __name__ == '__main__':
 
 
 
-import glob as glob
-imgList = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
-for iii in range(0,len(imgList),3):
-    print iii
-    imgName = imgList[iii][46:-4]
-    newname = '/media/My Passport/DoTimgs/Jay_Johnson/'+str(imgName)+'.jpg'
-    # cv2.imwrite(name,vid[ii])
-    cv2.imwrite(newname,cv2.imread(imgList[iii]))
+
+
+# import glob as glob
+# imgList = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
+# for iii in range(0,len(imgList),3):
+#     print iii
+#     imgName = imgList[iii][46:-4]
+#     newname = '/media/My Passport/DoTimgs/Jay_Johnson/'+str(imgName)+'.jpg'
+#     # cv2.imwrite(name,vid[ii])
+#     cv2.imwrite(newname,cv2.imread(imgList[iii]))
+
+
+
+
+video_name = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+cap   = cv2.VideoCapture(video_name)
+cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
+color = np.array([np.random.randint(0,255) \
+        for _ in range(3*int(1000))])\
+        .reshape(int(1000),3)
+
+f =  open('../rejayjohnsonintersectionpairrelationships/Canal_1.csv', 'rb')
+reader = csv.reader(f)
+
+st,firstfrm = cap.read()
+nrows     = int(np.size(firstfrm,0))
+ncols     = int(np.size(firstfrm,1))
+
+fig = plt.figure('vis')
+axL = plt.subplot(1,1,1)
+im  = plt.imshow(np.zeros([nrows,ncols,3]))
+plt.axis('off')
+
+
+
+for ii in range(0,1000,4):
+    temp = np.array(reader.next())
+    frame_idx = temp[0]
+    GTcenterXY = temp[-2:]
+
+    cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , frame_idx)
+    st,frame = cap.read()
+
+
+    im.set_data(frame[:,:,::-1])
+    plt.draw()
+
+    dots.append(axL.scatter(GTcenterXY[0], GTcenterXY[1], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
+    plt.draw()
+    plt.show()
+    plt.pause(0.00001)
+    dots = []
+
+    name = '../GTfigure/'+str(frame_idx).zfill(6)+'.jpg'
+    plt.savefig(name) ##save figure
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
