@@ -105,7 +105,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
             fnum         = trunkTrjFile['xtracks'].shape[1] # 600
             ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
-            # pdb.set_trace()
 
             startT = np.int32(np.ones([Nsample,1])*-999)
             endT   = np.int32(np.ones([Nsample,1])*-999)
@@ -213,6 +212,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # end of while loop
 
     if isSave and isClustered:
+        pdb.set_trace()
         print "notconnectedLabel:",notconnectedLabel
         savenameT = os.path.join(savePath,'final_vctime.p')
         savenameX = os.path.join(savePath,'final_vcxtrj.p')
@@ -358,5 +358,5 @@ if __name__ == '__main__':
     # start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
     start_frame_idx = 0
     print "start_frame_idx: ",start_frame_idx
-    matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
+    # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
