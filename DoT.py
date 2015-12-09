@@ -95,7 +95,6 @@ if __name__ == '__main__':
         # time.sleep(0.5)
         plt.pause(0.0001) 
     #     aveBKG  = aveBKG + vid[ii];
-
     # aveBKG = aveBKG/(readlength+1)
 
 
@@ -114,21 +113,20 @@ if __name__ == '__main__':
 #     cv2.imwrite(newname,cv2.imread(imgList[iii]))
 
 
-
+## visualize the Ground Truth
 
 video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 cap   = cv2.VideoCapture(video_name)
-cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
-color = np.array([np.random.randint(0,255) \
-        for _ in range(3*int(1000))])\
-        .reshape(int(1000),3)
 
-f =  open('../rejayjohnsonintersectionpairrelationships/Canal_1.csv', 'rb')
+cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
+color      = np.array([np.random.randint(0,255) for _ in range(3*int(1000))]).reshape(int(1000),3)
+
+f      =  open('../rejayjohnsonintersectionpairrelationships/Canal_1.csv', 'rb')
 reader = csv.reader(f)
 
 st,firstfrm = cap.read()
-nrows     = int(np.size(firstfrm,0))
-ncols     = int(np.size(firstfrm,1))
+nrows       = int(np.size(firstfrm,0))
+ncols       = int(np.size(firstfrm,1))
 
 fig = plt.figure('vis')
 axL = plt.subplot(1,1,1)
@@ -163,6 +161,7 @@ for ii in range(0,1000,4):
 
     name = '../GTfigure/'+str(int(kk).zfill(6)+'.jpg'
     kk = kk+1
+
     plt.savefig(name) ##save figure
 
 
