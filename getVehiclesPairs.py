@@ -42,13 +42,13 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 		# image_list   = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
 		# savePath     = "../tempFigs/roi2/"
 		"""complete"""
-		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
-		# test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
-		# test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
+		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
+		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
+		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
 
-		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
-		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcxtrj.p", "rb" ) )
-		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcytrj.p", "rb" ) )
+		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
+		# test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcxtrj.p", "rb" ) )
+		# test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcytrj.p", "rb" ) )
 
 		image_list   = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
 		savePath     = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/pair_relationship/"
@@ -189,8 +189,7 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2,saveflag = 0):
 		dots = []
 
 		if saveflag == 1:
-			name = './figures/'+str(frame_idx).zfill(6)+'.jpg'
-			# pdb.set_trace()
+			name = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/PairFigures/'+str(frame_idx).zfill(6)+'.jpg'
 			plt.savefig(name) ##save figure
 
 
@@ -207,7 +206,7 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
 			print "cooccur length: ", str(cooccur_ran)
-			saveflag = 0
+			saveflag = 1
 			if isWrite:
 				writer2.writerow([loopVehicleID1,loopVehicleID2])
 			if isVisualize:

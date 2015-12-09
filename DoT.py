@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
 
 
-video_name = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 cap   = cv2.VideoCapture(video_name)
 cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
 color = np.array([np.random.randint(0,255) \
@@ -136,11 +136,17 @@ im  = plt.imshow(np.zeros([nrows,ncols,3]))
 plt.axis('off')
 
 
-
+dots = []
+kk = 0
 for ii in range(0,1000,4):
     temp = np.array(reader.next())
-    frame_idx = temp[0]
-    GTcenterXY = temp[-2:]
+    if np.double(temp[0])<frame_idx: # new car
+        color = np.array([np.random.randint(0,255) \
+                for _ in range(3*int(1000))])\
+                .reshape(int(1000),3)
+
+    frame_idx = np.double(temp[0])
+    GTcenterXY = np.double(temp[-2:])
 
     cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , frame_idx)
     st,frame = cap.read()
@@ -149,13 +155,14 @@ for ii in range(0,1000,4):
     im.set_data(frame[:,:,::-1])
     plt.draw()
 
-    dots.append(axL.scatter(GTcenterXY[0], GTcenterXY[1], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
+    dots.append(axL.scatter(GTcenterXY[0], GTcenterXY[1], s=10, color=(color[100].T)/255.,edgecolor='none')) 
     plt.draw()
     plt.show()
     plt.pause(0.00001)
     dots = []
 
-    name = '../GTfigure/'+str(frame_idx).zfill(6)+'.jpg'
+    name = '../GTfigure/'+str(int(kk).zfill(6)+'.jpg'
+    kk = kk+1
     plt.savefig(name) ##save figure
 
 
