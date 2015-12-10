@@ -185,7 +185,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 status, frame = cap.read()
             else:
                 frame   = cv2.imread(image_list[frame_idx])
-            pdb.set_trace()
+            # pdb.set_trace()
             visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx,start_frame_idx)
             
 
@@ -245,7 +245,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start
         if k !=-1:
             # if (len(list(vcxtrj[k][frame_idx-start_frame_idx]))==1) and (len(np.array(vcytrj[k][frame_idx-start_frame_idx]))==1): #only the virtual center
             print "x,y",vcxtrj[k],vcytrj[k]
-            pdb.set_trace()
+            # pdb.set_trace()
             line       = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
                 # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
@@ -349,11 +349,10 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = False
-    # isVisualize = True
+    isVisualize      = True
     useVirtualCenter = True
     isLeft           = False
-    isSave           = True
+    isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     # start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
     start_frame_idx = 0

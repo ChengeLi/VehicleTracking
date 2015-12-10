@@ -175,9 +175,8 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2,saveflag = 0):
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(0,1,0),edgecolor='none'))
 		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
 		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=10, color=(color[k2].T)/255.,edgecolor='none'))
-
 		plt.draw()
-		plt.show()
+		# plt.show()
 		plt.pause(0.00001)
 
 
@@ -221,22 +220,47 @@ if __name__ == '__main__':
 	fps = 30
 
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
-
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
+	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3
 
-	clean_vctime = {key: value for key, value in test_vctime.items() 
-	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
-	clean_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
-	clean_vcytrj = {key: value for key, value in test_vcytrj.items() 
-	             if key not in obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3}
+	# clean_vctime = {key: value for key, value in test_vctime.items() 
+	#              if key not in badkeys}
+	# clean_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
+	#              if key not in badkeys}
+	# clean_vcytrj = {key: value for key, value in test_vcytrj.items() 
+	#              if key not in badkeys}
+
+	clean_vctime = {}
+	clean_vcxtrj = {}
+	clean_vcytrj = {}
+	for key in test_vctime.keys():
+		if key in badkeys:
+			continue
+		else: 
+			clean_vctime[key] = test_vctime[key]
+			clean_vcxtrj[key] = test_vcxtrj[key]
+			clean_vcytrj[key] = test_vcytrj[key]
+
+	pickle.dump(clean_vctime, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','wb'))
+	pickle.dump(clean_vcxtrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','wb'))
+	pickle.dump(clean_vcytrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','wb'))
+
+
+
+
+
+	clean_vctime = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','rb'))
+	clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
+	clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
+
+
 
 	print "trj remaining: ", str(len(clean_vctime))
 
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	print obj_pair2.globalID
-	# pickle.dump(obj_pair2,open("./mat/20150222_Mat/obj_pair2.p","wb"))
+	# print obj_pair2.globalID
+	# pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
 
 
 	""" write clustered Trj infor(not-pairing): clusterID, virtual center X, vc Y, Y direction, X direction """
@@ -284,8 +308,8 @@ if __name__ == '__main__':
 	writer2.writerow(['trj2 ID','trj2 ID'])
 
 	pdb.set_trace()
-	isWrite     = False
-	isVisualize = True
+	isWrite     = True
+	isVisualize = False
 	plt.figure('testing')
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):

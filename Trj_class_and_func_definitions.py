@@ -15,7 +15,7 @@ class TrjObj():
         self.globalID = sorted(vctime.keys())
         self.Xdir     = {} # Xdirections 0 or 1
         self.Ydir     = {} # Ydirections 0 or 1
-        self.bad_IDs1 = []
+        self.bad_IDs1 = [] # too short
         self.bad_IDs2 = [] # bad IDs with different length time and x,y
         self.bad_IDs3 = [] # inconsistent Y directions
         self.bad_IDs4 = [] # X direction 
