@@ -41,9 +41,13 @@ def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
     # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
 
     if dataSource =='Johnson':
-        dth    = 80
-        yspdth = 0.2 #filtered out 2/3 pairs
-        xspdth = 0.35 
+        # dth    = 80
+        # yspdth = 0.2 #filtered out 2/3 pairs
+        # xspdth = 0.35 
+        dth    = 200
+        yspdth = 1
+        xspdth = 1
+
     if dataSource =='DoT':
         dth    = 300 #??!!!!
         yspdth = 5 #y speed threshold
@@ -229,8 +233,9 @@ if __name__ == '__main__':
         result['yspd']    = yspd
 
         if not isAfterWarpping:
-            # savename = os.path.join(savePath,'Adj_'+str(matidx+1).zfill(3))
-            savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
+            # savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
+            savename = os.path.join(savePath,adj_element+'_Adj_200_1_1_'+matfiles[matidx][-7:-4].zfill(3))
+
             savemat(savename,result)
         else:
             savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
