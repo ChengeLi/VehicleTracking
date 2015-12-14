@@ -302,8 +302,9 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
 
 
 
-# if __name__ == '__main__':
-def ssc_main(dataSource):   
+if __name__ == '__main__':
+# def ssc_main(dataSource):
+    dataSource = 'Johnson'   
     """With constructed adjacency matrix """
     isAfterWarpping   = False
     isLeft            = False
