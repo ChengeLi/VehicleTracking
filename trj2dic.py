@@ -40,24 +40,21 @@ def Virctr(x,y):
 
 def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
 
-    if isVideo:    
-        video_src   = dataPath
-        cap         = cv2.VideoCapture(video_src)
-        st,firstfrm = cap.read()
-    else:
-        image_list = sorted(glob.glob(dataPath + '*.jpg'))
-        firstfrm   = cv2.imread(image_list[0])
-    
-
-    nrows     = int(np.size(firstfrm,0))
-    ncols     = int(np.size(firstfrm,1))
-    fig = plt.figure('vis')
-    axL = plt.subplot(1,1,1)
-    im  = plt.imshow(np.zeros([nrows,ncols,3]))
-    plt.axis('off')
-
-
-
+    if isVisualize:
+        if isVideo:    
+            video_src   = dataPath
+            cap         = cv2.VideoCapture(video_src)
+            st,firstfrm = cap.read()
+        else:
+            image_list = sorted(glob.glob(dataPath + '*.jpg'))
+            firstfrm   = cv2.imread(image_list[0])
+        
+        nrows     = int(np.size(firstfrm,0))
+        ncols     = int(np.size(firstfrm,1))
+        fig = plt.figure('vis')
+        axL = plt.subplot(1,1,1)
+        im  = plt.imshow(np.zeros([nrows,ncols,3]))
+        plt.axis('off')
 
     # applicable to both clustered and non-clustered trj datas
     # If non-clustered trjs, the input mlabels are just the trj ID (trjID)
@@ -329,10 +326,19 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
 
         if dataSource == 'Johnson':
             """Jay & Johnson"""
-            matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
-            dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Complete_result'
-            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/'
+            # for linux
+            # matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
+            # dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
+            # clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Complete_result'
+            # savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/'
+            # result_file_Ind  = 0 # use complete result
+            # for mac
+            matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
+            dataPath         = '../Jay&Johnson/roi2/imgs/'
+            # clustered_result = '../Jay&Johnson/roi2/Complete_result' 
+            # savePath         = '../Jay&Johnson/roi2/dic/'
+            clustered_result = '../Jay&Johnson/roi2/onlyBigGroup_Complete_result'
+            savePath         = '../Jay&Johnson/roi2/dic/onlyBigGroup/'
             result_file_Ind  = 0 # use complete result
 
     return matfiles,dataPath,clustered_result,savePath,result_file_Ind
@@ -349,10 +355,10 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
     isLeft           = False
-    isSave           = False
+    isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     # start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
     start_frame_idx = 0

@@ -36,22 +36,28 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 				savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
 
 	if dataSource == 'Johnson':
-		# test_vctime  = pickle.load( open( "../tempFigs/roi2/dic/final_vctime.p", "rb" ) )
-		# test_vcxtrj  = pickle.load( open( "../tempFigs/roi2/dic/final_vcxtrj.p", "rb" ) )
-		# test_vcytrj  = pickle.load( open( "../tempFigs/roi2/dic/final_vcytrj.p", "rb" ) )
-		# image_list   = sorted(glob.glob('/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/*.jpg'))
-		# savePath     = "../tempFigs/roi2/"
-		"""complete"""
-		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
-		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
-		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
+		# """complete"""
+		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
+		# test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
+		# test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
 
-		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
-		# test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcxtrj.p", "rb" ) )
-		# test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcytrj.p", "rb" ) )
+		# """partial"""
+		# # test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
+		# # test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcxtrj.p", "rb" ) )
+		# # test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcytrj.p", "rb" ) )
 
-		image_list   = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
-		savePath     = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/pair_relationship/"
+		# image_list   = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
+		# savePath     = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/pair_relationship/"
+
+        # for mac
+		test_vctime  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
+		test_vcxtrj  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
+		test_vcytrj  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
+
+		image_list   = sorted(glob.glob('../Jay&Johnson/roi2/imgs/*.jpg'))
+		savePath     = "../Jay&Johnson/roi2/pair_relationship/"
+
+
 
 	return test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath
 
@@ -241,26 +247,29 @@ if __name__ == '__main__':
 			clean_vcxtrj[key] = test_vcxtrj[key]
 			clean_vcytrj[key] = test_vcytrj[key]
 
-	pickle.dump(clean_vctime, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','wb'))
-	pickle.dump(clean_vcxtrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','wb'))
-	pickle.dump(clean_vcytrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','wb'))
+	# pickle.dump(clean_vctime, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','wb'))
+	# pickle.dump(clean_vcxtrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','wb'))
+	# pickle.dump(clean_vcytrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','wb'))
+	
+	# for mac
+	pickle.dump(clean_vctime, open('../Jay&Johnson/roi2/Pair_clean_vctime.p','wb'))
+	pickle.dump(clean_vcxtrj, open('../Jay&Johnson/roi2/Pair_clean_vcxtrj.p','wb'))
+	pickle.dump(clean_vcytrj, open('../Jay&Johnson/roi2/Pair_clean_vcytrj.p','wb'))
 
-
-
-
-
-	clean_vctime = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','rb'))
-	clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
-	clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
-
-
+	# clean_vctime = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','rb'))
+	# clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
+	# clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
 
 	print "trj remaining: ", str(len(clean_vctime))
 
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	# print obj_pair2.globalID
 	# pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
+	pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
+
+	pdb.set_trace()
+
+
 
 
 	""" write clustered Trj infor(not-pairing): clusterID, virtual center X, vc Y, Y direction, X direction """
@@ -308,7 +317,7 @@ if __name__ == '__main__':
 	writer2.writerow(['trj2 ID','trj2 ID'])
 
 	pdb.set_trace()
-	isWrite     = True
+	isWrite     = False
 	isVisualize = False
 	plt.figure('testing')
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
