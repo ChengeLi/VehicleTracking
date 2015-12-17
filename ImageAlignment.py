@@ -41,7 +41,7 @@ def perspectiveWarp(img, M,frame_idx,isSave):
 	dst = cv2.warpPerspective(img,M,(400,1100))
 	if isSave:
 		# name = '../tempFigs/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
-		name = '/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
+		name = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
 		cv2.imwrite(name, dst)
 	return dst
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 	framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
 
-	start_position = 57150  #4000
+	start_position = 75843  
 	print 'reading buffer...'
 	# for ii in range(start_position):
 	# 	print(ii)

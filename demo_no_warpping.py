@@ -17,8 +17,11 @@ import trj2dic as trj2dic
 
 dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
 savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
+frame_idx_bias = 84600 #start from the 47th minute
+
+
 print("running KLT...")
-klt.klt_tracker(isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
+klt.klt_tracker(frame_idx_bias, isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
 
 print("filter the trjs...")
 # execfile('trj_filter.py')

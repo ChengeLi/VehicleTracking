@@ -96,8 +96,8 @@ if __name__ == '__main__':
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     if dataSource == 'Johnson':
         # Jay & Johnson
-        matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
-        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
+        matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/'
+        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/'
 
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)

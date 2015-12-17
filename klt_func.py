@@ -17,16 +17,25 @@ from matplotlib import pyplot as plt
 #  useBlobCenter = True,isVisualize = False,dataSource = 'DoT'):
 
 if __name__ == '__main__':
-    isVideo  = True
-    if isVideo:
-        dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
-    else:
-        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-    dataSource = 'DoT'
-    useBlobCenter = True
+#     isVideo  = True
+#     if isVideo:
+#         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+#     else:
+#         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+#     savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+#     dataSource = 'DoT'
+    # useBlobCenter = True
+    # isVisualize = False
+    frame_idx_bias = 84600 #start from the 47th minute
+    isVideo= False
+    useBlobCenter = False
     isVisualize = False
-    
+    dataSource = 'Johnson'
+    dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
+    savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
+    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+
+
 
     # -- utilities
     plt.figure(num=None, figsize=(8, 11))
@@ -87,8 +96,9 @@ if __name__ == '__main__':
         start     = {}
         end       = {}
 
-    frame_idx_bias = len(previousLastFiles)*600
-    frame_idx      = 0 + frame_idx_bias 
+    if frame_idx_bias==[]:
+        frame_idx_bias = len(previousLastFiles)*600
+    frame_idx      = (0 + frame_idx_bias)/subSampRate 
     start_position = frame_idx_bias
 
     if useBlobCenter:
@@ -137,14 +147,13 @@ if __name__ == '__main__':
 
 
 
-
     # -- set mask, all ones = no mask
     mask = 255*np.ones_like(frameL)
 
     # -- set low number of frames for testing
     # nframe = 1801
     if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
-    while (frame_idx < nframe):
+    while (frame_idx*subSampRate < nframe):
         if useBlobCenter and ((frame_idx % trunclen) == 0):
             print "load foreground blob index matrix file...."
             blobIndLists       = []
@@ -157,7 +166,7 @@ if __name__ == '__main__':
 
             
         if not isVideo:
-            frame[:,:,:] = cv2.imread(imlist[frame_idx])
+            frame[:,:,:] = cv2.imread(imlist[frame_idx*subSampRate])
         if isVideo:
             try:
                 status, frame[:,:,:] = cap.read()
@@ -171,6 +180,12 @@ if __name__ == '__main__':
             BlobCenterCurFrm    = blobCenterLists[np.mod(frame_idx,trunclen)]
 
         frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+        
+        ## histogram equalization, more contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        frameL_he = clahe.apply(frameL)
+        frameL = frameL_he
+
         # for visulization
         vis = frame.copy()
 
@@ -242,7 +257,7 @@ if __name__ == '__main__':
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
 
-        print('{0} - {1}'.format(frame_idx,len(tracksdic)))
+        print('{0} - {1}'.format(frame_idx*subSampRate,len(tracksdic)))
 
         if isVisualize:
             # cv2.imshow('klt', vis)
@@ -253,6 +268,7 @@ if __name__ == '__main__':
         # switch previous frame
         frameLp[:,:] = frameL[:,:]
         frame_idx   += 1
+
 
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 

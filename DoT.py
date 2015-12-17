@@ -55,10 +55,9 @@ def visGT():
         plt.pause(0.00001)
         dots = []
 
-        name = '../GTfigure/'+str(int(kk).zfill(6)+'.jpg'
-        kk = kk+1
-
-        plt.savefig(name) ##save figure
+        # name = '../GTfigure/'+str(int(kk).zfill(6)+'.jpg'
+        # kk = kk+1
+        # plt.savefig(name) ##save figure
 
 
 def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
@@ -72,7 +71,6 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     scaninterval = int(Numfrm/100.0)
     # startFrm = range(0, Numfrm, scaninterval)
 
-    kkthInterval =  skipChunk      #start to get dark from 26th
 
     Frmrate = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
     # Numfrm=readlength
@@ -80,11 +78,9 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     frameW = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     
     
-    # vid = np.zeros([Numfrm,frameH,frameW,3], dtype = np.uint8)
+    vid = np.zeros([readlength,frameH,frameW,3], dtype = np.uint8)
     
-    start_position = 0+skipChunk
-    # start_position = int(skipTime*(Frmrate))
-    # start_position = startFrm[kkthInterval]
+    start_position = int(skipTime*(Frmrate))+skipChunk
 
 
     print 'reading buffer...'
@@ -94,22 +90,18 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     # or just set:
     cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
 
-
-
     print 'reading frames...'
-    for ii in range(0,Numfrm,2):
+    for ii in range(0,10*readlength,10):
         true_position = ii+start_position
-
+        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , true_position)
         print(true_position)
-        # rval, vid[ii] = cap.read()
-        rval, frm = cap.read()
-        rval, frm = cap.read()
+        rval, vid[ii/10] = cap.read()
+
         # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
         # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        name = '/media/My Passport/DoTimgs/Canal/'+str(true_position).zfill(8)+'.jpg'
+        # name = '/media/My Passport/DoTimgs/Canal/'+str(true_position).zfill(8)+'.jpg'
         # cv2.imwrite(name,vid[ii])
-        cv2.imwrite(name,frm)
-    return start_position
+    return vid,start_position
 
 
 
@@ -124,32 +116,35 @@ if __name__ == '__main__':
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_18h00min00s002ms.asf'
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
 
-    readlength = 2000
-    start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
+    readlength = 5000
+    vid,start_position = read_video(video_name, readlength, skipTime = 360, skipChunk = 0)
     
 
-
-    plt.show()
-    # im.axes.figure.canvas.show()
-    aveBKG = np.zeros([528,704,3], dtype = np.float32)
-    for ii in range(0,int(readlength), 1 ):  ## last stopped at 61 for TLC00000, 100 for 3
-    #read every 5 frames
-    ## when jumped out due to bug, just need to change the start
+    # plt.show()
+    # # im.axes.figure.canvas.show()
+    # for ii in range(0,int(readlength), 1 ):  ## last stopped at 61 for TLC00000, 100 for 3
+    # #read every 5 frames
+    # ## when jumped out due to bug, just need to change the start
         
-        true_position = ii+start_position
-        # true_position = ii+startFrm[kkthInterval]
+    #     true_position = ii+start_position
+    #     # true_position = ii+startFrm[kkthInterval]
 
-        print ('Now processing: '+str(true_position)+' '+ str(ii))
+    #     print ('Now processing: '+str(true_position)+' '+ str(ii))
 
-        im.set_data(vid[ii][:,:,::-1])
-        im.axes.figure.canvas.draw()
-        # plt.draw()
-        # time.sleep(0.5)
-        plt.pause(0.0001) 
-    #     aveBKG  = aveBKG + vid[ii];
-    # aveBKG = aveBKG/(readlength+1)
+    #     im.set_data(vid[ii][:,:,::-1])
+    #     im.axes.figure.canvas.draw()
+    #     # plt.draw()
+    #     # time.sleep(0.5)
+    #     plt.pause(0.0001) 
 
 
+
+    aveBKGsum = np.zeros([528,704,3], dtype = np.float32)
+    for ii in range(vid.shape[0]):
+        aveBKGsum = aveBKGsum + vid[ii];
+    aveBKG = np.uint8(aveBKGsum/(readlength))
+
+    plt.imshow(aveBKG)
 
 
 

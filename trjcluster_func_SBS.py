@@ -44,15 +44,14 @@ def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
         # dth    = 80
         # yspdth = 0.2 #filtered out 2/3 pairs
         # xspdth = 0.35 
-        dth    = 200
-        yspdth = 1
+        dth    = 300
+        yspdth = 5
         xspdth = 1
 
     if dataSource =='DoT':
         dth    = 300 #??!!!!
         yspdth = 5 #y speed threshold
         xspdth = 5 #x speed threshold
-
 
     if (sxdiff <xspdth ) & (sydiff<yspdth ) & (mdis < dth):
         adj_element = 1
@@ -95,8 +94,8 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
             # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         if dataSource == 'Johnson':
             """Jay & Johnson"""
-            matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/'
-            savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/'
+            matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/'
+            savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/'
             # matfilepath = '../tempFigs/roi2/filtered/'
             # savePath    = '../tempFigs/roi2/' 
         
@@ -152,6 +151,7 @@ if __name__ == '__main__':
         SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
 
+        # spdYdiff_file = open('sydiffAll.txt', 'wb')
 
         # sxdiffAll = []
         # sydiffAll = []
@@ -232,6 +232,7 @@ if __name__ == '__main__':
         result['xspd']    = xspd
         result['yspd']    = yspd
 
+        # pdb.set_trace()
         if not isAfterWarpping:
             # savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
             savename = os.path.join(savePath,adj_element+'_Adj_200_1_1_'+matfiles[matidx][-7:-4].zfill(3))

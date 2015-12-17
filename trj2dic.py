@@ -92,10 +92,12 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     global notconnectedLabel
     notconnectedLabel =[]
     frame_idx = start_frame_idx
+
     while frame_idx < np.int32(matfiles[-1][-7:-4])*600:
-        print "frame = ", str(frame_idx)
+        # pdb.set_trace()
+        print "frame = ", str(frame_idx*subSampRate)
         if (frame_idx % trunclen == 0):
-            trunkTrjFile = loadmat(matfiles[(frame_idx)/trunclen])
+            trunkTrjFile = loadmat(matfiles[(frame_idx-start_frame_idx)/trunclen])
             xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             IDintrunk    = trunkTrjFile['trjID'][0]
@@ -178,10 +180,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
         if isVisualize:
             if isVideo:
-                cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+                cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx*subSampRate)
                 status, frame = cap.read()
             else:
-                frame   = cv2.imread(image_list[frame_idx])
+                frame   = cv2.imread(image_list[frame_idx*subSampRate])
             # pdb.set_trace()
             visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx,start_frame_idx)
             
@@ -309,6 +311,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
     else:
         if dataSource == 'DoT':
             """Linux Canal"""
+            global subSampRate
+            subSampRate = 1
             matfiles               = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat'))
             clustered_result_files = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*mat'))
             savePath               = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
@@ -326,20 +330,22 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
 
         if dataSource == 'Johnson':
             """Jay & Johnson"""
+            global subSampRate
+            subSampRate = 6
             # for linux
-            # matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
-            # dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-            # clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Complete_result'
-            # savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/'
-            # result_file_Ind  = 0 # use complete result
+            matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat'))
+            dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
+            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Complete_result'
+            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/'
+            result_file_Ind  = 0 # use complete result
             # for mac
-            matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
-            dataPath         = '../Jay&Johnson/roi2/imgs/'
+            # matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
+            # dataPath         = '../Jay&Johnson/roi2/imgs/'
             # clustered_result = '../Jay&Johnson/roi2/Complete_result' 
             # savePath         = '../Jay&Johnson/roi2/dic/'
-            clustered_result = '../Jay&Johnson/roi2/onlyBigGroup_Complete_result'
-            savePath         = '../Jay&Johnson/roi2/dic/onlyBigGroup/'
-            result_file_Ind  = 0 # use complete result
+            # clustered_result = '../Jay&Johnson/roi2/onlyBigGroup_Complete_result'
+            # savePath         = '../Jay&Johnson/roi2/dic/onlyBigGroup/'
+            # result_file_Ind  = 0 # use complete result
 
     return matfiles,dataPath,clustered_result,savePath,result_file_Ind
 
@@ -360,8 +366,8 @@ if __name__ == '__main__':
     isLeft           = False
     isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
-    # start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
-    start_frame_idx = 0
+    start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
+    # start_frame_idx = 84600
     print "start_frame_idx: ",start_frame_idx
     # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)

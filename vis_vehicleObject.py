@@ -2,14 +2,15 @@
 # directly from the object fire generated from getVehiclesPair.py
 # using clean_obj_pair2.p
 
-
-import numpy
-import matplotlib.pyplot as pyplot
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
 import glob as glob
 import csv
 import cPickle as pickle
 import cv2
 import pdb
+
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start_frame_idx):
     dots       = []
@@ -104,14 +105,16 @@ if __name__ == '__main__':
     isVisualize = True
 
     if dataSource == 'Johnson':
+        image_list = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
         # clean_vctime = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vctime.p','rb'))
         # clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
         # clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
         # obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/clean_obj_pair2.p','rb'))
-        image_list = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
-        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/pair_relationship/"
-
+        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/clean_obj_pair2.p','rb'))
+        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/"
+        
+        # obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/clean_obj_pair2.p','rb'))
+        # savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/"
     if isVideo:  
         video_src   = dataPath
         cap         = cv2.VideoCapture(video_src)
@@ -125,15 +128,17 @@ if __name__ == '__main__':
 
 
     color = np.array([np.random.randint(0,255) for _ in range(3*int(max(obj_pair2.globalID)))]).reshape(int(max(obj_pair2.globalID)),3)
-    for hundredind in range(4,np.int(len(obj_pair2.globalID)/100.0)):
-        name = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/pair_relationship/'+str(hundredind*100)+'-'+str((hundredind+1)*100)+'.jpg'
-        plt.savefig(name)
-        plt.cla()
+    interval = 10
+    for intervalind in range(0,np.int(len(obj_pair2.globalID)/interval)+1):
+        if intervalind>0:
+            name = savePath+str((intervalind-1)*interval)+'-'+str((intervalind)*interval)+'.jpg'
+            plt.savefig(name)
+            plt.cla()
         fig   = plt.figure('vis')
         axL   = plt.subplot(1,1,1)
         im    = plt.imshow(np.zeros([nrows,ncols,3]))
         plt.axis('off')
-        for kk in obj_pair2.globalID[hundredind*100:(hundredind+1)*100]:
+        for kk in obj_pair2.globalID[intervalind*interval:(intervalind+1)*interval]:
             # print "now showing:",kk
             im         = plt.imshow(np.zeros([nrows,ncols,3]))
             living_ran = obj_pair2.frame[kk]
@@ -141,18 +146,18 @@ if __name__ == '__main__':
             vcytrj     = obj_pair2.yTrj[kk]
             kthColor   = (color[kk-1].T)/255.
 
-            # for frame_idx in range(living_ran[0],living_ran[1]):
-            frame_idx = living_ran[0]+1
-            # print "frame_idx:", frame_idx
-            print("frame {0}\r".format(frame_idx)),
-            sys.stdout.flush()
-            if isVisualize:
-                if isVideo:
-                    cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
-                    status, frame = cap.read()
-                else:
-                    frame   = cv2.imread(image_list[frame_idx])
-                    visualize_single_trj(fig,axL,im,vcxtrj, vcytrj,frame, kthColor)
+            for frame_idx in range(living_ran[0],living_ran[1]):
+            # frame_idx = living_ran[0]+1
+                # print "frame_idx:", frame_idx
+                print("frame {0}\r".format(frame_idx)),
+                sys.stdout.flush()
+                if isVisualize:
+                    if isVideo:
+                        cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+                        status, frame = cap.read()
+                    else:
+                        frame   = cv2.imread(image_list[frame_idx])
+                        visualize_single_trj(fig,axL,im,vcxtrj, vcytrj,frame, kthColor)
 
 
 

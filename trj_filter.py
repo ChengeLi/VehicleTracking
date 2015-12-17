@@ -71,8 +71,8 @@ def prepare_input_data(dataSource):
         useBlobCenter = True
     """Jay & Johnson"""
     if dataSource == 'Johnson':
-        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
-        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/filtered/'
+        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
+        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/'
         # matfilepath = '../tempFigs/roi2/'
         # savePath = '../tempFigs/roi2/filtered/' 
         useBlobCenter = False
@@ -84,15 +84,16 @@ def prepare_input_data(dataSource):
 
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 #     fps = 23
 #     dataSource = 'DoT'
 #     # fps for DoT Canal is 23
 #     # Jay & Johnson is 30
 
-def filtering_main_function(fps,dataSource = 'DoT'):
-    # fps = 30
-    # dataSource = 'Johnson'
+# def filtering_main_function(fps,dataSource = 'DoT'):
+    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+    fps = 30/subSampRate
+    dataSource = 'Johnson'
     matfiles,savePath,useBlobCenter = prepare_input_data(dataSource)
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
@@ -106,11 +107,6 @@ def filtering_main_function(fps,dataSource = 'DoT'):
             blob_index   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             blob_centerY = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
             blob_centerX = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
-
-
-
-
-
         else:
             blob_index = []
         if len(t)>0: 
@@ -153,7 +149,7 @@ def filtering_main_function(fps,dataSource = 'DoT'):
         
         
         print "Num of original samples is " , Numsample
-        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 1, fps = fps)
+        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 5, fps = fps)
         # print('initialization finished....')
         
         # delete all nan rows 

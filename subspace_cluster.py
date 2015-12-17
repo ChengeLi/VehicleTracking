@@ -303,8 +303,8 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource,usingLinux = True):
         if dataSource == 'Johnson':
 			# Jay & Johnson
 			if usingLinux:
-				matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/' + '*.mat'))
-				savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_'
+				matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/' + '*.mat'))
+				savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/ssc_'
 			else:
 				matfiles = sorted(glob.glob('../Johnson/roi2/adj/' +'*.mat'))
 				savePath = '../Johnson/roi2/ssc/ssc_' 
@@ -319,7 +319,7 @@ if __name__ == '__main__':
     """With constructed adjacency matrix """
     isAfterWarpping = False
     isLeft = False
-    matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux = False)
+    matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux = True)
     isSave = True
     isVisualize = False
 
