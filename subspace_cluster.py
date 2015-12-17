@@ -304,7 +304,7 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource,usingLinux = True):
 			# Jay & Johnson
 			if usingLinux:
 				matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/' + '*.mat'))
-				savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/ssc_'
+				savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/ssc_500-5-1_'
 			else:
 				matfiles = sorted(glob.glob('../Johnson/roi2/adj/' +'*.mat'))
 				savePath = '../Johnson/roi2/ssc/ssc_' 

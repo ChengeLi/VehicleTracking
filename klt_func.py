@@ -26,7 +26,8 @@ if __name__ == '__main__':
 #     dataSource = 'DoT'
     # useBlobCenter = True
     # isVisualize = False
-    frame_idx_bias = 84600 #start from the 47th minute
+    # frame_idx_bias = 84600 #start from the 47th minute
+    frame_idx_bias = 0 #johnson new
     isVideo= False
     useBlobCenter = False
     isVisualize = False
@@ -34,6 +35,10 @@ if __name__ == '__main__':
     dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
     savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
     subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+
+    # dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/1st.mov'
+    # savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
+    # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
 
 
 

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 def Virctr(x,y):
     '''
-        calculate virtual center, and remove out lier
+    calculate virtual center, and remove outlier
     '''    
     if len(x)<3:
         vcx = np.mean(x)
@@ -34,6 +34,30 @@ def Virctr(x,y):
         vcx = np.mean(x[idx])
         vcy = np.mean(y[idx])
     return vcx,vcy
+
+
+def VC_filter(vcxtrj,vcytrj):
+    Goodvc = True
+    if len(vcxtrj)>=2:
+        vcxspd = np.abs(np.diff(vcxtrj))
+        vcyspd = np.abs(np.diff(vcytrj))
+        # pdb.set_trace()
+        max_vcxspd = np.max(vcxspd)
+        max_vcyspd = np.max(vcyspd)
+
+        if (max_vcxspd>=10) and (max_vcyspd >= 10):
+            Goodvc = False
+
+        if (np.sum(vcxspd)<=5) or (np.sum(vcyspd) <= 5):
+            # print "static!"
+            Goodvc = False
+
+    return Goodvc
+
+
+
+
+
 
 
 
@@ -69,7 +93,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     vcxtrj = {} ##dictionary
     vcytrj = {}
     vctime = {}
-    
+    clusterSize = {}
 
     if isClustered:
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
@@ -82,6 +106,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vcxtrj[i]=[] 
             vcytrj[i]=[]
             vctime[i]=[] 
+            clusterSize[i] = []
     else:
         mlabels = np.int32(np.ones(max(IDintrunklast)+1)*-1)  #initial to be -1
         for i in range(max(IDintrunklast)+1): 
@@ -177,6 +202,9 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 #     continue
                 vcxtrj[k].append(vx) 
                 vcytrj[k].append(vy)
+                if len(x)!=len(y):
+                    pdb.set_trace()
+                clusterSize[k].append(len(x))
 
         if isVisualize:
             if isVideo:
@@ -184,7 +212,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 status, frame = cap.read()
             else:
                 frame   = cv2.imread(image_list[frame_idx*subSampRate])
-            # pdb.set_trace()
             visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx,start_frame_idx)
             
 
@@ -216,60 +243,44 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         savenameT = os.path.join(savePath,'final_vctime.p')
         savenameX = os.path.join(savePath,'final_vcxtrj.p')
         savenameY = os.path.join(savePath,'final_vcytrj.p')
+        savenameclusterSize = os.path.join(savePath,'final_clusterSize.p')
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
-            save_vcytrj = {}            
+            save_vcytrj = {}
+            save_clusterSize = {}            
             clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel}
             clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel}
             clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
+            clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel}
 
             for i in np.int32(np.unique(list(set(vctime.keys())-set(notconnectedLabel)))): 
                 save_vctime[i] = np.array(clean_vctime[i])
                 save_vcxtrj[i] = np.array(clean_vcxtrj[i])
                 save_vcytrj[i] = np.array(clean_vcytrj[i])
+                save_clusterSize[i] = np.array(clean_clusterSize[i])
             pickle.dump( save_vctime, open( savenameT, "wb" ) )
             pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
             pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
-
+            pickle.dump( save_clusterSize, open( savenameclusterSize, "wb" ) )
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start_frame_idx):
     dots       = []
     line_exist = 0
 
-    # if frame_idx == 5:
-    #     pdb.set_trace()
-
-    for k in np.unique(labinf):
-        if k !=-1:
-            # if (len(list(vcxtrj[k][frame_idx-start_frame_idx]))==1) and (len(np.array(vcytrj[k][frame_idx-start_frame_idx]))==1): #only the virtual center
-            print "x,y",vcxtrj[k],vcytrj[k]
-            # pdb.set_trace()
+    # print labinf
+    for k in np.unique(labinf)[1:]: #if k !=-1
+        # print "x,y",vcxtrj[k],vcytrj[k]
+        if VC_filter(vcxtrj[k],vcytrj[k]):
             line       = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
-                # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
-                # dots.append(axL.scatter(x, y, s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
-                # dots.append(axL.scatter(x, y, s=50, color=(1,0,0),edgecolor='none'))
-            # else:
-            #     """if draw dots"""
-            #     for point in range(len(vcxtrj[k][-1])): #only need to plot the last one
-            #         # pdb.set_trace()
-            #         print "k = ", str(k), "point = ", str(point)
-            #         dots.append(axL.scatter(vcxtrj[k][-1][point], vcytrj[k][-1][point], s=30, color=(color[k-1].T)/255.))
-            #     """if draw lines"""
-            #     # for kk in range(frame_idx):
-            #     #     pdb.set_trace()
-            #     #     for point in range(len(vcxtrj[k][frame_idx])): 
-            #     #         line       = axL.plot(vcxtrj[k][:frame_idx][point],vcytrj[k][:][point],color = (color[k-1].T)/255.,linewidth=2)
-            #     #         line_exist = 1
+            # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
 
-            """plot point, all trjs instead of just VC"""
-            # for point in range(len(vcxtrj[k][-1])): #only need to plot the last one
-            #     # print "k = ", str(k), "point = ", str(point)
-            #     dots.append(axL.scatter(vcxtrj[k][-1][point], vcytrj[k][-1][point], s=20, color=(color[k-1].T)/255.))
-
+            # dots.append(axL.scatter(vcxtrj[k],vcytrj[k], s=8, color=(color[k-1].T)/255.,edgecolor='none')) 
+        else:
+            pass
     im.set_data(frame[:,:,::-1])
-    fig.canvas.draw()
+    # fig.canvas.draw()
     plt.draw()
     plt.pause(0.00001) 
 
@@ -281,9 +292,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start
             axL.line.pop(0)
         except:
             line_exist = 0
-    for i in dots:
-        i.remove()
 
+    dots= []
     plt.show()
 
 
@@ -335,8 +345,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             # for linux
             matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat'))
             dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Complete_result'
-            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/'
+            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1Result/Complete_result'
+            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/'
             result_file_Ind  = 0 # use complete result
             # for mac
             # matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
@@ -367,7 +377,7 @@ if __name__ == '__main__':
     isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     start_frame_idx = (np.int32(matfiles[result_file_Ind*25][-7:-4])-1)*600 #start frame_idx
-    # start_frame_idx = 84600
+
     print "start_frame_idx: ",start_frame_idx
     # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)

@@ -44,7 +44,7 @@ def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
         # dth    = 80
         # yspdth = 0.2 #filtered out 2/3 pairs
         # xspdth = 0.35 
-        dth    = 300
+        dth    = 500
         yspdth = 5
         xspdth = 1
 
@@ -235,7 +235,7 @@ if __name__ == '__main__':
         # pdb.set_trace()
         if not isAfterWarpping:
             # savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
-            savename = os.path.join(savePath,adj_element+'_Adj_200_1_1_'+matfiles[matidx][-7:-4].zfill(3))
+            savename = os.path.join(savePath,adj_element+'_Adj_500_5_1_'+matfiles[matidx][-7:-4].zfill(3))
 
             savemat(savename,result)
         else:

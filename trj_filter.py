@@ -71,8 +71,8 @@ def prepare_input_data(dataSource):
         useBlobCenter = True
     """Jay & Johnson"""
     if dataSource == 'Johnson':
-        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
-        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/'
+        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
+        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/filtered/'
         # matfilepath = '../tempFigs/roi2/'
         # savePath = '../tempFigs/roi2/filtered/' 
         useBlobCenter = False

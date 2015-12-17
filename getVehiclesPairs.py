@@ -37,9 +37,9 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 
 	if dataSource == 'Johnson':
 		# """complete"""
-		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/final_vctime.p", "rb" ) )
-		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/final_vcxtrj.p", "rb" ) )
-		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/final_vcytrj.p", "rb" ) )
+		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vctime.p", "rb" ) )
+		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vcxtrj.p", "rb" ) )
+		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vcytrj.p", "rb" ) )
 
 		"""partial"""
 		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
@@ -150,6 +150,8 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite):
 			temp.append(obj_pair2loop.Xdir[ID222])
 			
 			writerCooccur.writerow(temp)
+			writer2.writerow([ID111,ID222]) # just the pair ids
+				
 	return co1X, co2X, co1Y, co2Y
 
 
@@ -206,13 +208,12 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 	if abs(VehicleObj1.frame[0] - VehicleObj2.frame[0]) >=600:
 		return
 	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
+
 	if coorccurStatus and np.size(cooccur_ran)>=overlap_pair_threshold:
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
 			print "cooccur length: ", str(cooccur_ran)
-			saveflag = 1
-			if isWrite:
-				writer2.writerow([loopVehicleID1,loopVehicleID2])
+			saveflag = 0
 			if isVisualize:
 				visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2,saveflag) #visualize
 
@@ -222,18 +223,13 @@ if __name__ == '__main__':
 	isAfterWarpping = False
 	isLeft          = True
 	dataSource      = 'Johnson'
+	fps = 5
+	overlap_pair_threshold = 3*fps
 
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3
-
-	# clean_vctime = {key: value for key, value in test_vctime.items() 
-	#              if key not in badkeys}
-	# clean_vcxtrj = {key: value for key, value in test_vcxtrj.items() 
-	#              if key not in badkeys}
-	# clean_vcytrj = {key: value for key, value in test_vcytrj.items() 
-	#              if key not in badkeys}
-
+	pdb.set_trace()
 	clean_vctime = {}
 	clean_vcxtrj = {}
 	clean_vcytrj = {}
@@ -245,9 +241,9 @@ if __name__ == '__main__':
 			clean_vcxtrj[key] = test_vcxtrj[key]
 			clean_vcytrj[key] = test_vcytrj[key]
 
-	pickle.dump(clean_vctime, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vctime.p','wb'))
-	pickle.dump(clean_vcxtrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vcxtrj.p','wb'))
-	pickle.dump(clean_vcytrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vcytrj.p','wb'))
+	# pickle.dump(clean_vctime, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vctime.p','wb'))
+	# pickle.dump(clean_vcxtrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vcxtrj.p','wb'))
+	# pickle.dump(clean_vcytrj, open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/Pair_clean_vcytrj.p','wb'))
 	
 	# # for mac
 	# pickle.dump(clean_vctime, open('../Jay&Johnson/roi2/Pair_clean_vctime.p','wb'))
@@ -262,7 +258,7 @@ if __name__ == '__main__':
 
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/clean_obj_pair2.p','wb'))
+	pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1clean_obj_pair2.p','wb'))
 	# pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
 
 	pdb.set_trace()
@@ -305,30 +301,38 @@ if __name__ == '__main__':
 	color_choice = np.array([np.random.randint(0,255) for _ in range(3*int(max(obj_pair2.globalID)))]).reshape(int(max(obj_pair2.globalID)),3)
 	# colors  = lambda: np.random.rand(50)
 
-	savenameCooccur = os.path.join(savePath,'pair_relationship_overlap90.csv')
+	savenameCooccur = os.path.join(savePath,'pair_relationship_overlap3s.csv')
 	writerCooccur   = csv.writer(open(savenameCooccur,'wb'))
 	writerCooccur.writerow(['trj1 ID','frame','x','y','y direction','x direction','trj2 ID','frame','x','y','y direction','x direction'])
 	obj_pair2loop   = obj_pair2
 
-	savename2  = os.path.join(savePath,'pairs_ID_overlap90.csv')
+	savename2  = os.path.join(savePath,'pairs_ID_overlap3s.csv')
 	writer2    = csv.writer(open(savename2,'wb'))
 	writer2.writerow(['trj2 ID','trj2 ID'])
 
 	pdb.set_trace()
-	isWrite     = False
+	isWrite     = True
 	isVisualize = False
 	plt.figure('testing')
+	test_clusterSize  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_clusterSize.p", "rb" ) )
+
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):
 			loopVehicleID1 = obj_pair2loop.globalID[ind1]
 			loopVehicleID2 = obj_pair2loop.globalID[ind2]
+
+			if (sum(test_clusterSize[loopVehicleID1])== len(test_clusterSize[loopVehicleID1]))\
+				or  (sum(test_clusterSize[loopVehicleID2])== len(test_clusterSize[loopVehicleID2])):
+				# print "single trj as cluster!"
+				continue
+
 			print "pairing: ",loopVehicleID1,' & ',loopVehicleID2
 			plt.cla()
 			axL   = plt.subplot(1,1,1)
 			im    = plt.imshow(np.zeros([nrows,ncols,3]))
 			plt.axis('off')
 			visualize_threshold  = 300 # only if a pair shared more than 40 frames, show them
-			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,color_choice,isWrite, isVisualize, visualize_threshold,overlap_pair_threshold = 90)
+			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,color_choice,isWrite, isVisualize, visualize_threshold,overlap_pair_threshold)
 
 
 

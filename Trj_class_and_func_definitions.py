@@ -20,8 +20,9 @@ class TrjObj():
         self.bad_IDs3 = [] # inconsistent Y directions
         self.bad_IDs4 = [] # X direction 
 
+        fps = 5
         for key, val in vctime.iteritems():
-            if (len(val)==0) or (val[1]-val[0]+1 <= 10):
+            if (len(val)==0) or (val[1]-val[0]+1 <= fps*1):
                 self.bad_IDs1.append(key)
 
 

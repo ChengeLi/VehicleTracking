@@ -10,6 +10,7 @@ import csv
 import cPickle as pickle
 import cv2
 import pdb
+from scipy.io import loadmat, savemat
 
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start_frame_idx):
@@ -110,8 +111,8 @@ if __name__ == '__main__':
         # clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
         # clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
         # obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/clean_obj_pair2.p','rb'))
-        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/"
+        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1clean_obj_pair2.p','rb'))
+        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/500-5-1/"
         
         # obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/clean_obj_pair2.p','rb'))
         # savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/"
@@ -126,12 +127,19 @@ if __name__ == '__main__':
     nrows = int(np.size(firstfrm,0))
     ncols = int(np.size(firstfrm,1))
 
+    final_clusterSize  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_clusterSize.p','rb'))
+    # clusterSize20 = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1Result/clusterSize20up.mat') 
+    # clusterSize20_label = clusterSize20['cluster20up'][0]
+    # temp = np.unique(np.int32(list(np.floor(clusterSize20_label)) + list(np.ceil(clusterSize20_label))))
+
+
+
 
     color = np.array([np.random.randint(0,255) for _ in range(3*int(max(obj_pair2.globalID)))]).reshape(int(max(obj_pair2.globalID)),3)
-    interval = 10
+    interval = 20
     for intervalind in range(0,np.int(len(obj_pair2.globalID)/interval)+1):
         if intervalind>0:
-            name = savePath+str((intervalind-1)*interval)+'-'+str((intervalind)*interval)+'.jpg'
+            name = savePath+'big_cluster_size'+str((intervalind-1)*interval)+'-'+str((intervalind)*interval)+'.jpg'
             plt.savefig(name)
             plt.cla()
         fig   = plt.figure('vis')
@@ -139,30 +147,42 @@ if __name__ == '__main__':
         im    = plt.imshow(np.zeros([nrows,ncols,3]))
         plt.axis('off')
         for kk in obj_pair2.globalID[intervalind*interval:(intervalind+1)*interval]:
+        # for kk in set(obj_pair2.globalID).intersection(set(temp)):
             # print "now showing:",kk
+            if (sum(final_clusterSize[kk])== len(final_clusterSize[kk])) and (len(final_clusterSize[kk])<10):
+                print "single trj as cluster!"
+                continue
+            
+
             im         = plt.imshow(np.zeros([nrows,ncols,3]))
             living_ran = obj_pair2.frame[kk]
             vcxtrj     = obj_pair2.xTrj[kk]
             vcytrj     = obj_pair2.yTrj[kk]
             kthColor   = (color[kk-1].T)/255.
 
-            for frame_idx in range(living_ran[0],living_ran[1]):
-            # frame_idx = living_ran[0]+1
-                # print "frame_idx:", frame_idx
-                print("frame {0}\r".format(frame_idx)),
-                sys.stdout.flush()
-                if isVisualize:
-                    if isVideo:
-                        cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
-                        status, frame = cap.read()
-                    else:
-                        frame   = cv2.imread(image_list[frame_idx])
-                        visualize_single_trj(fig,axL,im,vcxtrj, vcytrj,frame, kthColor)
+            frame_idx = living_ran[0]+1
+            # print "frame_idx:", frame_idx
+            print("frame {0}\r".format(frame_idx)),
+            sys.stdout.flush()
+            if isVisualize:
+                if isVideo:
+                    cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+                    status, frame = cap.read()
+                else:
+                    frame   = cv2.imread(image_list[frame_idx])
+                    visualize_single_trj(fig,axL,im,vcxtrj, vcytrj,frame, kthColor)
+
+             # fix me , show by frame   
+            # subSampRate = 6
+            # for frame_idx in range(47*5*60,57*5*60,1):
+            #     realFrame_idx = frame_idx*subSampRate
 
 
-
-
-
+            #     labinf      = list(set(mlabels[IDinCurFrm])) 
+            #     PtsInCurFrm = obj_pair2.frame[ID]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
+            #     IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
+            #     labinf = 
+            #     visualize_trj(fig,axL,im, labinf, vcxtrj, vcytrj,frame, kthColor,frame_idx):
 
 
 
