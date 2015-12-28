@@ -37,9 +37,9 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 
 	if dataSource == 'Johnson':
 		# """complete"""
-		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vctime.p", "rb" ) )
-		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vcxtrj.p", "rb" ) )
-		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_vcytrj.p", "rb" ) )
+		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vctime.p", "rb" ) )
+		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vcxtrj.p", "rb" ) )
+		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vcytrj.p", "rb" ) )
 
 		"""partial"""
 		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
@@ -229,7 +229,6 @@ if __name__ == '__main__':
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
 	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3
-	pdb.set_trace()
 	clean_vctime = {}
 	clean_vcxtrj = {}
 	clean_vcytrj = {}
@@ -255,10 +254,9 @@ if __name__ == '__main__':
 	# clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
 
 	print "trj remaining: ", str(len(clean_vctime))
-
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1clean_obj_pair2.p','wb'))
+	pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','wb'))
 	# pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
 
 	pdb.set_trace()
@@ -314,7 +312,7 @@ if __name__ == '__main__':
 	isWrite     = True
 	isVisualize = False
 	plt.figure('testing')
-	test_clusterSize  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_clusterSize.p", "rb" ) )
+	test_clusterSize  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_clusterSize.p", "rb" ) )
 
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):

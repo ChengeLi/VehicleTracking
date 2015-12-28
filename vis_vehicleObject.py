@@ -111,8 +111,8 @@ if __name__ == '__main__':
         # clean_vcxtrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcxtrj.p','rb'))
         # clean_vcytrj = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/Pair_clean_vcytrj.p','rb'))
         # obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1clean_obj_pair2.p','rb'))
-        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/500-5-1/"
+        obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','rb'))
+        savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/complete_500-5-1/"
         
         # obj_pair2  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/clean_obj_pair2.p','rb'))
         # savePath   = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/alpha=0dot001/"
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     nrows = int(np.size(firstfrm,0))
     ncols = int(np.size(firstfrm,1))
 
-    final_clusterSize  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/final_clusterSize.p','rb'))
+    final_clusterSize  = pickle.load(open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_clusterSize.p','rb'))
     # clusterSize20 = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1Result/clusterSize20up.mat') 
     # clusterSize20_label = clusterSize20['cluster20up'][0]
     # temp = np.unique(np.int32(list(np.floor(clusterSize20_label)) + list(np.ceil(clusterSize20_label))))

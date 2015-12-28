@@ -345,8 +345,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             # for linux
             matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat'))
             dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/500-5-1Result/Complete_result'
-            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/500-5-1/'
+            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/complete_500-5-1Result/Complete_result'
+            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/'
             result_file_Ind  = 0 # use complete result
             # for mac
             # matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))

@@ -100,7 +100,7 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
             # savePath    = '../tempFigs/roi2/' 
         
         matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
-        # matfiles = matfiles[33:78]
+        matfiles = matfiles[33:]
     return matfiles,savePath
 
 

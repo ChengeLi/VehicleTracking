@@ -101,9 +101,9 @@ if __name__ == '__main__':
         start     = {}
         end       = {}
 
-    if frame_idx_bias==[]:
-        frame_idx_bias = len(previousLastFiles)*600
     frame_idx      = (0 + frame_idx_bias)/subSampRate 
+    if len(previousLastFiles)>0:
+        frame_idx = len(previousLastFiles)*600
     start_position = frame_idx_bias
 
     if useBlobCenter:
@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
 
 
-
+    # pdb.set_trace()
     # -- set mask, all ones = no mask
     mask = 255*np.ones_like(frameL)
 

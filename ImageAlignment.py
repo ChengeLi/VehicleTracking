@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 	framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
 
-	start_position = 75843  
+	start_position = 114770  
 	print 'reading buffer...'
 	# for ii in range(start_position):
 	# 	print(ii)
