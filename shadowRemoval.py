@@ -27,22 +27,22 @@ def cutOutBorder(Img):
 
 
 # method 1: decrease illuminance
-imageList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/imgs/*.jpg'))
-oriImg = cv2.imread(imageList[0])
-height, width = oriImg.shape[0:2]
-NumImg = len(imageList)
-NormalizedImgList = np.zeros((NumImg,oriImg.shape[0],oriImg.shape[1],oriImg.shape[2]))
+# imageList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/imgs/*.jpg'))
+# oriImg = cv2.imread(imageList[0])
+# height, width = oriImg.shape[0:2]
+# NumImg = len(imageList)
+# NormalizedImgList = np.zeros((NumImg,oriImg.shape[0],oriImg.shape[1],oriImg.shape[2]))
 
-for kk in range(len(imageList)):
-	oriImg = cv2.imread(imageList[kk])
-	NormalizedImg = np.zeros(oriImg.shape)
-	NormalizedImg[:,:,0] = oriImg[:,:,0]/np.maximum(oriImg[:,:,1],oriImg[:,:,2])
-	NormalizedImg[:,:,1] = oriImg[:,:,1]/np.maximum(oriImg[:,:,0],oriImg[:,:,2])
-	NormalizedImg[:,:,2] = oriImg[:,:,2]/np.maximum(oriImg[:,:,0],oriImg[:,:,1])
+# for kk in range(len(imageList)):
+# 	oriImg = cv2.imread(imageList[kk])
+# 	NormalizedImg = np.zeros(oriImg.shape)
+# 	NormalizedImg[:,:,0] = oriImg[:,:,0]/np.maximum(oriImg[:,:,1],oriImg[:,:,2])
+# 	NormalizedImg[:,:,1] = oriImg[:,:,1]/np.maximum(oriImg[:,:,0],oriImg[:,:,2])
+# 	NormalizedImg[:,:,2] = oriImg[:,:,2]/np.maximum(oriImg[:,:,0],oriImg[:,:,1])
 
-	NormalizedImgList[kk,:,:,:] = NormalizedImg
-	# plt.imshow(NormalizedImg[:,:,::-1])
-	# plt.pause(0.001)
+# 	NormalizedImgList[kk,:,:,:] = NormalizedImg
+# 	# plt.imshow(NormalizedImg[:,:,::-1])
+# 	# plt.pause(0.001)
 
 # method 2: 
 
@@ -66,11 +66,15 @@ NormalizedImg = A*NormalizedImg**gamma
 
 
 NormalizedImg = np.array(NormalizedImg, dtype=np.uint16)
+plt.figure()
+plt.imshow(NormalizedImg)
 
 fr_shadow = cv2.cvtColor(NormalizedImg, cv2.COLOR_BGR2GRAY)
 fr_shadow = np.array(fr_shadow, dtype=np.uint8)
 
 thresh,fr_shadow_bin = cv2.threshold(fr_shadow,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+plt.figure()
+plt.imshow(fr_shadow_bin)
 
 finalImg = np.zeros(oriImg.shape[:2])
 for hh in range(height):
@@ -80,7 +84,8 @@ for hh in range(height):
 		else:
 			finalImg[hh,ww] = 0
 
-plt.imshow(finalImg)
+plt.figure()
+plt.imshow(np.uint8(finalImg))
 
 
 
