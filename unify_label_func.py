@@ -4,7 +4,8 @@ import glob as glob
 import cPickle as pickle
 import numpy as np
 from scipy.io import loadmat,savemat
-
+from DataPathclass import *
+DataPathobj = DataPath()
 
 def unify_label(matfiles,savename):
     atmp     = []
@@ -84,7 +85,7 @@ def unify_label(matfiles,savename):
         savetrjID.pop(k)
 
     result          = {}
-    pdb.set_trace()
+    # pdb.set_trace()
     result['label'] = labels
     result['trjID'] = savetrjID
     savemat(savename,result)
@@ -93,19 +94,20 @@ def unify_label(matfiles,savename):
 
 
 if __name__ == '__main__':
-    dataSource = 'Johnson'
+    # dataSource = 'Johnson'
+    dataSource = 'DoT'
 # def unify_label_main(dataSource):
     if dataSource == 'DoT':
         # for linux
-        matfilePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/'
-        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        matfilePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/')
+        savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/')
         # for mac
         # matfilePath = '../DoT/CanalSt@BaxterSt-96.106/...???'
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     if dataSource == 'Johnson':
         # Jay & Johnson
         # matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
-        # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
+        # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/unifiedLabel/'
         # for mac
         matfilePath = '../Jay&Johnson/roi2/ssc/'
         savePath = '../Jay&Johnson/roi2/'

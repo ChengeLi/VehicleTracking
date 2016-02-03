@@ -79,6 +79,10 @@ if __name__ == '__main__':
     trunclen        = 600
     # lenoffset       = 0
     detect_interval = 5
+    if detect_interval < subSampRate:
+        detect_interval = 1
+    else:
+        detect_interval = np.floor(detect_interval/subSampRate)
 
 
     previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
@@ -253,7 +257,7 @@ if __name__ == '__main__':
 
 
         """Detecting new points"""
-        if frame_idx % detect_interval == 0: 
+        if subsample_frmIdx % detect_interval == 0: 
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
             mask[:,:] = 255
@@ -384,7 +388,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6New')
+            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6')
             savemat(savename,trk)
 
 

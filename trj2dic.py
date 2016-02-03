@@ -16,6 +16,9 @@ import glob as glob
 from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
+from DataPathclass import *
+DataPathobj = DataPath()
+
 
 def Virctr(x,y):
     '''
@@ -125,6 +128,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             trunkTrjFile = loadmat(matfiles[(frame_idx-start_frame_idx)/trunclen])
             xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            if len(trunkTrjFile['trjID'])==0:
+                continue
             IDintrunk    = trunkTrjFile['trjID'][0]
             Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
             fnum         = trunkTrjFile['xtracks'].shape[1] # 600
@@ -141,7 +146,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     if startT[i]!=np.nanmin(ttrj[i,:])or endT[i]!=np.nanmax(ttrj[i,:]):
                         print "wrong time===========!!!, want to delete this trj?"
                         # fix me..... delete the trj
-                        pdb.set_trace()
+                        # pdb.set_trace()
             #  get the mlabels for unclustered trjs, just the original global ID
             if not isClustered:
                 for idx,ID in enumerate(IDintrunk):  
@@ -323,9 +328,9 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             """Linux Canal"""
             global subSampRate
             subSampRate = 1
-            matfiles               = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat'))
-            clustered_result_files = sorted(glob.glob('/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*mat'))
-            savePath               = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+            matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
+            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*mat')))
+            savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/')
             result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
             clustered_result       = clustered_result_files[result_file_Ind]
             """Mac Canal"""
@@ -343,10 +348,10 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             global subSampRate
             subSampRate = 6
             # for linux
-            matfiles         = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat'))
-            dataPath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-            clustered_result = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/complete_500-5-1Result/Complete_result'
-            savePath         = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/'
+            matfiles         = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat')))
+            dataPath         = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
+            clustered_result = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/complete_500-5-1Result/Complete_result')
+            savePath         = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/')
             result_file_Ind  = 0 # use complete result
             # for mac
             # matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
@@ -363,10 +368,11 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
 
 if __name__ == '__main__':
 # def trj2dic_main(isVideo, dataSource):
-    # isVideo    = True
-    # dataSource = 'DoT'
-    isVideo    = False
-    dataSource = 'Johnson'
+    isVideo    = True
+    dataSource = 'DoT'
+
+    # isVideo    = False
+    # dataSource = 'Johnson'
 
     trunclen         = 600
     isClustered      = True

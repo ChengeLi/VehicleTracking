@@ -16,8 +16,8 @@ DataPathobj = DataPath()
 # dataPath = '/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/'
 # savePath = '../tempFigs/roi2/'
 
-dataPath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
-savePath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
+dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
+savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
 print("running KLT...")
 klt.klt_tracker(isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
 
@@ -50,7 +50,7 @@ if isVideo:
     dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 else:
     dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-savePath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
+savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
 
 print("running KLT...")
 klt.klt_tracker(isVideo = True,dataPath=dataPath,savePath=savePath, useBlobCenter = True)

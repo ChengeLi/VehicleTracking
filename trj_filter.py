@@ -11,7 +11,7 @@ from DataPathclass import *
 DataPathobj = DataPath()
 
 
-def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 15, fps = 23):
+def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minspdth = 15): # DoT fps 23 Johnson 30
 
     transth  = 100*fps   #transition time (red light time) 100 seconds
     mask_re       = []
@@ -35,10 +35,9 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth =
             # pdb.set_trace()
             try:
                 # spdfile.write(str(i)+' '+str(max(speed[i,:][x[i,1:]!=0][1:-1]))+'\n')
+                # print "speed:", max(speed[i,:][x[i,1:]!=0][1:-1])
                 if max(speed[i,:][x[i,1:]!=0][1:-1])>minspdth: # check if it is a moving point
-                    # stoptimefile.write(str(i)+' '+str(sum(speed[i,:][x[i,1:]!=0][1:-1] < 3))+'\n')
                     if sum(speed[i,:][x[i,1:]!=0][1:-1] < 3) < transth:  # check if it is a stationary point
-
                         mask_re.append(mask[i]) # ID 
                         x_re.append(x[i,:])
                         y_re.append(y[i,:])
@@ -74,7 +73,8 @@ def prepare_input_data(dataSource):
         # for mac
         # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        useBlobCenter = True
+        # useBlobCenter = True
+        useBlobCenter = False
         fps = 23/subSampRate
     """Jay & Johnson"""
     if dataSource == 'Johnson':
@@ -153,36 +153,36 @@ if __name__ == '__main__':
         
         
         print "Num of original samples is " , Numsample
-        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 5, fps = fps)
+        minspdth = 10
+        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps = fps, minspdth = minspdth)
         # print('initialization finished....')
         
         # delete all nan rows 
-        allnanInd = FindAllNanRow(t_re)
-        if allnanInd != []:
-            print "delete all nan rows!!"
-            print allnanInd
-            del mask_re[allnanInd]
-            del x_re[allnanInd]
-            del y_re[allnanInd]
-            del t_re[allnanInd]
-            del blob_index_re[allnanInd]
-            del xspd[allnanInd]
-            del yspd[allnanInd]
-
-
+        if x_re!=[]:
+            allnanInd = FindAllNanRow(t_re)
+            if allnanInd != []:
+                print "delete all nan rows!!"
+                print allnanInd
+                del mask_re[allnanInd]
+                del x_re[allnanInd]
+                del y_re[allnanInd]
+                del t_re[allnanInd]
+                del blob_index_re[allnanInd]
+                del xspd[allnanInd]
+                del yspd[allnanInd]
+        else:
+            pass 
         NumGoodsample = len(x_re)
         print "Num of Good samples is" , NumGoodsample
-        # pdb.set_trace()
-        result    = {}
-        result['trjID']         = mask_re
-        result['xtracks']       = x_re       
-        result['ytracks']       = y_re
-        result['Ttracks']       = t_re
-        result['xspd']          = xspd
-        result['yspd']          = yspd
+        result            = {}
+        result['trjID']   = mask_re
+        result['xtracks'] = x_re       
+        result['ytracks'] = y_re
+        result['Ttracks'] = t_re
+        result['xspd']    = xspd
+        result['yspd']    = yspd
         if useBlobCenter:
             result['fg_blob_index'] = blob_index_re
-
-        savename = os.path.join(savePath,'len4overlap1trj_'+matfiles[matidx][-7:-4].zfill(3))
+        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+np.int(matfiles[matidx][-15:-12]).zfill(3))
         savemat(savename,result)
 

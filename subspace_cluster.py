@@ -14,6 +14,9 @@ from sklearn.cluster import *
 from sklearn.manifold import *
 from sklearn.utils import check_random_state
 import pdb
+import os
+from DataPathclass import *
+DataPathobj = DataPath()
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -298,9 +301,8 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
         # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
         if dataSource == 'DoT':
             # for linux
-            matfiles = sorted(glob.glob(
-                    '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_' + '*.mat'))
-            savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_'
+            matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/' + '*.mat')))
+            savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_')
             # for mac
             # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
             # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
@@ -308,25 +310,27 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
         if dataSource == 'Johnson':
             # Jay & Johnson
             if usingLinux:
-                matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/' + '*.mat'))
-                savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_'
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/adj/' + '*.mat')))
+                savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_')
             else:
                 matfiles = sorted(glob.glob('../Jay&Johnson/roi2/adj/' + '*.mat'))
                 savePath = '../Jay&Johnson/roi2/ssc/ssc_'
 
-        matfiles = matfiles[0:]
+        # matfiles = matfiles[0:]
     return matfiles, savePath
 
 
 if __name__ == '__main__':
     # def ssc_main(dataSource):
-    dataSource = 'Johnson'
+    # dataSource = 'Johnson'
+    dataSource = 'DoT'
     """With constructed adjacency matrix """
     isAfterWarpping = False
     isLeft = False
     matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=False)
     isSave = True
-    isVisualize = True
+    # isVisualize = True
+    isVisualize = False
 
     for matidx, matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
@@ -341,13 +345,13 @@ if __name__ == '__main__':
         if isVisualize:
             # visualize different classes seperated by SSC for each Connected Component
             """  use the x_re and y_re from adj mat files  """
-            xtrj = file['xtracks']
-            ytrj = file['ytracks']
+            # xtrj = file['xtracks']
+            # ytrj = file['ytracks']
 
-            color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(int(max(labels) + 1), 3)
-            fig999 = plt.figure()
-            # plt.ion()
-            ax = plt.subplot(1, 1, 1)
+            # color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(int(max(labels) + 1), 3)
+            # fig999 = plt.figure()
+            # # plt.ion()
+            # ax = plt.subplot(1, 1, 1)
 
             newtrjID   = list(trjID[0])
             newlabels = list(labels)

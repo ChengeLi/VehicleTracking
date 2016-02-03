@@ -9,7 +9,8 @@ from scipy.sparse import csr_matrix
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
-
+from DataPathclass import *
+DataPathobj = DataPath()
 
 
 def adj_gaussian_element(sxdiff, sydiff, mdis,SBS,useSBS = True):
@@ -71,9 +72,6 @@ def sameBlobScore(fgBlobInd1,fgBlobInd2):
     SBS = np.sum(fgBlobInd1 == fgBlobInd2)
     return SBS
 
-
-
-
 def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     if isAfterWarpping:
         if isLeft:
@@ -87,15 +85,15 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     else:
         if dataSource == 'DoT':
             """for linux"""
-            matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
-            savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/'
+            matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
+            savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/')
             """for mac"""
             # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
             # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         if dataSource == 'Johnson':
             """Jay & Johnson"""
-            matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/'
-            savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/'
+            matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/')
+            savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/')
             # matfilepath = '../tempFigs/roi2/filtered/'
             # savePath    = '../tempFigs/roi2/' 
         
@@ -110,7 +108,8 @@ if __name__ == '__main__':
     isAfterWarpping = False
     isLeft          = False
     useSBS          = False
-    dataSource      = 'Johnson'
+    # dataSource      = 'Johnson'
+    dataSource      = 'DoT'
 
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft,dataSource)
     # adj_element = np.nan
@@ -122,9 +121,13 @@ if __name__ == '__main__':
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
 
-    for matidx,matfile in enumerate(matfiles):
+    # for matidx,matfile in enumerate(matfiles):
+    for matidx in range(17,len(matfiles)):
+        matfile = matfiles[matidx]
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
+        if len(ptstrj['trjID'])==0:
+            continue
         ptsidx = ptstrj['trjID'][0]
         x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
@@ -232,7 +235,6 @@ if __name__ == '__main__':
         result['xspd']    = xspd
         result['yspd']    = yspd
 
-        # pdb.set_trace()
         if not isAfterWarpping:
             # savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
             savename = os.path.join(savePath,adj_element+'_Adj_500_5_1_'+matfiles[matidx][-7:-4].zfill(3))
