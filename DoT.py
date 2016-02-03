@@ -67,21 +67,21 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
 
     # cap = cv2.VideoCapture('./sternberg_park__mid_block_leonard_st_/TLC00004.AVI')
     cap = cv2.VideoCapture(video_name)
-    Numfrm = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) #20480
+    Numfrm = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) #20480  71131
     scaninterval = int(Numfrm/100.0)
     # startFrm = range(0, Numfrm, scaninterval)
 
 
     Frmrate = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
-    # Numfrm=readlength
+    "use all the frames"
+    readlength = Numfrm
     frameH = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     frameW = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     
     
-    vid = np.zeros([readlength,frameH,frameW,3], dtype = np.uint8)
-    
-    start_position = int(skipTime*(Frmrate))+skipChunk
-
+    vid = np.zeros([readlength/3,frameH,frameW,3], dtype = np.uint8)
+    # start_position = int(skipTime*(Frmrate))+skipChunk
+    start_position = 7059
 
     print 'reading buffer...'
     # for ii in range(start_position):
@@ -89,18 +89,19 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     #     rval, img = cap.read()
     # or just set:
     cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
-
+    # pdb.set_trace()
     print 'reading frames...'
-    for ii in range(0,10*readlength,10):
-        true_position = ii+start_position
+    # for ii in range(0,6*readlength,6):
+    for ii in range(0+start_position,Numfrm,3):
+        true_position = ii
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , true_position)
         print(true_position)
-        rval, vid[ii/10] = cap.read()
-
+        rval, vid[ii/3] = cap.read()
+        # rval, vid[ii] = cap.read()
         # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
         # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        # name = '/media/My Passport/DoTimgs/Canal/'+str(true_position).zfill(8)+'.jpg'
-        # cv2.imwrite(name,vid[ii])
+        name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/' +str(true_position).zfill(8)+'.jpg'
+        cv2.imwrite(name,vid[ii/3])
     return vid,start_position
 
 
@@ -110,14 +111,16 @@ if __name__ == '__main__':
     # video_name = '/home/chengeli/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms_3.avi'
     im = plt.imshow(np.zeros([528,704,3]))
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
-    video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+    # video_name = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
     # video_name = '../DoT/ASF_files/Canal St @ Baxter St - 96.106_2015-06-18_09h00min00s000ms.asf'
+    video_name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.mp4';
+
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_16h04min40s686ms\ 2.avi'
     # video_name = '/Users/Chenge/Desktop/5Ave@42St-96.81_2015-06-16_18h00min00s002ms.asf'
     # video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.avi'
 
     readlength = 5000
-    vid,start_position = read_video(video_name, readlength, skipTime = 360, skipChunk = 0)
+    vid,start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
     
 
     # plt.show()
@@ -138,13 +141,13 @@ if __name__ == '__main__':
     #     plt.pause(0.0001) 
 
 
+    "average frame" 
+    # aveBKGsum = np.zeros([528,704,3], dtype = np.float32)
+    # for ii in range(vid.shape[0]):
+    #     aveBKGsum = aveBKGsum + vid[ii];
+    # aveBKG = np.uint8(aveBKGsum/(readlength))
 
-    aveBKGsum = np.zeros([528,704,3], dtype = np.float32)
-    for ii in range(vid.shape[0]):
-        aveBKGsum = aveBKGsum + vid[ii];
-    aveBKG = np.uint8(aveBKGsum/(readlength))
-
-    plt.imshow(aveBKG)
+    # plt.imshow(aveBKG)
 
 
 

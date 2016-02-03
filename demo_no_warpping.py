@@ -1,5 +1,4 @@
 # demo for videos no need to warp
-
 import klt_func as klt
 import trj_filter as trj_filter
 import trjcluster_func_SBS as trjcluster
@@ -7,21 +6,20 @@ import subspace_cluster as subspace_cluster
 import unify_label_func as unify_label
 import trj2dic as trj2dic
 
-
 # import visualization_func as visual
+
+from DataPathclass import *
+DataPathobj = DataPath()
 
 """whole process for Jay&Johnson"""
 # linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4'#complete
 # dataPath = '/media/TOSHIBA/DoTdata/VideoFromCUSP/roi2/imgs/'
 # savePath = '../tempFigs/roi2/'
 
-dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/'
-frame_idx_bias = 84600 #start from the 47th minute
-
-
+dataPath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
+savePath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
 print("running KLT...")
-klt.klt_tracker(frame_idx_bias, isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
+klt.klt_tracker(isVideo= False,dataPath=dataPath,savePath=savePath, useBlobCenter = False,isVisualize = False,dataSource = 'Johnson')
 
 print("filter the trjs...")
 # execfile('trj_filter.py')
@@ -52,7 +50,7 @@ if isVideo:
     dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 else:
     dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
+savePath = os.path.join(DataPathobj.sysPathHeader,'/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
 
 print("running KLT...")
 klt.klt_tracker(isVideo = True,dataPath=dataPath,savePath=savePath, useBlobCenter = True)

@@ -7,6 +7,9 @@ import numpy as np
 from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
+from DataPathclass import *
+DataPathobj = DataPath()
+
 
 def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , minspdth = 15, fps = 23):
 
@@ -61,45 +64,46 @@ def FindAllNanRow(aa):
     return allNanRowInd
 
 def prepare_input_data(dataSource):
+    ## fps for DoT Canal is 23
+    ## Jay & Johnson is 30
+    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
     if dataSource == 'DoT':
         # for linux
-        matfilepath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-        savePath    = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/'
+        matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
+        savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
         # for mac
         # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
         useBlobCenter = True
+        fps = 23/subSampRate
     """Jay & Johnson"""
     if dataSource == 'Johnson':
         # matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
         # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/filtered/'
-        matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
-        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/'       # matfilepath = '../tempFigs/roi2/'
+        matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/')
+        savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/')       # matfilepath = '../tempFigs/roi2/'
         # savePath = '../tempFigs/roi2/filtered/' 
         useBlobCenter = False
+        fps = 30/subSampRate
+
 
     matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-    start_position = 46 #already processed 10 files
+    start_position = 0 #already processed 10 files
     matfiles       = matfiles[start_position:]
-    return matfiles,savePath,useBlobCenter
+    return matfiles,savePath,useBlobCenter,fps
 
 
 
 if __name__ == '__main__':
-#     fps = 23
-#     dataSource = 'DoT'
-#     # fps for DoT Canal is 23
-#     # Jay & Johnson is 30
+    dataSource = 'DoT'
+    # dataSource = 'Johnson'
 
 # def filtering_main_function(fps,dataSource = 'DoT'):
-    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
-    fps = 30/subSampRate
-    dataSource = 'Johnson'
-    matfiles,savePath,useBlobCenter = prepare_input_data(dataSource)
+    matfiles,savePath,useBlobCenter,fps = prepare_input_data(dataSource)
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
-        # mask = ptstrj['mask'][0]
+        # mask = ptstrj['mask'][0] 
         mask = ptstrj['trjID'][0]
         x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
@@ -112,7 +116,6 @@ if __name__ == '__main__':
             blob_index = []
         if len(t)>0: 
             t[t==np.max(t)]=np.nan
-
         
         Numsample = ptstrj['xtracks'].shape[0]
         trunclen  = ptstrj['xtracks'].shape[1]

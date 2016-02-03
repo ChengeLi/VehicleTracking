@@ -10,6 +10,11 @@ from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 from matplotlib import pyplot as plt
 
+from DataPathclass import *
+DataPathobj = DataPath()
+# dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
+# savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
+
 
 # def klt_tracker(isVideo, \
 #  dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
@@ -17,33 +22,41 @@ from matplotlib import pyplot as plt
 #  useBlobCenter = True,isVisualize = False,dataSource = 'DoT'):
 
 if __name__ == '__main__':
-#     isVideo  = True
-#     if isVideo:
-#         dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
-#     else:
-#         dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-#     savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/'
-#     dataSource = 'DoT'
+    # ===== DoT Canal
+    frame_idx_bias = 0
+    isVideo  = True
+    if isVideo:
+        dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+        # dataPath = '..DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.mp4'
+    else:
+        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' # only 2000 pictures
+    savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
     # useBlobCenter = True
-    # isVisualize = False
-    # frame_idx_bias = 84600 #start from the 47th minute
-    frame_idx_bias = 0 #johnson new
-    isVideo= False
     useBlobCenter = False
-    isVisualize = False
-    dataSource = 'Johnson'
-    dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'
-    savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/'
-    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+    isVisualize   = False
+    dataSource    = 'DoT'
+    subSampRate   = 6
 
-    # dataPath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/1st.mov'
-    # savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
+    # ===== JayJohnson
+    # frame_idx_bias = 84600 #start from the 47th minute
+    # isVideo= False
+    # useBlobCenter = False
+    # isVisualize = False
+    # dataSource = 'Johnson'
+    # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
+    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/')
+    # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+
+    # ===== JayJohnson new
+    # frame_idx_bias = 0 #johnson new
+    # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/1st.mov')
+    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/')
     # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
 
 
 
     # -- utilities
-    plt.figure(num=None, figsize=(8, 11))
+    if isVisualize: plt.figure(num=None, figsize=(8, 11))
     """ new jay st """
     if dataSource == 'Johnson':
         lk_params = dict(winSize=(5, 5), maxLevel=2, 
@@ -61,7 +74,6 @@ if __name__ == '__main__':
                               blockSize=5)  # old jayst 
     
     # idx             = 0
-
     # track_len       = 10
     # pregood         = []
     trunclen        = 600
@@ -89,7 +101,6 @@ if __name__ == '__main__':
             start[key]     = np.nanmin(lastT[kk,:])
             if math.isnan(start[key]): 
                 print "key:",key, "kk:",kk
-                # pdb.set_trace()
                 start.pop(key)
                 continue
             end[key]       = -1 #all alive trj
@@ -100,11 +111,14 @@ if __name__ == '__main__':
         tracksdic = {} 
         start     = {}
         end       = {}
-
-    frame_idx      = (0 + frame_idx_bias)/subSampRate 
     if len(previousLastFiles)>0:
-        frame_idx = len(previousLastFiles)*600
+        frame_idx = len(previousLastFiles)*600*subSampRate
+    else:
+        frame_idx = (0 + frame_idx_bias)
+    
     start_position = frame_idx_bias
+    subsample_frmIdx = frame_idx/subSampRate
+    
 
     if useBlobCenter:
         # linux local:
@@ -114,22 +128,22 @@ if __name__ == '__main__':
         # Mac
         # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
         # blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-        blobindPath                 = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/'
+        blobindPath                 = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/')
         blob_ind_sparse_matrices    = sorted(glob.glob(blobindPath + 'blob*.p'))
-        blobCenterPath              = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/'
+        blobCenterPath              = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/')
         blob_center_sparse_lists = sorted(glob.glob(blobCenterPath + 'blob*.p'))
 
-
-    
     if isVideo:
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
+        # if not cap.isOpened():
+		 #    raise Exception("video not opened!")
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         
         print 'reading buffer...'
-        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position-1))
+        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
         status, frame = cap.read()
         frameL        = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
         if len(previousLastFiles)>0:
@@ -142,7 +156,7 @@ if __name__ == '__main__':
         imlist    = sorted(glob.glob(imagepath + '*.jpg'))
         nframe    = len(imlist)
         # -- read in first frame and set dimensions
-        frame     = cv2.imread(imlist[max(0,start_position-1)])
+        frame     = cv2.imread(imlist[max(0,start_position)])
         frameL    = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
         if len(previousLastFiles)>0:
             frameLp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  #set the previous to be the last frame in last truncation
@@ -157,9 +171,9 @@ if __name__ == '__main__':
 
     # -- set low number of frames for testing
     # nframe = 1801
-    if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
-    while (frame_idx*subSampRate < nframe):
-        if useBlobCenter and ((frame_idx % trunclen) == 0):
+    # if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
+    while (frame_idx < nframe):
+        if useBlobCenter and (((frame_idx) % trunclen) == 0):
             print "load foreground blob index matrix file...."
             blobIndLists       = []
             blobIndListfile    = blob_ind_sparse_matrices[frame_idx % trunclen]
@@ -171,7 +185,7 @@ if __name__ == '__main__':
 
             
         if not isVideo:
-            frame[:,:,:] = cv2.imread(imlist[frame_idx*subSampRate])
+            frame[:,:,:] = cv2.imread(imlist[subsample_frmIdx*subSampRate])
         if isVideo:
             try:
                 status, frame[:,:,:] = cap.read()
@@ -183,6 +197,7 @@ if __name__ == '__main__':
         if useBlobCenter:
             BlobIndMatrixCurFrm = (blobIndLists[np.mod(frame_idx,trunclen)]).todense()
             BlobCenterCurFrm    = blobCenterLists[np.mod(frame_idx,trunclen)]
+            pdb.set_trace()
 
         frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         
@@ -257,12 +272,12 @@ if __name__ == '__main__':
                     if useBlobCenter:
                         blobInd    = BlobIndMatrixCurFrm[y,x]
                         blobCenter = BlobCenterCurFrm[blobInd]
-                        tracksdic[dicidx].append((x,y,frame_idx,np.int8(blobInd),blobCenter[0],blobCenter[1]))
+                        tracksdic[dicidx].append((x,y,frame_idx,np.int(blobInd),blobCenter[0],blobCenter[1]))
                     else:
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
 
-        print('{0} - {1}'.format(frame_idx*subSampRate,len(tracksdic)))
+        print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
 
         if isVisualize:
             # cv2.imshow('klt', vis)
@@ -272,14 +287,14 @@ if __name__ == '__main__':
     
         # switch previous frame
         frameLp[:,:] = frameL[:,:]
-        frame_idx   += 1
-
+        subsample_frmIdx   += 1
+        frame_idx = subsample_frmIdx*subSampRate
 
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 
-        if  ((frame_idx>0) & ((frame_idx) % trunclen == 0)) or (frame_idx==nframe):
+        if  ((frame_idx>0) & ((subsample_frmIdx) % trunclen == 0)) or (frame_idx==nframe):
             print "saving===!!!"   
-            print('{0} - {1}'.format(frame_idx,len(tracksdic)))         
+            # print('{0} - {1}'.format(frame_idx,len(tracksdic)))         
             Xtracks = np.zeros([len(tracksdic),trunclen])
             Ytracks = np.zeros([len(tracksdic),trunclen])
             # initialize T track using numbers that will never appear in reality
@@ -291,7 +306,7 @@ if __name__ == '__main__':
                 BlobCenterX   = np.zeros([len(tracksdic),trunclen]) 
                 BlobCenterY   = np.zeros([len(tracksdic),trunclen]) 
             # set first frame in this chunk
-            offset  = frame_idx - trunclen
+            offset  = subsample_frmIdx - trunclen
 
             # loop through the current trajectories list
             for ii, trjidx in enumerate(tracksdic.keys()):
@@ -314,13 +329,13 @@ if __name__ == '__main__':
                 # previous truncation were removed, so only save from the
                 # second point.
                 # if st_ind=='fromPre':
-                if st_ind<offset:
+                if st_ind/subSampRate<offset:
                     # print "trj point is from previous truncation!"
-                    st_ind = offset
+                    st_ind = offset*subSampRate
                     ttrack = ttrack[:,1:] #because the first point is the last point from pre trunc, already saved
 
                 # put trajectory into matrix
-                tstart, tstop = st_ind-offset, en_ind-offset+1
+                tstart, tstop = st_ind/subSampRate-offset, en_ind/subSampRate-offset+1
 
                 if en_ind==-1:
                     Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])] = ttrack[0,:]
@@ -339,10 +354,6 @@ if __name__ == '__main__':
                         BlobIndtracks[ii,:][tstart:tstop] = ttrack[3,:]
                         BlobCenterX[ii,:][tstart:tstop]   = ttrack[4,:]
                         BlobCenterY[ii,:][tstart:tstop]   = ttrack[5,:]
-
-
-
-
 
             # put tracks into sparse matrix
             trk ={}
@@ -365,16 +376,15 @@ if __name__ == '__main__':
                     tracksdic.pop(i)
                 else:
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
-            # pdb.set_trace()
+
             trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
             trk['lastPtsKey']   = np.array(tracksdic.keys())
-            # pdb.set_trace()
             # save as matlab file... :-/
             # savename = './klt/20150222_Mat/HR_w_T______test_' + \
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(frame_idx/trunclen).zfill(3))
+            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6New')
             savemat(savename,trk)
 
 

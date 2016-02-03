@@ -17,6 +17,10 @@ def unify_label(matfiles,savename):
             L1 = loadmat(matfiles[matidx])['label'][0]
             L1 = L1+1 # class label starts from 1 instead of 0
             M1 = loadmat(matfiles[matidx])['trjID'][0]
+
+            # L1 = loadmat(matfiles[matidx])['newlabel'][0]
+            # L1 = L1+1
+            # M1 = loadmat(matfiles[matidx])['newtrjID'][0]
         else:
             L1 = L2
             M1 = M2
@@ -24,6 +28,9 @@ def unify_label(matfiles,savename):
         L2 = loadmat(matfiles[matidx+1])['label'][0]
         L2 = L2+1
         M2 = loadmat(matfiles[matidx+1])['trjID'][0]
+        # L2 = loadmat(matfiles[matidx+1])['newlabel'][0]
+        # L2 = L2+1
+        # M2 = loadmat(matfiles[matidx+1])['newtrjID'][0]
 
 
         L1max = max(L1)  ## not duplicate
@@ -77,6 +84,7 @@ def unify_label(matfiles,savename):
         savetrjID.pop(k)
 
     result          = {}
+    pdb.set_trace()
     result['label'] = labels
     result['trjID'] = savetrjID
     savemat(savename,result)
@@ -96,14 +104,20 @@ if __name__ == '__main__':
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
     if dataSource == 'Johnson':
         # Jay & Johnson
-        matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/'
-        savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/complete_500-5-1Result/'
+        # matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
+        # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/'
+        # for mac
+        matfilePath = '../Jay&Johnson/roi2/ssc/'
+        savePath = '../Jay&Johnson/roi2/'
+
+
 
     matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
 
     if numTrunc<=200:
         savename = os.path.join(savePath,'Complete_result')
+        # savename = os.path.join(savePath,'onlyBigGroup_Complete_result')
         unify_label(matfilesAll,savename)
     else:
         for kk in range(0,numTrunc,25):

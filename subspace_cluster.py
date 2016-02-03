@@ -1,20 +1,19 @@
-import numpy as np
-import scipy as sp
-import scipy.io as scipy_io
-import sklearn, copy, glob, pdb, itertools
+import copy
+import glob
 import matplotlib.pyplot as plt
-from sklearn import (manifold, datasets, decomposition, ensemble, lda,
-                     random_projection, mixture)
-from sklearn.manifold import *
-from sklearn.utils import check_random_state
-from scipy import linalg
-import matplotlib as mpl
+import numpy as np
 import numpy.linalg as np_lg
 import numpy.matlib as np_mat
-from scipy.sparse import *
-from sklearn.cluster import *
+import scipy.io as scipy_io
+import sklearn
+from scipy import linalg
 from scipy.io import savemat
-
+from scipy.sparse import *
+from sklearn import (mixture)
+from sklearn.cluster import *
+from sklearn.manifold import *
+from sklearn.utils import check_random_state
+import pdb
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -56,7 +55,7 @@ class sparse_subspace_clustering:
             temp_X_norm = 1.0 / (np_lg.norm(self.dataset[:, idx], axis=1) + np.power(10, -10))
             temp_X_norm[np.where(np.isinf(temp_X_norm))[0]] = 0
             temp_X[0:self.dataset.shape[0], :] = self.dataset[:, idx] * np.transpose(
-                np_mat.repmat(temp_X_norm, idx.size, 1))
+                    np_mat.repmat(temp_X_norm, idx.size, 1))
             temp_X[i, :] = np.zeros(idx.size)
             temp_X[self.dataset.shape[0]:self.dataset.shape[0] + idx.size, :] = np.diag(np.ones(idx.size) * 0.1)
 
@@ -97,7 +96,7 @@ class sparse_subspace_clustering:
                 ssc.get_adjacency(sub_matrix)
                 ssc.manifold()
                 sub_labels, model = ssc.clustering_DPGMM(
-                    n_components=int(np.floor(sub_index.size / min_sample_cluster) + 1), alpha=alpha)
+                        n_components=int(np.floor(sub_index.size / min_sample_cluster) + 1), alpha=alpha)
                 print "project dimension is: ", str(project_dimension)
                 #        visulize(ssc.embedding_,sub_labels,model)
                 labels[sub_index] = np.max(labels) + sub_labels
@@ -142,21 +141,20 @@ def visulize(data, labels, clf, color):
 
             # Plot an ellipse to show the Gaussian component
             #    plt.xlim(-6, 4 * np.pi - 6)
-        #    plt.ylim(-5, 5)
-        #    plt.title(title)
+            #    plt.ylim(-5, 5)
+            #    plt.title(title)
     # plt.xticks(())
     # plt.yticks(())
     plt.show()
 
 
 def ssc_with_Adj_CC(file):
+    small_connected_comp = []
     feature = (file['adj'] > 0).astype('float')  ## adj mtx
     CClabel = file['c']  # labels from connected Component
     trjID = file['trjID']
     labels = np.zeros(CClabel.size)
-    color_choice = np.array([np.random.randint(0, 255) \
-                             for _ in range(3 * int(CClabel.size))]) \
-        .reshape(int(CClabel.size), 3)
+    color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)
         # print "connected component No. " ,str(i)
@@ -172,7 +170,13 @@ def ssc_with_Adj_CC(file):
             ssc.get_adjacency(sub_matrix)
             ssc.manifold()
             # sub_labels,model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/2)+1),alpha=0.1)
-            sub_labels, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.1)
+            # sub_labels111, model111 = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.1)
+            # sub_labels222, model222 = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=1)
+            # sub_labels333, model333 = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=10)
+            # sub_labels444, model444 = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.01)
+            # sub_labels, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.05)
+            sub_labels, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.001)
+
 
             # pdb.set_trace()
             # visulize(ssc.embedding_,sub_labels,model,color)
@@ -182,10 +186,11 @@ def ssc_with_Adj_CC(file):
             labels[sub_index] = np.max(labels) + (sub_labels + 1)
             # print sub_labels  ## not always start from 0?? 
             print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
-                sub_labels).size
+                    sub_labels).size
         else:  ## if size small, treat as one group
             sub_labels = np.ones(sub_index.size)
             labels[sub_index] = np.max(labels) + sub_labels
+            small_connected_comp.append(sub_index)
             # print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
     j = 0
     labels_new = np.zeros(labels.shape)
@@ -195,7 +200,7 @@ def ssc_with_Adj_CC(file):
         labels_new[np.where(labels == unique_array[i])] = j
         j = j + 1
     labels = labels_new
-    return trjID, labels
+    return trjID, labels, small_connected_comp
 
 
 def sscConstructedAdj_CC(file):  # use ssc to construct adj, use any samples except the sample itself
@@ -255,7 +260,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
             # visulize(ssc.embedding_,sub_labels,model)
             labels[sub_index] = np.max(labels) + (sub_labels + 1)
             print 'number of trajectory in this connected components%s' % sub_labels.size + '  unique labels %s' % np.unique(
-                sub_labels).size
+                    sub_labels).size
         else:
             sub_labels = np.ones(sub_index.size)
             labels[sub_index] = np.max(labels) + sub_labels
@@ -272,7 +277,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
     return trjID, labels
 
 
-def prepare_input_data(isAfterWarpping, isLeft, dataSource,usingLinux = True):
+def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
     global savePath
     if isAfterWarpping:
         if isLeft:
@@ -294,20 +299,20 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource,usingLinux = True):
         if dataSource == 'DoT':
             # for linux
             matfiles = sorted(glob.glob(
-                '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_' + '*.mat'))
+                    '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/Adj_' + '*.mat'))
             savePath = '/media/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_'
             # for mac
             # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
             # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
 
         if dataSource == 'Johnson':
-			# Jay & Johnson
-			if usingLinux:
-				matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/' + '*.mat'))
-				savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/ssc/ssc_500-5-1_'
-			else:
-				matfiles = sorted(glob.glob('../Johnson/roi2/adj/' +'*.mat'))
-				savePath = '../Johnson/roi2/ssc/ssc_' 
+            # Jay & Johnson
+            if usingLinux:
+                matfiles = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/adj/' + '*.mat'))
+                savePath = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_'
+            else:
+                matfiles = sorted(glob.glob('../Jay&Johnson/roi2/adj/' + '*.mat'))
+                savePath = '../Jay&Johnson/roi2/ssc/ssc_'
 
         matfiles = matfiles[0:]
     return matfiles, savePath
@@ -319,66 +324,68 @@ if __name__ == '__main__':
     """With constructed adjacency matrix """
     isAfterWarpping = False
     isLeft = False
-    matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux = True)
+    matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=False)
     isSave = True
-    isVisualize = False
+    isVisualize = True
 
     for matidx, matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
-        trjID, labels = ssc_with_Adj_CC(file)
+        trjID, labels,small_connected_comp = ssc_with_Adj_CC(file)
         """ construct adj use ssc"""
         # trjID,labels, adj = sscConstructedAdj_CC(file)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
         # trjID,labels = sscAdj_inNeighbour(file)
 
-        # pdb.set_trace()
         if isVisualize:
             # visualize different classes seperated by SSC for each Connected Component
             """  use the x_re and y_re from adj mat files  """
             xtrj = file['xtracks']
             ytrj = file['ytracks']
 
-            color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(
-                int(max(labels) + 1), 3)
+            color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(int(max(labels) + 1), 3)
             fig999 = plt.figure()
             # plt.ion()
             ax = plt.subplot(1, 1, 1)
 
-            # newtrjID   = list(trjID[0])
+            newtrjID   = list(trjID[0])
             newlabels = list(labels)
             for i in range(int(max(labels)) + 1):
                 trjind = np.where(labels == i)[0]
                 print "trjind = ", str(trjind)
-                if len(trjind) <= 3:
-                    newlabels.remove(i)
-                    # newtrjID.remove()
-                    continue
-                for jj in range(len(trjind)):
-                    startlimit = np.min(np.where(xtrj[trjind[jj], :] != 0))
-                    endlimit = np.max(np.where(xtrj[trjind[jj], :] != 0))
-                    # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
-                    lines = ax.plot(xtrj[trjind[jj], startlimit:endlimit], ytrj[trjind[jj], startlimit:endlimit],
-                                    color=(color[i - 1].T) / 255., linewidth=2)
-                    # fig999.canvas.draw()
-                    # plt.pause(0.0001)
+                if len(trjind) <= 20:
+					# newlabels.remove(i)
+					newlabels = [x for x in newlabels if x!=i]
+					newtrjID = [x for x in newtrjID if x not in trjID[0][trjind]]
+					# pdb.set_trace()
+					continue ## skip the rest, don't draw too short trjs
 
-                    # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
+     #            for jj in range(len(trjind)):
+     #                startlimit = np.min(np.where(xtrj[trjind[jj],:]!=0))
+     #                endlimit   = np.max(np.where(xtrj[trjind[jj],:]!=0))
+     #                # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
+     #                lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
+                   
+     
+					# # fig999.canvas.draw()
+					# # plt.pause(0.0001)
 
-            # im = plt.imshow(np.zeros([528,704,3])) 
+     #            # plt.text(np.median(xtrj[trjind[jj],startlimit:endlimit]), np.median(ytrj[trjind[jj],startlimit:endlimit]), str(trjind))
 
-            fig999.canvas.draw()
-        else:
-            pass
+     #        # im = plt.imshow(np.zeros([528,704,3])) 
+     #        fig999.canvas.draw()
+     #        name = '../Jay&Johnson/roi2/ssc/'+str(matidx).zfill(3)+'.jpg'
+     #        plt.savefig(name)
 
-        # pdb.set_trace()
         if isSave:
             print "saving the labels..."
             labelsave = {}
             # labelsave['label']   = np.array(newlabels)
             labelsave['label'] = labels
             labelsave['trjID'] = trjID
+            labelsave['newlabel'] = newlabels
+            labelsave['newtrjID'] = newtrjID
             savename = savePath + matfiles[matidx][-7:-4].zfill(3)
             savemat(savename, labelsave)
 
