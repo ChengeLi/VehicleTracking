@@ -120,15 +120,17 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     global notconnectedLabel
     notconnectedLabel =[]
     frame_idx = start_frame_idx
+    subsample_frmIdx = np.floor(frame_idx/subSampRate)
 
-    while frame_idx < np.int32(matfiles[-1][-7:-4])*600:
+    while frame_idx < np.int(matfiles[-1][-7:-4])*subSampRate*600:
         # pdb.set_trace()
-        print "frame = ", str(frame_idx*subSampRate)
-        if (frame_idx % trunclen == 0):
-            trunkTrjFile = loadmat(matfiles[(frame_idx-start_frame_idx)/trunclen])
+        print "frame = ", str(frame_idx)
+        if (subsample_frmIdx) % trunclen == 0:
+            trunkTrjFile = loadmat(matfiles[np.int(np.floor(subsample_frmIdx/trunclen))])
             xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
             if len(trunkTrjFile['trjID'])==0:
+                subsample_frmIdx = subsample_frmIdx+trunclen
                 continue
             IDintrunk    = trunkTrjFile['trjID'][0]
             Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
@@ -186,7 +188,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                             notconnectedLabel.append(k)
                             vctime[k].append(int(startfrm))
                             vctime[k].append(int(endfrm))
-                            # pdb.set_trace() 
+
         # current frame index is: (frame_idx%trunclen)
         PtsInCurFrm = xtrj[:,frame_idx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
@@ -239,7 +241,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
                     pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
 
-        frame_idx = frame_idx+1
+        subsample_frmIdx   += 1
+        frame_idx = subsample_frmIdx*subSampRate
         # end of while loop
 
     if isSave and isClustered:
@@ -302,8 +305,6 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx,start
     plt.show()
 
 
-
-
 def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
     if isAfterWarpping:
         if isLeft:
@@ -327,10 +328,10 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
         if dataSource == 'DoT':
             """Linux Canal"""
             global subSampRate
-            subSampRate = 1
+            subSampRate = 6
             matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
-            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+'*mat')))
-            savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/')
+            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/'+'*mat')))
+            savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/')
             result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
             clustered_result       = clustered_result_files[result_file_Ind]
             """Mac Canal"""
@@ -339,7 +340,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             # savePath   = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'        
             
             if isVideo:
-                dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+                dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+                # dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
             else:
                 dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
 
@@ -373,7 +375,6 @@ if __name__ == '__main__':
 
     # isVideo    = False
     # dataSource = 'Johnson'
-
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
@@ -387,3 +388,12 @@ if __name__ == '__main__':
     print "start_frame_idx: ",start_frame_idx
     # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
+
+
+
+
+
+
+
+
+

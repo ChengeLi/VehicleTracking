@@ -121,7 +121,7 @@ if __name__ == '__main__':
         frame_idx = (0 + frame_idx_bias)
     
     start_position = frame_idx_bias
-    subsample_frmIdx = frame_idx/subSampRate
+    subsample_frmIdx = np.floor(frame_idx/subSampRate)
     
 
     if useBlobCenter:
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
         # if not cap.isOpened():
-		 #    raise Exception("video not opened!")
+        #    raise Exception("video not opened!")
         nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
         ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
         nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -388,7 +388,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6')
+            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6_newnew')
             savemat(savename,trk)
 
 

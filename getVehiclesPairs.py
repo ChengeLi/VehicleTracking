@@ -9,7 +9,8 @@ import glob as glob
 import cPickle as pickle
 import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
-
+from DataPathclass import *
+DataPathobj = DataPath()
 
 
 
@@ -27,13 +28,19 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 				savePath        = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
 
 			else:
-				test_vctime      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vctime.p", "rb" ) )
-				test_vcxtrj      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcxtrj.p", "rb" ) )
-				test_vcytrj      = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_vcytrj.p", "rb" ) )
-				
+				test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vctime.p", "rb" ) )
+				test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
+				test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
 				right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
 				image_list       = right_image_list
 				savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
+
+		else:
+			test_vctime = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vctime.p'), "rb" ) )
+			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcxtrj.p'), "rb" ) )
+			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcytrj.p'), "rb" ) )
+			image_list = []
+			savePath   = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/')
 
 	if dataSource == 'Johnson':
 		# """complete"""
@@ -55,9 +62,6 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 
 		# image_list   = sorted(glob.glob('../Jay&Johnson/roi2/imgs/*.jpg'))
 		# savePath     = "../Jay&Johnson/roi2/pair_relationship/"
-
-
-
 	return test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath
 
 
@@ -168,8 +172,13 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2,saveflag = 0):
 	for k in range(np.size(cooccur_ran)):
 		frame_idx = cooccur_ran[k]
 		# print "frame_idx: " ,frame_idx
-		tmpName= image_list[frame_idx]
-		frame=cv2.imread(tmpName)
+		if isVideo:
+			cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES ,frame_idx)
+			status, frame = cap.read()
+		else:
+			tmpName= image_list[frame_idx]
+			frame=cv2.imread(tmpName)
+
 		im.set_data(frame[:,:,::-1])
 		plt.draw()
 		#    lines = axL.plot(vcxtrj1[k],vcytrj1[k],color = (color[k-1].T)/255.,linewidth=2)
@@ -219,10 +228,11 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 
 
 if __name__ == '__main__':
-	
 	isAfterWarpping = False
 	isLeft          = True
-	dataSource      = 'Johnson'
+	# dataSource      = 'Johnson'
+	dataSource      = 'DoT'
+
 	fps = 5
 	overlap_pair_threshold = 3*fps
 
@@ -256,9 +266,9 @@ if __name__ == '__main__':
 	print "trj remaining: ", str(len(clean_vctime))
 	# rebuild this object using filtered data, should be no bad_IDs
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
-	pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','wb'))
+	# pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','wb'))
 	# pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
-
+	pickle.dump(obj_pair2,open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/obj_pair2.p'),'wb'))
 	pdb.set_trace()
 
 
@@ -284,9 +294,21 @@ if __name__ == '__main__':
 
 
 	#=======visualize the pair relationship==============================================
-	# for plottting
-	firstfrm =cv2.imread(image_list[0])
-	framenum = int(len(image_list))
+	isVideo  = True
+	if isVideo:
+		dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+		cap       = cv2.VideoCapture(dataPath)
+		cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES ,0)
+		status, firstfrm = cap.read()
+		framenum    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+	else:
+		image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg')) # only 2000 pictures
+		# for plottting
+		firstfrm =cv2.imread(image_list[0])
+		framenum = int(len(image_list))
+
+
 	nrows    = int(np.size(firstfrm,0))
 	ncols    = int(np.size(firstfrm,1))
 	
@@ -308,11 +330,11 @@ if __name__ == '__main__':
 	writer2    = csv.writer(open(savename2,'wb'))
 	writer2.writerow(['trj2 ID','trj2 ID'])
 
-	pdb.set_trace()
+	# pdb.set_trace()
 	isWrite     = True
 	isVisualize = False
 	plt.figure('testing')
-	test_clusterSize  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_clusterSize.p", "rb" ) )
+	test_clusterSize  = pickle.load( open( os.path.join(DataPathobj.sysPathHeader, 'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_clusterSize.p'), "rb" ) )
 
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):
