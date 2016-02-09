@@ -7,5 +7,5 @@ class DataPath(object):
         if platform.system()=='Darwin':   # on mac
             self.sysPathHeader = '/Volumes/TOSHIBA/'
         else:   # on linux
-            self.sysPathHeader = '/media/'
+            self.sysPathHeader = '/media/TOSHIBA/'
 

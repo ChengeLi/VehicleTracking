@@ -13,8 +13,6 @@ from DataPathclass import *
 DataPathobj = DataPath()
 
 
-
-
 def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 	if dataSource == 'DoT':
 		if isAfterWarpping:
