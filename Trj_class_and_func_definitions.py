@@ -1,7 +1,7 @@
 import numpy as np
 import pdb
 class TrjObj():
-    def __init__(self,vcxtrj,vcytrj,vctime):
+    def __init__(self,vcxtrj,vcytrj,vctime,subSampRate):
         self.trunkTrjFile    = {}
         self.Trj             = [] #[x,y]
         self.Trj_with_ID     = [] # [ID,x,y]
@@ -22,19 +22,20 @@ class TrjObj():
 
         fps = 5
         for key, val in vctime.iteritems():
-            if (len(val)==0) or (val[1]-val[0]+1 <= fps*1):
+            if (len(val)==0) or (val[1]-val[0]+1 < fps*1):
+                # pdb.set_trace()
                 self.bad_IDs1.append(key)
 
 
         for key, value in vcxtrj.iteritems():
             x_location = vcxtrj[key]
             y_location = vcytrj[key]
-            # pdb.set_trace()            
             if len(vctime[key])==2:
-                curfrm = range(vctime[key][0],vctime[key][1]+1)
+                curfrm = range(vctime[key][0],vctime[key][1]+subSampRate,subSampRate)
                 if np.size(curfrm)!= np.size(value):
                     print "error!==============================="
                     print('vctime size : {0}, vcxtrj size : {1}').format(np.size(curfrm),np.size(value))
+                    # pdb.set_trace()
                     self.bad_IDs2.append(key)
                                    
                 else:

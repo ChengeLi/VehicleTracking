@@ -95,9 +95,9 @@ def get_Co_occur(VehicleObj1, VehicleObj2):
 
 	if gonetime1 >= appeartime2:
 		if gonetime1 <=gonetime2:
-			cooccur_ran = range(appeartime2, gonetime1+1)
+			cooccur_ran = range(appeartime2, gonetime1+subSampRate,subSampRate)
 		else:
-			cooccur_ran = range(appeartime2, gonetime2+1)
+			cooccur_ran = range(appeartime2, gonetime2+subSampRate,subSampRate)
 		cooccur_IDs    = [VehicleObj1.VehicleID, VehicleObj2.VehicleID]
 		coorccurStatus = 1	
 
@@ -118,11 +118,11 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite):
 	xTrj       = obj_pair2loop.xTrj[ID111]  
 	
 	
-	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1)
+	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1*subSampRate,subSampRate)
 	startind1  = fullrange1.index(cooccur_ran[0])
 	endind1    = fullrange1.index(cooccur_ran[-1])
 	
-	fullrange2 = range(obj_pair2loop.frame[ID222][0], obj_pair2loop.frame[ID222][1]+1)
+	fullrange2 = range(obj_pair2loop.frame[ID222][0], obj_pair2loop.frame[ID222][1]+1*subSampRate,subSampRate)
 	startind2  = fullrange2.index(cooccur_ran[0])
 	endind2    = fullrange2.index(cooccur_ran[-1])	
 
@@ -132,7 +132,6 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite):
 
 	co2X = obj_pair2loop.xTrj[ID222][startind2:endind2+1]
 	co2Y = obj_pair2loop.yTrj[ID222][startind2:endind2+1]
-	
 	if isWrite:
 		for gkk in range(np.size(cooccur_ran)):
 			temp = []
@@ -215,7 +214,6 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 	if abs(VehicleObj1.frame[0] - VehicleObj2.frame[0]) >=600:
 		return
 	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
-
 	if coorccurStatus and np.size(cooccur_ran)>=overlap_pair_threshold:
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
@@ -232,10 +230,11 @@ if __name__ == '__main__':
 	dataSource      = 'DoT'
 
 	fps = 5
+	subSampRate = 6
 	overlap_pair_threshold = 3*fps
 
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
-	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime)
+	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime,subSampRate = subSampRate)
 	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3
 	clean_vctime = {}
 	clean_vcxtrj = {}
@@ -263,7 +262,7 @@ if __name__ == '__main__':
 
 	print "trj remaining: ", str(len(clean_vctime))
 	# rebuild this object using filtered data, should be no bad_IDs
-	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime)
+	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime,subSampRate = subSampRate)
 	# pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','wb'))
 	# pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
 	pickle.dump(obj_pair2,open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/obj_pair2.p'),'wb'))
@@ -328,7 +327,6 @@ if __name__ == '__main__':
 	writer2    = csv.writer(open(savename2,'wb'))
 	writer2.writerow(['trj2 ID','trj2 ID'])
 
-	# pdb.set_trace()
 	isWrite     = True
 	isVisualize = False
 	plt.figure('testing')

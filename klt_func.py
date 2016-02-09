@@ -175,7 +175,6 @@ if __name__ == '__main__':
 
     # -- set low number of frames for testing
     # nframe = 1801
-    # if isVideo: cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,frame_idx))
     while (frame_idx < nframe):
         if useBlobCenter and (((frame_idx) % trunclen) == 0):
             print "load foreground blob index matrix file...."
@@ -192,6 +191,7 @@ if __name__ == '__main__':
             frame[:,:,:] = cv2.imread(imlist[subsample_frmIdx*subSampRate])
         if isVideo:
             try:
+                cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
                 status, frame[:,:,:] = cap.read()
             except:
                 print "exception!!"
