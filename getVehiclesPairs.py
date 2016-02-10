@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
 from DataPathclass import *
 DataPathobj = DataPath()
+import sys
 
 
 def prepare_data(isAfterWarpping,dataSource,isLeft=True):
@@ -169,6 +170,8 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2,saveflag = 0):
 	for k in range(np.size(cooccur_ran)):
 		frame_idx = cooccur_ran[k]
 		# print "frame_idx: " ,frame_idx
+		plt.title('frame '+str(frame_idx))
+
 		if isVideo:
 			cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES ,frame_idx)
 			status, frame = cap.read()
@@ -186,8 +189,8 @@ def visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color, k1,k2,saveflag = 0):
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(color[k-1].T)/255.,edgecolor='none')) 
 		# dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=50, color=(1,0,0),edgecolor='none'))
 		# dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=50, color=(0,1,0),edgecolor='none'))
-		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=10, color=(color[k1].T)/255.,edgecolor='none')) 
-		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=10, color=(color[k2].T)/255.,edgecolor='none'))
+		dots.append(axL.scatter(vcxtrj1[k], vcytrj1[k], s=8, color=(color[k1].T)/255.,edgecolor='none')) 
+		dots.append(axL.scatter(vcxtrj2[k], vcytrj2[k], s=8, color=(color[k2].T)/255.,edgecolor='none'))
 		plt.draw()
 		# plt.show()
 		plt.pause(0.00001)
@@ -217,9 +220,12 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 	if coorccurStatus and np.size(cooccur_ran)>=overlap_pair_threshold:
 		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
-			print "cooccur length: ", str(cooccur_ran)
+			# print "cooccur length: ", str(cooccur_ran)
+			print "len(cooccur_ran):", len(cooccur_ran), cooccur_ran[0],'-',cooccur_ran[-1]
+			sys.stdout.flush()
 			saveflag = 0
 			if isVisualize:
+				print "trj",loopVehicleID1,"  trj",loopVehicleID2
 				visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2,saveflag) #visualize
 
 
@@ -235,7 +241,9 @@ if __name__ == '__main__':
 
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime,subSampRate = subSampRate)
-	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs3
+	# badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2+obj_pair.bad_IDs4
+	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2
+
 	clean_vctime = {}
 	clean_vcxtrj = {}
 	clean_vcytrj = {}
@@ -347,22 +355,22 @@ if __name__ == '__main__':
 			axL   = plt.subplot(1,1,1)
 			im    = plt.imshow(np.zeros([nrows,ncols,3]))
 			plt.axis('off')
-			visualize_threshold  = 300 # only if a pair shared more than 40 frames, show them
+			visualize_threshold  = fps*10 # only if a pair shared more than this many frames, show them
 			visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,color_choice,isWrite, isVisualize, visualize_threshold,overlap_pair_threshold)
 
 
 
 
 
-	# pdb.set_trace()
+	pdb.set_trace()
 	# """use for signle stesting in the end, show pairs given IDs"""
-	# plt.figure('testing')
-	# axL         = plt.subplot(1,1,1)
-	# im          = plt.imshow(np.zeros([nrows,ncols,3]))
-	# plt.axis('off')
-	# isWrite     = False
-	# isVisualize = True
-	# visual_givenID(30092, 30194, obj_pair2loop,color_choice,isWrite, isVisualize ,visualize_threshold = 40)
+	plt.figure('testing2')
+	axL         = plt.subplot(1,1,1)
+	im          = plt.imshow(np.zeros([nrows,ncols,3]))
+	plt.axis('off')
+	isWrite     = False
+	isVisualize = True
+	visual_givenID(649, 703, obj_pair2loop,color_choice,isWrite, isVisualize ,visualize_threshold = 40)
 
 
 
