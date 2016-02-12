@@ -5,7 +5,7 @@ import cPickle as pickle
 import numpy as np
 from scipy.io import loadmat,savemat
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 
 def unify_label(matfiles,savename):
     atmp     = []

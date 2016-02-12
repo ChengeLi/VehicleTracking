@@ -8,7 +8,7 @@ from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 
 
 def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minspdth = 15): # DoT fps 23 Johnson 30

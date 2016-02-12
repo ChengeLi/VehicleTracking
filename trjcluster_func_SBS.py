@@ -10,7 +10,7 @@ from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 
 
 def adj_gaussian_element(sxdiff, sydiff, mdis,SBS,useSBS = True):

@@ -10,7 +10,7 @@ import cPickle as pickle
 import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 import sys
 
 

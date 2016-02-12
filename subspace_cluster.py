@@ -16,7 +16,7 @@ from sklearn.utils import check_random_state
 import pdb
 import os
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):

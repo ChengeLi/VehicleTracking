@@ -27,7 +27,7 @@ print t3
 print("running subspace_cluster...")
 t0 = time.time()
 execfile('subspace_cluster.py')
-t4 = time.time() - t0  # t4 = 833.2255761623383
+t4 = time.time() - t0  # t4 = 2334.37383294 
 print t4
 
 print("running unify_label...")

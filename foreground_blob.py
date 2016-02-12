@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 import scipy.ndimage as ndimg 
 
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 
 """blob detector doesn't work..."""
 """
