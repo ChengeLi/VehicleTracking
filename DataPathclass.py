@@ -15,7 +15,7 @@ class DataPath(object):
 		else:   # on linux
 			# self.sysPathHeader = '/media/TOSHIBA/'
 			if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
-				self.sysPathHeader = '/media/My Book/DOT Video/'
+				self.sysPathHeader = '../CanalVideos/'
 			else:
 				self.sysPathHeader = '/media/My Book/DOT Video/'
 
