@@ -280,8 +280,10 @@ if __name__ == '__main__':
 	obj_pair2 = TrjObj(clean_vcxtrj,clean_vcytrj,clean_vctime,subSampRate = subSampRate)
 	# pickle.dump(obj_pair2,open('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/500-5-1clean_obj_pair2.p','wb'))
 	# pickle.dump(obj_pair2,open('../Jay&Johnson/roi2/clean_obj_pair2.p','wb'))
-	pickle.dump(obj_pair2,open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/obj_pair2.p'),'wb'))
-	pdb.set_trace()
+	pickle.dump(obj_pair2,open(os.path.join(savePath,'obj_pair2.p'),'wb'))
+	
+
+	# pdb.set_trace()
 
 
 
@@ -308,7 +310,7 @@ if __name__ == '__main__':
 	#=======visualize the pair relationship==============================================
 	isVideo  = True
 	if isVideo:
-		dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+		dataPath = DataPathobj.video #'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 		cap       = cv2.VideoCapture(dataPath)
 		cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES ,0)
 		status, firstfrm = cap.read()
@@ -345,7 +347,7 @@ if __name__ == '__main__':
 	isWrite     = True
 	isVisualize = False
 	plt.figure('testing')
-	test_clusterSize  = pickle.load( open( os.path.join(DataPathobj.sysPathHeader, 'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_clusterSize.p'), "rb" ) )
+	test_clusterSize  = pickle.load( open( os.path.join(DataPathobj.dicpath,'final_clusterSize.p'), "rb" ) )
 
 	for ind1 in range(len(obj_pair2loop.globalID)-1):
 		for ind2 in range(ind1+1, min(len(obj_pair2loop.globalID),ind1+500)):
@@ -369,15 +371,15 @@ if __name__ == '__main__':
 
 
 
-	pdb.set_trace()
+	# pdb.set_trace()
 	# """use for signle stesting in the end, show pairs given IDs"""
-	plt.figure('testing2')
-	axL         = plt.subplot(1,1,1)
-	im          = plt.imshow(np.zeros([nrows,ncols,3]))
-	plt.axis('off')
-	isWrite     = False
-	isVisualize = True
-	visual_givenID(649, 703, obj_pair2loop,color_choice,isWrite, isVisualize ,visualize_threshold = 40)
+	# plt.figure('testing2')
+	# axL         = plt.subplot(1,1,1)
+	# im          = plt.imshow(np.zeros([nrows,ncols,3]))
+	# plt.axis('off')
+	# isWrite     = False
+	# isVisualize = True
+	# visual_givenID(649, 703, obj_pair2loop,color_choice,isWrite, isVisualize ,visualize_threshold = 40)
 
 
 

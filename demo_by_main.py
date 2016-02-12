@@ -2,8 +2,10 @@
 
 import time
 import sys
+import numpy as np
 
-VideoIndex = sys.argv[1]
+VideoIndex = np.int(sys.argv[1])
+# VideoIndex = 48
 
 print("running KLT...")
 t0 = time.time()
@@ -40,7 +42,7 @@ print "save the final result to dic format"
 t0 = time.time()
 execfile('trj2dic.py')
 t6 = time.time() - t0
-print t6
+print t6  # 172.96072793    
 
 print "get trj pairs" 
 t0 = time.time()
