@@ -21,7 +21,7 @@ class DataPath(object):
 
 
 		# self.videoPath = os.path.join(self.sysPathHeader,'Canal @ Baxter/Canal St @ Baxter St - 96.106_2015-06-20_08h00min00s000ms.asf')
-		self.videoPath = os.path.join(self.sysPathHeader,'Canal @ Baxter/')
+		self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
 		self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 		self.video     = self.videoList[VideoIndex]
 		self.videoTime = self.video[-31:-17]
