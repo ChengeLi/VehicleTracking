@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 from matplotlib import pyplot as plt
 
 from DataPathclass import *
-DataPathobj = DataPath()
+DataPathobj = DataPath(VideoIndex)
 # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
 # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
 
@@ -26,12 +26,15 @@ if __name__ == '__main__':
     frame_idx_bias = 0
     isVideo  = True
     if isVideo:
-        dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
-        # dataPath = '..DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.mp4'
-        # dataPath = '/media/My Book/DOT Video/Canal @ Baxter/Canal St @ Baxter St - 96.106_2015-06-20_08h00min00s000ms.asf'    
+        # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+        dataPath = DataPathobj.video
     else:
-        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' # only 2000 pictures
-    savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
+        # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' # only 2000 pictures
+        dataPath = DataPathobj.imagePath
+    
+    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
+    savePath = DataPathobj.kltpath
+
     # useBlobCenter = True
     useBlobCenter = False
     isVisualize   = False
@@ -67,11 +70,11 @@ if __name__ == '__main__':
 
     """ canal st """
     if dataSource == 'DoT':
-        lk_params = dict(winSize=(15, 15), maxLevel=2, 
+        lk_params = dict(winSize=(10, 10), maxLevel=2, 
                          criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
         # feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
         #                       blockSize=7)  
-        feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=3, 
+        feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, 
                               blockSize=5)  # old jayst 
     
     # idx             = 0
@@ -143,10 +146,10 @@ if __name__ == '__main__':
         cap       = cv2.VideoCapture(video_src)
         # if not cap.isOpened():
         #    raise Exception("video not opened!")
-        nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-        ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-        nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        
+        nrows  = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+        ncols  = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+        nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        fps    = np.int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         print 'reading buffer...'
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
         status, frame = cap.read()
@@ -282,7 +285,7 @@ if __name__ == '__main__':
                         tracksdic[dicidx].append((x,y,frame_idx))
                     dicidx += 1
 
-        print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
+        # print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
 
         if isVisualize:
             # cv2.imshow('klt', vis)
@@ -389,7 +392,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(subsample_frmIdx/trunclen).zfill(3)+'_sub6_newnew')
+            savename = os.path.join(savePath,'klt_'+str(np.int(subsample_frmIdx/trunclen)).zfill(3)+'_sub6')
             savemat(savename,trk)
 
 

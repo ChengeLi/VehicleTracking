@@ -85,6 +85,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         
         nrows     = int(np.size(firstfrm,0))
         ncols     = int(np.size(firstfrm,1))
+        # plt.ion()
         fig = plt.figure('vis')
         axL = plt.subplot(1,1,1)
         im  = plt.imshow(np.zeros([nrows,ncols,3]))
@@ -370,9 +371,15 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             """Linux Canal"""
             global subSampRate
             subSampRate = 6
-            matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
-            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/'+'*mat')))
-            savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/')
+            # matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
+            # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/'+'*mat')))
+            # savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/')
+            matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'*.mat')))
+            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.dicpath,'*.mat')))
+            savePath = DataPathobj.dicpath
+
+
+
             result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
             clustered_result       = clustered_result_files[result_file_Ind]
             """Mac Canal"""
@@ -381,8 +388,8 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             # savePath   = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'        
             
             if isVideo:
-                dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
-                # dataPath = '../DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+                # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+                dataPath = DataPathobj.video
             else:
                 dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
 

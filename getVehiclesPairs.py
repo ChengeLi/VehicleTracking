@@ -35,11 +35,18 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 				savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
 
 		else:
-			test_vctime = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vctime.p'), "rb" ) )
-			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcxtrj.p'), "rb" ) )
-			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcytrj.p'), "rb" ) )
-			image_list = []
-			savePath   = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/')
+			# test_vctime = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vctime.p'), "rb" ) )
+			# test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcxtrj.p'), "rb" ) )
+			# test_vcytrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcytrj.p'), "rb" ) )
+			# image_list = []
+			# savePath   = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/')
+
+			test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
+			image_list = DataPathobj.imagePath
+			savePath = DataPathobj.pairpath
+
 
 	if dataSource == 'Johnson':
 		# """complete"""

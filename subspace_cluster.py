@@ -301,8 +301,12 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
         # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
         if dataSource == 'DoT':
             # for linux
-            matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/' + '*.mat')))
-            savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_')
+            # matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/' + '*.mat')))
+            # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_')
+            matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
+            savePath = DataPathobj.sscpath
+
+
             # for mac
             # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
             # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
@@ -329,8 +333,8 @@ if __name__ == '__main__':
     isLeft = False
     matfiles, savePath = prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=False)
     isSave = True
-    # isVisualize = True
-    isVisualize = False
+    isVisualize = True
+    # isVisualize = False
 
     for matidx, matfile in enumerate(matfiles):
         file = scipy_io.loadmat(matfile)
@@ -357,7 +361,7 @@ if __name__ == '__main__':
             newlabels = list(labels)
             for i in range(int(max(labels)) + 1):
                 trjind = np.where(labels == i)[0]
-                print "trjind = ", str(trjind)
+                # print "trjind = ", str(trjind)
                 if len(trjind) <= 20:
 					# newlabels.remove(i)
 					newlabels = [x for x in newlabels if x!=i]

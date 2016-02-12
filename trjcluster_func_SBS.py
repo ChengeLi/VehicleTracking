@@ -85,8 +85,12 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     else:
         if dataSource == 'DoT':
             """for linux"""
-            matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
-            savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/')
+            # matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
+            # savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/')
+            matfilepath = DataPathobj.filteredKltPath
+            savePath    = DataPathobj.adjpath
+
+
             """for mac"""
             # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
             # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
@@ -98,7 +102,7 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
             # savePath    = '../tempFigs/roi2/' 
         
         matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
-        matfiles = matfiles[33:]
+        # matfiles = matfiles[33:]
     return matfiles,savePath
 
 
@@ -121,9 +125,9 @@ if __name__ == '__main__':
     fig888 = plt.figure()
     ax     = plt.subplot(1,1,1)
 
-    # for matidx,matfile in enumerate(matfiles):
-    for matidx in range(17,len(matfiles)):
-        matfile = matfiles[matidx]
+    for matidx,matfile in enumerate(matfiles):
+    # for matidx in range(0,18):
+        # matfile = matfiles[matidx]
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
         if len(ptstrj['trjID'])==0:
@@ -161,7 +165,7 @@ if __name__ == '__main__':
         # mdisAll = []
         # build adjacent mtx
         for i in range(NumGoodsample):
-            print "i", i
+            # print "i", i
             # plt.cla()
             for j in range(i, min(NumGoodsample,i+1000)):
                 tmp1 = x[i,:]!=0

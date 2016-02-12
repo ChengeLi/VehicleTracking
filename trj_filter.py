@@ -68,14 +68,16 @@ def prepare_input_data(dataSource):
     subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
     if dataSource == 'DoT':
         # for linux
-        matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
-        savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
+        # matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
+        # savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
+        matfilepath = DataPathobj.kltpath
+        savePath = DataPathobj.filteredKltPath
+
         # for mac
         # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-        # useBlobCenter = True
         useBlobCenter = False
-        fps = 23/subSampRate
+        fps = 30/subSampRate
     """Jay & Johnson"""
     if dataSource == 'Johnson':
         # matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
@@ -183,6 +185,6 @@ if __name__ == '__main__':
         result['yspd']    = yspd
         if useBlobCenter:
             result['fg_blob_index'] = blob_index_re
-        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+np.int(matfiles[matidx][-15:-12]).zfill(3))
+        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matfiles[matidx][-19:-16]).zfill(3))
         savemat(savename,result)
 
