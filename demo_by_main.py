@@ -1,4 +1,8 @@
-# demo for videos no need to warp
+
+# from shell
+# stdbuf -oL python demo_by_main.py 2 >../CanalVideos/log2 &
+
+
 
 import time
 import sys
