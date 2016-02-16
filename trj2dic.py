@@ -334,11 +334,11 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # name = './canalResult/original/'+str(frame_idx).zfill(6)+'.jpg'
     # plt.savefig(name) ##save figure
 
-    # while line_exist :
-    #     try:
-    #         axL.lines.pop(0)
-    #     except:
-    #         line_exist = 0
+    while line_exist :
+        try:
+            axL.lines.pop(0)
+        except:
+            line_exist = 0
 
     for i in dots:
         i.remove()
@@ -423,10 +423,10 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = False
+    isVisualize      = True
     useVirtualCenter = True
     isLeft           = False
-    isSave           = True
+    isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     # start_frame_idx = trunclen*subSampRate*6

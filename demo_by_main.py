@@ -2,6 +2,8 @@
 # from shell
 # stdbuf -oL python demo_by_main.py 2 >../CanalVideos/log2 &
 
+stdbuf -oL python demo_by_main.py 4 >../CanalVideos/log4 &
+
 
 
 import time
@@ -50,7 +52,7 @@ print t6  # 172.96072793
 
 print "get trj pairs" 
 t0 = time.time()
-execfile('getVehiclesPairs.py')
+execfile('getVehiclesPairs.py') # writing to csv takes more than 3 hours
 t7 = time.time() - t0
 print t7
 
