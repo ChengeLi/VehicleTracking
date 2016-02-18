@@ -2,7 +2,7 @@
 # from shell
 # stdbuf -oL python demo_by_main.py 2 >../CanalVideos/log2 &
 
-stdbuf -oL python demo_by_main.py 4 >../CanalVideos/log4 &
+#stdbuf -oL python demo_by_main.py 4 >../CanalVideos/log4 &
 
 
 
