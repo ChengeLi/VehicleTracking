@@ -1,6 +1,7 @@
 import os
 import platform
 import glob as glob
+import pdb
 
 class DataPath(object):
     # def __init__(self):
@@ -12,23 +13,25 @@ class DataPath(object):
 	def __init__(self,VideoIndex):  # different VideoIndex for different videos
 		if platform.system()=='Darwin':   # on mac
 			self.sysPathHeader = '/Volumes/TOSHIBA/'
-			self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
-			self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 		else:   # on linux
-			if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
+			# self.sysPathHeader = '/media/TOSHIBA/'
+			if os.getcwd()[-3:] == 'AIG':  # on CUSP compute #/home/cusp/cl2840/CanalVideos/Canal@Baxter/avi
 				self.sysPathHeader = '../CanalVideos/Canal@Baxter/'
-				self.videoPath = os.path.join(self.sysPathHeader,'avi/')
-				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
 			else:
 				self.sysPathHeader = '/media/My Book/DOT Video/'
-				self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
-				self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 
 
+		# self.videoPath = os.path.join(self.sysPathHeader,'Canal @ Baxter/Canal St @ Baxter St - 96.106_2015-06-20_08h00min00s000ms.asf')
+		self.videoPath = os.path.join(self.sysPathHeader,'avi/')
+		#pdb.set_trace()
+		print self.videoPath
+		self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+		#pdb.set_trace()
 		self.video     = self.videoList[VideoIndex]
 		self.videoTime = self.video[-31:-17]
 
 		self.DataPath = os.path.join(self.sysPathHeader,self.videoTime)
+		
 		if not os.path.exists(self.DataPath):
 			os.mkdir(self.DataPath)
 
