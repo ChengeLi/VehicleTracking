@@ -184,7 +184,7 @@ if __name__ == '__main__':
         result['xspd']    = xspd
         result['yspd']    = yspd
         if useBlobCenter:
-            result['fg_blob_index'] = blob_index_re
-        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matfiles[matidx][-19:-16]).zfill(3))
+            result['fg_blob_index'] = blob_index_re	
+        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matfiles[matidx][-12:-9]).zfill(3))
         savemat(savename,result)
 

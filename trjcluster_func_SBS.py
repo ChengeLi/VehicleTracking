@@ -114,6 +114,7 @@ if __name__ == '__main__':
     useSBS          = False
     # dataSource      = 'Johnson'
     dataSource      = 'DoT'
+    isVisualize = False
 
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft,dataSource)
     # adj_element = np.nan
@@ -122,8 +123,9 @@ if __name__ == '__main__':
     # adj_element = "Cosine"
 
     # """to visualize the neighbours"""
-    fig888 = plt.figure()
-    ax     = plt.subplot(1,1,1)
+    if isVisualize:
+    	fig888 = plt.figure()
+    	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
     # for matidx in range(0,18):

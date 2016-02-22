@@ -320,7 +320,7 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
                 matfiles = sorted(glob.glob('../Jay&Johnson/roi2/adj/' + '*.mat'))
                 savePath = '../Jay&Johnson/roi2/ssc/ssc_'
 
-        # matfiles = matfiles[0:]
+        matfiles = matfiles[0:12]
     return matfiles, savePath
 
 

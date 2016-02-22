@@ -95,6 +95,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     # If non-clustered trjs, the input mlabels are just the trj ID (trjID)
     
     lasttrunkTrjFile = loadmat(matfiles[-1]) ##the last one, to get the max index number
+    if len(lasttrunkTrjFile['trjID'])<1:
+        lasttrunkTrjFile = loadmat(matfiles[-2])  # in case the last one is empty
     IDintrunklast    = lasttrunkTrjFile['trjID'][0]
     color            = np.array([np.random.randint(0,255) \
                        for _ in range(3*int(max(IDintrunklast)))])\
@@ -423,10 +425,10 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
     isLeft           = False
-    isSave           = False
+    isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     # start_frame_idx = trunclen*subSampRate*6
