@@ -120,8 +120,10 @@ if __name__ == '__main__':
     numTrunc    = len(matfilesAll)
 
     if numTrunc<=200:
-        savename = os.path.join(savePath,'Complete_result')
-        # savename = os.path.join(savePath,'onlyBigGroup_Complete_result')
+        if smooth:
+            savename = os.path.join(savePath,'smooth_Complete_result')
+        else:
+            savename = os.path.join(savePath,'Complete_result')
         unify_label(matfilesAll,savename)
     else:
         for kk in range(0,numTrunc,25):

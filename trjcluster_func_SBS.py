@@ -12,15 +12,47 @@ import matplotlib.pyplot as plt
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
 
+def getMuSigma(x,y,xspd,yspd):
 
-def adj_gaussian_element(sxdiff, sydiff, mdis,SBS,useSBS = True):
-    sigma_xspd_diff = 0.7
-    sigma_yspd_diff = 0.7
-    sigma_spatial_distance = 200
+    sxdiffAll = []
+    sydiffAll = []
+    mdisAll = []
+
+
+    # build adjacent mtx
+    for i in range(NumGoodsample):
+        # print "i", i
+        # plt.cla()
+        for j in range(i, min(NumGoodsample,i+1000)):
+            tmp1 = x[i,:]!=0
+            tmp2 = x[j,:]!=0
+            idx  = num[tmp1&tmp2]
+            if len(idx)>5: # has overlapping
+            # if len(idx)>=30: # at least overlap for 100 frames
+                sidx   = idx[0:-1] # for speed
+                sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
+                mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+                
+                sxdiffAll.append(sxdiff)
+                sydiffAll.append(sydiff)
+                mdisAll.append(mdis)
+
+    mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
+    mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
+    mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
+
+    return mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance
+
+
+def adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd, SBS,useSBS = False):
+    # sigma_xspd_diff = 0.7
+    # sigma_yspd_diff = 0.7
+    # sigma_spatial_distance = 200
     if useSBS:
-        adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2) + SBS)
+        adj_element = np.exp((-sxdiff**2/stdx**2)+(-sydiff**2/stdy**2)+(-mdis**2/stdd**2) + SBS)
     else:
-        adj_element = np.exp((-sxdiff**2/sigma_xspd_diff**2)+(-sydiff**2/sigma_yspd_diff**2)+(-mdis**2/sigma_spatial_distance**2))
+        adj_element = np.exp((-sxdiff**2/stdx**2)+(-sydiff**2/stdy**2)+(-mdis**2/stdd**2))
     # if math.isnan(adj_element):
     #     pdb.set_trace()
     return adj_element
@@ -85,27 +117,19 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
     else:
         if dataSource == 'DoT':
             """for linux"""
-            # matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
-            # savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/')
             matfilepath = DataPathobj.filteredKltPath
             savePath    = DataPathobj.adjpath
-
-
-            """for mac"""
-            # matfilepath   = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
-            # savePath      = '../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
         if dataSource == 'Johnson':
             """Jay & Johnson"""
             matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/')
             savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/')
-            # matfilepath = '../tempFigs/roi2/filtered/'
-            # savePath    = '../tempFigs/roi2/' 
         
-        matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
-        # matfiles = matfiles[33:]
+        if smooth:
+            matfiles = sorted(glob.glob(matfilepath + 'smooth_len*.mat'))
+        else:
+            matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
+        matfiles = matfiles[0:]
     return matfiles,savePath
-
-
 
 # def trjcluster(useSBS,dataSource):
 if __name__ == '__main__':
@@ -118,8 +142,8 @@ if __name__ == '__main__':
 
     matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft,dataSource)
     # adj_element = np.nan
-    adj_element = "Thresholding"
-    # adj_element = "Gaussian"
+    # adj_element = "Thresholding"
+    adj_element = "Gaussian"
     # adj_element = "Cosine"
 
     # """to visualize the neighbours"""
@@ -128,7 +152,7 @@ if __name__ == '__main__':
     	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
-    # for matidx in range(0,18):
+    # for matidx in range(2,4):
         # matfile = matfiles[matidx]
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -160,11 +184,10 @@ if __name__ == '__main__':
         SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
 
-        # spdYdiff_file = open('sydiffAll.txt', 'wb')
+        if adj_element =="Gaussian":
+            ux,stdx,uy,stdy,ud,stdd = getMuSigma(x,y,xspd,yspd)
 
-        # sxdiffAll = []
-        # sydiffAll = []
-        # mdisAll = []
+
         # build adjacent mtx
         for i in range(NumGoodsample):
             # print "i", i
@@ -179,13 +202,13 @@ if __name__ == '__main__':
                     sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                     sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
                     mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-
-                    # sxdiffAll.append(sxdiff)
-                    # sydiffAll.append(sydiff)
-                    # mdisAll.append(mdis)
-
+                    
+                    sxdiffAll.append(sxdiff)
+                    sydiffAll.append(sydiff)
+                    mdisAll.append(mdis)
                     trj1     = [x[i,idx],y[i,idx]]
                     trj2     = [x[j,idx],y[j,idx]]
+                    
                     """counting the sharing blob numbers of two trjs"""
                     if useSBS:
                         SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
@@ -193,7 +216,7 @@ if __name__ == '__main__':
                         adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis,dataSource)
 
                     if adj_element =="Gaussian":
-                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis,SBS[i,j],useSBS)
+                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd,SBS[i,j],useSBS)
 
                     if adj_element == "Cosine":
                         i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
@@ -207,9 +230,6 @@ if __name__ == '__main__':
                     else:
                         SBS[i,j] = 0
                         adj[i,j] = 0
-        # pickle.dump( sxdiffAll, open( './roi2_xspdiff'+str(matidx)+'.p', "wb" ) )
-        # pickle.dump( sydiffAll, open( './roi2_yspdiff'+str(matidx)+'.p', "wb" ) )
-        # pickle.dump( mdisAll, open( './roi2_mdis'+str(matidx)+'.p', "wb" ) )
 
         SBS = SBS + SBS.transpose()
         np.fill_diagonal(SBS, np.diagonal(SBS)/2)
@@ -243,15 +263,18 @@ if __name__ == '__main__':
 
         if not isAfterWarpping:
             # savename = os.path.join(savePath,adj_element+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
-            savename = os.path.join(savePath,adj_element+'_Adj_500_5_1_'+matfiles[matidx][-7:-4].zfill(3))
-
+            if smooth:
+                savename = 'smooth_'+adj_element+'_Adj_500_5_1_'+str(matidx+1).zfill(3)
+            else:
+                savename = adj_element+'_Adj_500_5_1_'+str(matidx+1).zfill(3)
+            savename = os.path.join(savePath,savename)
             savemat(savename,result)
         else:
             savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
             savemat(savename,result)
             
 
-        # """ visualization """
+        """ visualization, see if connected components make sense"""
         # pdb.set_trace()        
         # s111,c111 = connected_components(sparsemtx) #s is the total CComponent, c is the label
         # color     = np.array([np.random.randint(0,255) for _ in range(3*int(s111))]).reshape(s111,3)
@@ -268,6 +291,7 @@ if __name__ == '__main__':
         #         lines = ax.plot(x[ind[jj],startlimit:endlimit], y[ind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
         #         fig888.canvas.draw()
         #     plt.pause(0.0001) 
+        # plt.show()
         # pdb.set_trace()
 
 

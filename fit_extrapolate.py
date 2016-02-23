@@ -8,33 +8,12 @@ from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
 from scipy.interpolate import interp1d
-from scipy.stats import norm
 from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
-
-
-
-# from DataPathclass import *
-# DataPathobj = DataPath(VideoIndex)
-
-# fitting Gaussian and get rid of the outlier(too large p3)
-def fitGaussian(data):
-	# Fit a normal distribution to the data:
-	mu, std = norm.fit(data)
-	# Plot the histogram.
-	# plt.hist(data, bins=25, normed=True, alpha=0.6, color='g')
-	# Plot the PDF.
-	# xmin, xmax = plt.xlim()
-	# x = np.linspace(xmin, xmax, 100)
-	# p = norm.pdf(x, mu, std)
-	# plt.plot(x, p, 'k', linewidth=2)
-	# title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
-	# plt.title(title)
-	# plt.show()
-	return mu, std
-
+from DataPathclass import *
+DataPathobj = DataPath(VideoIndex)
 
 def polyFitTrj(x,y):
 	badTrj  = []
@@ -153,7 +132,8 @@ def kmeansPolyCoeff(p3):
 	    fignum = fignum + 1
 
 def readData(matidx = 0):
-	matfilepath    = '/Users/Chenge/Desktop/testklt/'
+	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
+	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 	start_position = 0 
 	matfiles       = matfiles[start_position:]
@@ -211,7 +191,6 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			plt.draw()
 	plt.show()
 
-
 def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,  ptstrj,matfile):
 	ptstrj['xtracks'] = csr_matrix(x_smooth_mtx)
 	ptstrj['ytracks'] = csr_matrix(y_smooth_mtx)
@@ -223,7 +202,7 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,  ptstrj,matfile):
 	if not os.path.exists(smoothPath):
 		os.mkdir(smoothPath)
 	onlyFileName = matfile[len(parentPath)+1:]
-	savename = os.path.join(smoothPath,onlyFileName[:-4]+'_smooth'+'.mat')
+	savename = os.path.join(smoothPath,'smooth_'+onlyFileName)
 	savemat(savename,ptstrj)
 
 
@@ -240,6 +219,7 @@ def main(matidx):
 	pdb.set_trace()
 	plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
 	# saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+
 
 
 if __name__ == '__main__':		

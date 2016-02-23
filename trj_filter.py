@@ -62,33 +62,18 @@ def FindAllNanRow(aa):
     allNanRowInd = np.array(index)[np.isnan(aa).all(axis = 1)]
     return allNanRowInd
 
-def prepare_input_data(dataSource):
+def prepare_input_data(dataSource,smooth = False):
     ## fps for DoT Canal is 23
     ## Jay & Johnson is 30
     subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
     if dataSource == 'DoT':
-        # for linux
-        # matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
-        # savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/')
-        matfilepath = DataPathobj.kltpath
+        if smooth:
+            matfilepath = DataPathobj.smoothpath
+        else:
+            matfilepath = DataPathobj.kltpath
         savePath = DataPathobj.filteredKltPath
-
-        # for mac
-        # matfilepath = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-        # savePath    = '../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/'
         useBlobCenter = False
         fps = 30/subSampRate
-    """Jay & Johnson"""
-    if dataSource == 'Johnson':
-        # matfilepath = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/'
-        # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/filtered/'
-        matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/')
-        savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/')       # matfilepath = '../tempFigs/roi2/'
-        # savePath = '../tempFigs/roi2/filtered/' 
-        useBlobCenter = False
-        fps = 30/subSampRate
-
-
     matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
     start_position = 0 #already processed 10 files
     matfiles       = matfiles[start_position:]
@@ -98,10 +83,8 @@ def prepare_input_data(dataSource):
 
 if __name__ == '__main__':
     dataSource = 'DoT'
-    # dataSource = 'Johnson'
-
 # def filtering_main_function(fps,dataSource = 'DoT'):
-    matfiles,savePath,useBlobCenter,fps = prepare_input_data(dataSource)
+    matfiles,savePath,useBlobCenter,fps = prepare_input_data(dataSource, smooth)
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -183,8 +166,15 @@ if __name__ == '__main__':
         result['Ttracks'] = t_re
         result['xspd']    = xspd
         result['yspd']    = yspd
+        
+
         if useBlobCenter:
             result['fg_blob_index'] = blob_index_re	
-        savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matfiles[matidx][-12:-9]).zfill(3))
+        if smooth:
+            savename = os.path.join(savePath,'smooth_len4minSpd'+str(minspdth)+'_'+str(matidx+1).zfill(3)+'.mat')
+        else:
+            savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matidx+1).zfill(3))
         savemat(savename,result)
+
+
 

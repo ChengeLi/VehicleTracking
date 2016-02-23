@@ -392,7 +392,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(np.int(subsample_frmIdx/trunclen)).zfill(3)+'_sub6')
+            savename = os.path.join(savePath,'klt_'+'sub6'+str(np.int(subsample_frmIdx/trunclen)).zfill(3))
             savemat(savename,trk)
 
 

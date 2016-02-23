@@ -303,10 +303,11 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
             # for linux
             # matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/' + '*.mat')))
             # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_')
-            matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
+            if smooth:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'smooth_*.mat')))
+            else:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat'))) 
             savePath = DataPathobj.sscpath
-
-
             # for mac
             # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
             # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
@@ -320,7 +321,7 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
                 matfiles = sorted(glob.glob('../Jay&Johnson/roi2/adj/' + '*.mat'))
                 savePath = '../Jay&Johnson/roi2/ssc/ssc_'
 
-        matfiles = matfiles[0:12]
+        matfiles = matfiles[0:]
     return matfiles, savePath
 
 
@@ -394,7 +395,10 @@ if __name__ == '__main__':
             labelsave['trjID'] = trjID
             labelsave['newlabel'] = newlabels
             labelsave['newtrjID'] = newtrjID
-            savename = savePath + matfiles[matidx][-7:-4].zfill(3)
+            if smooth:
+                savename =os.path.join(savePath,'smooth_'+matfiles[matidx][-7:-4].zfill(3))
+            else:
+                savename = os.path.join(savePath, + matfiles[matidx][-7:-4].zfill(3))
             savemat(savename, labelsave)
 
     """SSC clustering Andy Project"""

@@ -31,18 +31,34 @@ def Virctr(x,y):
     # if len(x)!=len(y):
     #     return np.nan, np.nan
 
+    # if len(x)<3:
+    #     vcx = np.mean(x)
+    #     vcy = np.mean(y)
+    # else:
+    #     mx = np.mean(x)
+    #     my = np.mean(y)
+    #     sx = np.std(x)
+    #     sy = np.std(y)
+    #     # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+    #     idx = ((x-mx)<=sx)&((y-my)<=sy)
+    #     vcx = np.mean(x[idx])
+    #     vcy = np.mean(y[idx])
     if len(x)<3:
-        vcx = np.mean(x)
-        vcy = np.mean(y)
+        vcx = np.median(x)
+        vcy = np.median(y)
     else:
         mx = np.mean(x)
         my = np.mean(y)
         sx = np.std(x)
         sy = np.std(y)
-        # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
-        idx = ((x-mx)<=sx)&((y-my)<=sy)
-        vcx = np.mean(x[idx])
-        vcy = np.mean(y[idx])
+
+        if sx>10 or sy>10:
+            return np.nan,np.nan
+        else:
+            # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+            idx = ((x-mx)<=sx)&((y-my)<=sy)
+            vcx = np.median(x[idx])
+            vcy = np.median(y[idx])
     return vcx,vcy
 
 
@@ -224,20 +240,24 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 
                 if useVirtualCenter:
                     vx,vy = Virctr(x,y) # find virtual center
+                    if len(vcxtrj[k])>1:
+                        if np.isnan(vx) or np.isnan(vy):
+                            vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
+                            vy = vcytrj[k][-1]
+                        # else: append nan's
+                        elif np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
+                            vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
+                            vy = vcytrj[k][-1]
                 else:
                     vx = x
                     vy = y
-
-                # if vx<=0 or vy<=0:  # why exist negative????
-                if np.isnan(vx) or np.isnan(vy):
-                    pdb.set_trace() 
-                #     # vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
-                #     # vy = vcytrj[k][-1]
-                vcxtrj[k].append(vx) 
-                vcytrj[k].append(vy)
+                # pdb.set_trace()
+                # if vx<=0 or vy<=0:  # why exist negative????                        
+                vcxtrj[k].extend([vx]) 
+                vcytrj[k].extend([vy])
                 if len(x)!=len(y):
                     pdb.set_trace()
-                clusterSize[k].append(len(x))
+                clusterSize[k].extend([len(x)])
 
         if isVisualize:
             if isVideo:
@@ -268,7 +288,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
                     pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
 
-        subsample_frmIdx   += 1
+        subsample_frmIdx += 1
         frame_idx = subsample_frmIdx*subSampRate
         # end of while loop
 
@@ -289,12 +309,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
             clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel}
 
-
             pickle.dump( clean_vctime, open(savenameT,"wb"))
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
             pickle.dump( clean_clusterSize, open(savenameclusterSize,"wb"))
-            # pdb.set_trace()
 
             """duplicate"""
             # for i in np.int32(np.unique(list(set(vctime.keys())-set(notconnectedLabel)))): 
@@ -312,20 +330,23 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             # pdb.set_trace()
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
-    dots       = []
+    dots = []
     line_exist = 0
     # print labinf
     for k in np.unique(labinf)[1:]: #if k !=-1
         # print "x,y",vcxtrj[k],vcytrj[k]
-        
+        if useVirtualCenter:
+            xx = np.array(vcxtrj[k])[~np.isnan(vcxtrj[k])]
+            yy = np.array(vcytrj[k])[~np.isnan(vcytrj[k])]
+        else:
+            xx = np.array(vcxtrj[k])
+            yy = np.array(vcytrj[k])
+        # pdb.set_trace()
         # if VC_filter(vcxtrj[k],vcytrj[k]):
         if True:
-            lines       = axL.plot(vcxtrj[k],vcytrj[k],color = (color[k-1].T)/255.,linewidth=2)
-            line_exist = 1
-            # pdb.set_trace()
-            # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
-
-            # dots.append(axL.scatter(vcxtrj[k],vcytrj[k], s=8, color=(color[k-1].T)/255.,edgecolor='none')) 
+            # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
+            # line_exist = 1
+            dots.append(axL.scatter(xx,yy, s=8, color=(color[k-1].T)/255.,edgecolor='none')) 
         else:
             pass
     im.set_data(frame[:,:,::-1])
@@ -333,15 +354,16 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.draw()
     plt.pause(0.00001) 
     plt.title('frame '+str(frame_idx))
-    # name = './canalResult/original/'+str(frame_idx).zfill(6)+'.jpg'
+    name = os.path.join(DataPathobj.DataPath,'vis',str(frame_idx).zfill(6)+'.jpg')
     # plt.savefig(name) ##save figure
+    plt.draw()
+    plt.show()
 
-    while line_exist :
+    while line_exist:
         try:
             axL.lines.pop(0)
         except:
             line_exist = 0
-
     for i in dots:
         i.remove()
     # dots= []
@@ -373,11 +395,14 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             """Linux Canal"""
             global subSampRate
             subSampRate = 6
-            # matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
-            # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/'+'*mat')))
-            # savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/')
-            matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'*.mat')))
-            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*.mat')))
+            if smooth:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'smooth*.mat')))
+                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'smooth_*.mat')))
+            else:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
+                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))
+
+
             savePath = DataPathobj.dicpath
             result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
             clustered_result       = clustered_result_files[result_file_Ind]
@@ -425,10 +450,10 @@ if __name__ == '__main__':
     trunclen         = 600
     isClustered      = True
     isAfterWarpping  = False
-    isVisualize      = False
+    isVisualize      = True
     useVirtualCenter = True
     isLeft           = False
-    isSave           = True
+    isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
     start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     # start_frame_idx = trunclen*subSampRate*6
