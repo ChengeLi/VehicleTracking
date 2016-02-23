@@ -8,33 +8,12 @@ from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
 from scipy.interpolate import interp1d
-from scipy.stats import norm
 from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
-
-
-
-# from DataPathclass import *
-# DataPathobj = DataPath(VideoIndex)
-
-# fitting Gaussian and get rid of the outlier(too large p3)
-def fitGaussian(data):
-	# Fit a normal distribution to the data:
-	mu, std = norm.fit(data)
-	# Plot the histogram.
-	# plt.hist(data, bins=25, normed=True, alpha=0.6, color='g')
-	# Plot the PDF.
-	# xmin, xmax = plt.xlim()
-	# x = np.linspace(xmin, xmax, 100)
-	# p = norm.pdf(x, mu, std)
-	# plt.plot(x, p, 'k', linewidth=2)
-	# title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
-	# plt.title(title)
-	# plt.show()
-	return mu, std
-
+from DataPathclass import *
+DataPathobj = DataPath(VideoIndex)
 
 def polyFitTrj(x,y):
 	badTrj  = []
@@ -69,7 +48,6 @@ def polyFitTrj(x,y):
 	for ii in range(p3.shape[1]):
 		data = p3[:,ii]
 		outlierID = outlierID+ list(np.where(np.isnan(data)==True)[0])
-
 		mu,std = fitGaussian(data[np.ones(len(data), dtype=bool)-np.isnan(data)])
 		outlierID = outlierID + list(np.where(data>=mu+std)[0])+list(np.where(data<=mu-std)[0])
 		# print p3[outlierID,:]
@@ -150,7 +128,8 @@ def kmeansPolyCoeff(p3):
 	    fignum = fignum + 1
 
 def readData(matidx = 0):
-	matfilepath    = '/Users/Chenge/Desktop/testklt/'
+	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
+	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
 	start_position = 0 
 	matfiles       = matfiles[start_position:]
@@ -175,26 +154,6 @@ def getSmoothMtx(x,y):
 	return x_smooth_mtx,y_smooth_mtx
 
 
-def plotTrj(x,y,Trjchoice=[]):
-	if Trjchoice==[]:
-		Trjchoice=range(x.shape[0])
-
-	plt.ion()
-	plt.figure()
-	for ii in range(0,len(Trjchoice),1):
-		kk = Trjchoice[ii]
-		xk = x[kk,:][x[kk,:]!=0]
-		yk = y[kk,:][y[kk,:]!=0]
-		if len(xk)>=5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
-			# plt.plot(xk)
-			# plt.plot(yk)
-			plt.plot(xk, yk)
-			# extraPolate(xk, yk)
-			# x_fit = np.linspace(xk.min(), xk.max(), 200)
-			# y_fit = pow(x_fit,3)*p3[ii,0] + pow(x_fit,2)*p3[ii,1] + pow(x_fit,1)*p3[ii,2]+ p3[ii,3]
-			# plt.plot(x_fit, y_fit)
-			plt.draw()
-	plt.show()
 
 
 def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,  ptstrj,matfile):
@@ -208,7 +167,7 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,  ptstrj,matfile):
 	if not os.path.exists(smoothPath):
 		os.mkdir(smoothPath)
 	onlyFileName = matfile[len(parentPath)+1:]
-	savename = os.path.join(smoothPath,onlyFileName[:-4]+'_smooth'+'.mat')
+	savename = os.path.join(smoothPath,'smooth_'+onlyFileName)
 	savemat(savename,ptstrj)
 
 
@@ -223,8 +182,8 @@ def main(matidx):
 	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx)
 	# kmeansPolyCoeff(p3)
 
-	# plotTrj(x_smooth_mtx,y_smooth_mtx,goodTrj)
-	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+	plotTrj(x_smooth_mtx,y_smooth_mtx,goodTrj)
+	# saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 if __name__ == '__main__':		
