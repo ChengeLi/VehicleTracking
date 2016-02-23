@@ -240,18 +240,21 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 
                 if useVirtualCenter:
                     vx,vy = Virctr(x,y) # find virtual center
-                    if np.isnan(vx) or np.isnan(vy):
-                        if len(vcxtrj[k])>1:
+                    if len(vcxtrj[k])>1:
+                        if np.isnan(vx) or np.isnan(vy):
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
                             vy = vcytrj[k][-1]
                         # else: append nan's
+                        elif np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
+                            vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
+                            vy = vcytrj[k][-1]
                 else:
                     vx = x
                     vy = y
                 # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative????                        
-                vcxtrj[k].extend(vx) 
-                vcytrj[k].extend(vy)
+                vcxtrj[k].extend([vx]) 
+                vcytrj[k].extend([vy])
                 if len(x)!=len(y):
                     pdb.set_trace()
                 clusterSize[k].extend([len(x)])
@@ -343,8 +346,6 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         if True:
             # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             # line_exist = 1
-            # pdb.set_trace()
-            # dots.append(axL.scatter(vcxtrj[k], vcxtrj[k], s=50, color=(color[k-1].T)/255.,edgecolor='black')) 
             dots.append(axL.scatter(xx,yy, s=8, color=(color[k-1].T)/255.,edgecolor='none')) 
         else:
             pass
@@ -354,7 +355,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.pause(0.00001) 
     plt.title('frame '+str(frame_idx))
     name = os.path.join(DataPathobj.DataPath,'vis',str(frame_idx).zfill(6)+'.jpg')
-    plt.savefig(name) ##save figure
+    # plt.savefig(name) ##save figure
     plt.draw()
     plt.show()
 
@@ -394,11 +395,14 @@ def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
             """Linux Canal"""
             global subSampRate
             subSampRate = 6
-            # matfiles               = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/filtered/len' +'*.mat')))
-            # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/'+'*mat')))
-            # savePath               = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/')
-            matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'*.mat')))
-            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'smooth_*.mat')))
+            if smooth:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'smooth*.mat')))
+                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'smooth_*.mat')))
+            else:
+                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
+                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))
+
+
             savePath = DataPathobj.dicpath
             result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
             clustered_result       = clustered_result_files[result_file_Ind]
@@ -447,7 +451,7 @@ if __name__ == '__main__':
     isClustered      = True
     isAfterWarpping  = False
     isVisualize      = True
-    useVirtualCenter = False
+    useVirtualCenter = True
     isLeft           = False
     isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
