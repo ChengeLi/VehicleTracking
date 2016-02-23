@@ -61,7 +61,10 @@ def polyFitTrj(x,y):
 		else:
 			goodTrj.append(kk)
 			# pdb.set_trace()
-			p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
+			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
+			#### p3.append(np.polyfit( y[kk,:][y[kk,:]!=0], x[kk,:][x[kk,:]!=0],3))
+			p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
+
 
 	outlierID =[]
 	p3 = np.array(p3)
@@ -85,7 +88,7 @@ def polyFitTrj(x,y):
 def extraPolate(xk, yk):
 	# positions to inter/extrapolate
 	# y_extraPosistion = np.linspace(start_Y, end_Y, 2)
-	y_extraPosistion = range(start_Y, end_Y, 2)
+	y_extraPosistion = range(start_Y, end_Y, 1)
 	# spline order: 1 linear, 2 quadratic, 3 cubic ... 
 	order = 1
 	# do inter/extrapolation
@@ -175,7 +178,7 @@ def getSmoothMtx(x,y):
 	return x_smooth_mtx,y_smooth_mtx
 
 
-def plotTrj(x,y,Trjchoice=[]):
+def plotTrj(x,y,p3=[],Trjchoice=[]):
 	if Trjchoice==[]:
 		Trjchoice=range(x.shape[0])
 
@@ -188,11 +191,23 @@ def plotTrj(x,y,Trjchoice=[]):
 		if len(xk)>=5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
 			# plt.plot(xk)
 			# plt.plot(yk)
-			plt.plot(xk, yk)
+			# plt.plot(xk, yk)
 			# extraPolate(xk, yk)
-			# x_fit = np.linspace(xk.min(), xk.max(), 200)
+			'''1'''
+			x_fit = np.linspace(xk.min(), xk.max(), 200)
 			# y_fit = pow(x_fit,3)*p3[ii,0] + pow(x_fit,2)*p3[ii,1] + pow(x_fit,1)*p3[ii,2]+ p3[ii,3]
-			# plt.plot(x_fit, y_fit)
+			y_fit = pow(x_fit,2)*p3[ii,0]+pow(x_fit,1)*p3[ii,1]+ p3[ii,2]
+
+			x_range = xk.max()-xk.min()
+			x_fit_extra = np.linspace(max(0,xk.min()-x_range*0.50), min(xk.max()+x_range*0.50,700), 200)
+			# y_fit_extra = pow(x_fit_extra,3)*p3[ii,0] + pow(x_fit_extra,2)*p3[ii,1] + pow(x_fit_extra,1)*p3[ii,2]+ p3[ii,3]
+			y_fit_extra = pow(x_fit_extra,2)*p3[ii,0]+pow(x_fit_extra,1)*p3[ii,1]+ p3[ii,2]
+			
+			# '''2'''
+			# y_fit = np.linspace(yk.min(), yk.max(), 200)
+			# x_fit = pow(y_fit,3)*p3[ii,0] + pow(y_fit,2)*p3[ii,1] + pow(y_fit,1)*p3[ii,2]+ p3[ii,3]
+			plt.plot(x_fit_extra, y_fit_extra,'r')
+			plt.plot(x_fit, y_fit,'g')
 			plt.draw()
 	plt.show()
 
@@ -222,9 +237,9 @@ def main(matidx):
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
 	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx)
 	# kmeansPolyCoeff(p3)
-
-	# plotTrj(x_smooth_mtx,y_smooth_mtx,goodTrj)
-	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+	pdb.set_trace()
+	plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
+	# saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 if __name__ == '__main__':		
@@ -238,6 +253,7 @@ if __name__ == '__main__':
 	end_Y   = 500;
 	for matidx in range(6):
 		main(matidx)
+		pdb.set_trace()
 
 
 
