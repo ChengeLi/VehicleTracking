@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
 
 import scipy.ndimage as ndimg 
+from scipy.io import loadmat
 
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
@@ -89,13 +90,22 @@ def ContourBlob(mask,ori_img):
 
 
 
-def blobImg2blobmatrix(mask):
-	maskgray                 = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
+def blobImg2blobmatrix(maskgray):
+	# maskgray                 = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
 	# ret,thresholded               = cv2.threshold(maskgray,127,255,0)
 	(blobLabelMatrix, numFgPixel) = ndimg.measurements.label(maskgray)
 	# BlobCenters = np.array(ndimg.measurements.center_of_mass(thresholded,blobLabelMatrix,range(1,numFgPixel+1)))
 	BlobCenters = np.array(ndimg.measurements.center_of_mass(maskgray,blobLabelMatrix,range(1,numFgPixel+1)))
+	pdb.set_trace()
 	return blobLabelMatrix, BlobCenters
+
+
+def readData():
+    matfilepath = DataPathobj.blobPath
+    matfiles = sorted(glob.glob(matfilepath + '*.mat'))
+    matfiles = matfiles[0:]
+    return matfiles
+
 
 
 
@@ -106,63 +116,71 @@ if __name__ == '__main__':
 	# mask_list = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/incPCP/Canal_filled_hole/*.jpg')))
 	# ori_list  = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/*.jpg'))
 
-	"""new"""
-	mask_list = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/foreGdSImgs/*.jpg')))
-	ori_list = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/*.jpg')))
-	nframe    = min(len(mask_list),len(ori_list))
-	trunclen  = 600
-	plt.figure()
-	subSampRate = 6
+	
+	# mask_list = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/foreGdSImgs/*.jpg')))
+	# ori_list = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/*.jpg')))
+	# nframe    = min(len(mask_list),len(ori_list))
+	nframe = 10000
 
-	choice_Interval = 3
+	matfiles = readData()
+	for matidx, matfile in enumerate(matfiles):
+		mask_tensor = loadmat(matfile)
 
-	# temp_img   = cv2.imread(ori_list[0])
-	# blobTensor = np.zeros((temp_img.shape[0],temp_img.shape[1],nframe))
-	blobLabelMtx_list = []
-	blobCenterList    = []
-	frame_idx      = 0 
+		trunclen  = 600
+		plt.figure()
+		subSampRate = 6
+		# choice_Interval = 3
 
-	while frame_idx*subSampRate <nframe:
-		print "frame_idx: ", frame_idx*subSampRate
-		# print "mask: ", mask_list[(frame_idx*subSampRate)/choice_Interval]
-		mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
-		# ori_img = cv2.imread(ori_list[(frame_idx*subSampRate)/choice_Interval])
-		
-		"""blob detector doesn't work..."""
-		# keypoints = find_blob(ori_img)
-		"""use cv2.findContours, and then fill the contours..."""
-		# blobLabelMatrix = blobImg2blobmatrix(mask,ori_img)
-		# blobTensor[:,:,frame_idx] = blobLabelMatrix
+		# temp_img   = cv2.imread(ori_list[0])
+		# blobTensor = np.zeros((temp_img.shape[0],temp_img.shape[1],nframe))
+		blobLabelMtx_list = []
+		blobCenterList    = []
+		frame_idx = 0 
+		Nrows = 480
+		Ncols = 640
+		while frame_idx*subSampRate <nframe:
+			print "frame_idx: ", frame_idx*subSampRate
+			# print "mask: ", mask_list[(frame_idx*subSampRate)/choice_Interval]
+			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
+			# ori_img = cv2.imread(ori_list[(frame_idx*subSampRate)/choice_Interval])
+			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
+			maskgray = mask_mat_list[:,frame_idx].reshape((Nrows,Ncols))
 
-		"""use ndimage.measurements"""
-		blobLabelMatrix, BlobCenters = blobImg2blobmatrix(mask)
-		sparse_slice = csr_matrix(blobLabelMatrix)
-		blobLabelMtx_list.append(sparse_slice)
-		blobCenterList.append(BlobCenters)
+			"""blob detector doesn't work..."""
+			# keypoints = find_blob(ori_img)
+			"""use cv2.findContours, and then fill the contours..."""
+			# blobLabelMatrix = blobImg2blobmatrix(mask,ori_img)
+			# blobTensor[:,:,frame_idx] = blobLabelMatrix
 
-		frame_idx = frame_idx+1
-		#end of while loop
-		if (frame_idx>0) and (np.mod(frame_idx,trunclen)==0):
-			# pdb.set_trace()
-			print "Save the blob index tensor into a pickle file:"
-			# savePath = '../DoT/CanalSt@BaxterSt-96.106/'
-			# savePath = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-			savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/')
-			savename = os.path.join(savePath,'blobTensorList'+str(frame_idx/trunclen).zfill(3)+'.p')
-			pickle.dump(blobLabelMtx_list, open( savename, "wb" ))
-			blobLabelMtx_list = []
+			"""use ndimage.measurements"""
+			blobLabelMatrix, BlobCenters = blobImg2blobmatrix(maskgray)
+			sparse_slice = csr_matrix(blobLabelMatrix)
+			blobLabelMtx_list.append(sparse_slice)
+			blobCenterList.append(BlobCenters)
 
-			print "Save the blob centers..."
-			savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/')
-			savename = os.path.join(savePath,'blobCenterList'+str(frame_idx/trunclen).zfill(3)+'.p')
-			pickle.dump(blobCenterList, open( savename, "wb" ))
-			blobCenterList = []
+			frame_idx = frame_idx+1
+			#end of while loop
+			if (frame_idx>0) and (np.mod(frame_idx,trunclen)==0):
+				# pdb.set_trace()
+				print "Save the blob index tensor into a pickle file:"
+				# savePath = '../DoT/CanalSt@BaxterSt-96.106/'
+				# savePath = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
+				savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/')
+				savename = os.path.join(savePath,'blobTensorList'+str(frame_idx/trunclen).zfill(3)+'.p')
+				pickle.dump(blobLabelMtx_list, open( savename, "wb" ))
+				blobLabelMtx_list = []
+
+				print "Save the blob centers..."
+				savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/')
+				savename = os.path.join(savePath,'blobCenterList'+str(frame_idx/trunclen).zfill(3)+'.p')
+				pickle.dump(blobCenterList, open( savename, "wb" ))
+				blobCenterList = []
 
 
 
-	"""directly dumping to pickle not allowed, memory error! """
-	# savename = os.path.join(savePath,'blobTensor.p')
-	# pickle.dump( blobTensor, open( savename, "wb" ) )
+		"""directly dumping to pickle not allowed, memory error! """
+		# savename = os.path.join(savePath,'blobTensor.p')
+		# pickle.dump( blobTensor, open( savename, "wb" ) )
 
 
 

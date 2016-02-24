@@ -249,12 +249,12 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
                             vy = vcytrj[k][-1]
                 else:
-                    vx = x
-                    vy = y
+                    vx = list(x)
+                    vy = list(y)
                 # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative????                        
-                vcxtrj[k].extend([vx]) 
-                vcytrj[k].extend([vy])
+                vcxtrj[k].extend(list(vx)) 
+                vcytrj[k].extend(list(vy))
                 if len(x)!=len(y):
                     pdb.set_trace()
                 clusterSize[k].extend([len(x)])
@@ -264,8 +264,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
                 status, frame = cap.read()
             else:
-                frame   = cv2.imread(image_list[frame_idx])
-            visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame, color,frame_idx)
+                frame = cv2.imread(image_list[frame_idx])
+            visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame,color,frame_idx)
             
 
         if isSave: #not clustered yet
@@ -346,7 +346,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         if True:
             # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             # line_exist = 1
-            dots.append(axL.scatter(xx,yy, s=8, color=(color[k-1].T)/255.,edgecolor='none')) 
+            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
         else:
             pass
     im.set_data(frame[:,:,::-1])
@@ -354,8 +354,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.draw()
     plt.pause(0.00001) 
     plt.title('frame '+str(frame_idx))
-    name = os.path.join(DataPathobj.DataPath,'vis',str(frame_idx).zfill(6)+'.jpg')
-    # plt.savefig(name) ##save figure
+    name = os.path.join(DataPathobj.DataPath,'vis2',str(frame_idx).zfill(6)+'.jpg')
+    plt.savefig(name) ##save figure
     plt.draw()
     plt.show()
 
@@ -451,11 +451,12 @@ if __name__ == '__main__':
     isClustered      = True
     isAfterWarpping  = False
     isVisualize      = True
-    useVirtualCenter = True
+    useVirtualCenter = False
     isLeft           = False
     isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
-    start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
+    # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
+    start_frame_idx = 0
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
     # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]

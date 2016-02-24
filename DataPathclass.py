@@ -27,11 +27,11 @@ class DataPath(object):
 
 		self.video     = self.videoList[VideoIndex]
 		self.videoTime = self.video[-31:-17]
-
 		self.DataPath = os.path.join(self.sysPathHeader,self.videoTime)
 		if not os.path.exists(self.DataPath):
 			os.mkdir(self.DataPath)
 
+		
 		self.imagePath = []
 		self.kltpath = os.path.join(self.DataPath,"klt/")
 		self.smoothpath = os.path.join(self.DataPath,"klt/smooth/")
@@ -41,8 +41,9 @@ class DataPath(object):
 		self.dicpath = os.path.join(self.DataPath,"dic/")
 		self.unifiedLabelpath = os.path.join(self.DataPath,"unifiedLabel/")
 		self.pairpath = os.path.join(self.DataPath,"pair/")
+		self.blobPath = os.path.join(self.DataPath,"incPCPmask/")
 		"""create folders"""
-		pathList = [self.kltpath,self.smoothpath,self.filteredKltPath, self.adjpath,self.sscpath,self.unifiedLabelpath,self.dicpath,self.pairpath]
+		pathList = [self.kltpath,self.smoothpath,self.filteredKltPath, self.adjpath,self.sscpath,self.unifiedLabelpath,self.dicpath,self.pairpath,self.blobPath]
 		for path in pathList:
 			try:
 				os.mkdir(path)
@@ -71,27 +72,27 @@ def fitGaussian(data):
 
 
 
-def plotTrj(x,y,Trjchoice=[]):
-	if Trjchoice==[]:
-		Trjchoice=range(x.shape[0])
+# def plotTrj(x,y,Trjchoice=[]):
+# 	if Trjchoice==[]:
+# 		Trjchoice=range(x.shape[0])
 
-	plt.ion()
-	plt.figure()
-	im  = plt.imshow(np.zeros([508,710,3]))	
-	for ii in range(0,len(Trjchoice),1):
-		kk = Trjchoice[ii]
-		xk = x[kk,:][x[kk,:]!=0]
-		yk = y[kk,:][y[kk,:]!=0]
-		if len(xk)>=5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
-			# plt.plot(xk)
-			# plt.plot(yk)
-			plt.plot(xk, yk)
-			# extraPolate(xk, yk)
-			# x_fit = np.linspace(xk.min(), xk.max(), 200)
-			# y_fit = pow(x_fit,3)*p3[ii,0] + pow(x_fit,2)*p3[ii,1] + pow(x_fit,1)*p3[ii,2]+ p3[ii,3]
-			# plt.plot(x_fit, y_fit)
-			plt.draw()
-	plt.show()
+# 	plt.ion()
+# 	plt.figure()
+# 	im  = plt.imshow(np.zeros([508,710,3]))	
+# 	for ii in range(0,len(Trjchoice),1):
+# 		kk = Trjchoice[ii]
+# 		xk = x[kk,:][x[kk,:]!=0]
+# 		yk = y[kk,:][y[kk,:]!=0]
+# 		if len(xk)>=5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
+# 			# plt.plot(xk)
+# 			# plt.plot(yk)
+# 			plt.plot(xk, yk)
+# 			# extraPolate(xk, yk)
+# 			# x_fit = np.linspace(xk.min(), xk.max(), 200)
+# 			# y_fit = pow(x_fit,3)*p3[ii,0] + pow(x_fit,2)*p3[ii,1] + pow(x_fit,1)*p3[ii,2]+ p3[ii,3]
+# 			# plt.plot(x_fit, y_fit)
+# 			plt.draw()
+# 	plt.show()
 
 
 
