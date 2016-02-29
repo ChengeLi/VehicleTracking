@@ -2,9 +2,11 @@ import cv2
 import pdb
 import numpy as np
 from matplotlib import pyplot as plt
+import glob as glob
+# from DataPathclass import *
+# DataPathobj = DataPath(VideoIndex)
 
 def getPerspectiveMtx(img):
-
 	# img = cv2.imread('../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/00000601.jpg')
 	img = np.asarray(img)
 	# rows,cols,ch = img.shape
@@ -32,8 +34,6 @@ def getPerspectiveMtx(img):
 
 	pts1 = np.float32([[2181, 1091], [2484,1161],[1610,2041],[2089,2157]])  # new jayst lower
 	pts2 = np.float32([[0,0],[400,0],[0,1100],[400,1100]]) #new Jayst lower
-
-
 	M = cv2.getPerspectiveTransform(pts1,pts2)
 	return M
 
@@ -47,24 +47,28 @@ def perspectiveWarp(img, M,frame_idx,isSave):
 
 
 if __name__ == '__main__':
-	linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4' #complete
-	# mac_video_src = '/Volumes/TOSHIBA/DoTdata/VideoFromCUSP/C0007.avi' #partial
-	# test_video_src = '/Users/Chenge/Desktop/C0007.avi'
+	isVideo = False
+	if isVideo:
+		linux_video_src = '/media/TOSHIBA/DoTdata/VideoFromCUSP/C0007.MP4' #complete
+		# mac_video_src = '/Volumes/TOSHIBA/DoTdata/VideoFromCUSP/C0007.avi' #partial
+		# test_video_src = '/Users/Chenge/Desktop/C0007.avi'
+		cap       = cv2.VideoCapture(linux_video_src)
+		nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+		ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+		nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+		framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+		start_position = 114770  
+		print 'reading buffer...'
+		# for ii in range(start_position):
+		# 	print(ii)
+		# 	rval, img = cap.read()
+		cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
+		print 'warp image...read frame',str(start_position)
+		st, img = cap.read()
+	else:
+		imageList = sorted(glob.glob('Users/Chenge/Documents/github/AIG/DoT/CanalSt@BaxterSt-96.106/imgs/*.jpg'))
+		img       = cv2.imread(imageList[0])
 
-	cap       = cv2.VideoCapture(linux_video_src)
-	nrows     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-	ncols     = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-	nframe    = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	framerate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-
-	start_position = 114770  
-	print 'reading buffer...'
-	# for ii in range(start_position):
-	# 	print(ii)
-	# 	rval, img = cap.read()
-	cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , start_position)
-	print 'warp image...read frame',str(start_position)
-	st, img = cap.read()
 	warpMtx = getPerspectiveMtx(img)
 	pdb.set_trace()
 	for frame_idx in range(int(nframe/2)):
@@ -72,3 +76,14 @@ if __name__ == '__main__':
 		isSave        = 1
 		status, frame = cap.read()
 		dst           = perspectiveWarp(frame, warpMtx, start_position+1+frame_idx,isSave)
+
+
+
+
+
+
+
+
+
+
+
