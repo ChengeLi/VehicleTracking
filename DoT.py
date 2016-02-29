@@ -3,11 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pdb
 import time
+import csv
+
 # import scipy.ndimage.morphology as ndm
 # from scipy.ndimage.filters import median_filter as mf
 
 
-import csv
 def visGT():
     ## visualize the Ground Truth
 
@@ -17,22 +18,27 @@ def visGT():
     cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
     color      = np.array([np.random.randint(0,255) for _ in range(3*int(1000))]).reshape(int(1000),3)
 
-    f      =  open('../rejayjohnsonintersectionpairrelationships/Canal_1.csv', 'rb')
+    f      =  open('../GroundTruth/rejayjohnsonintersectionpairrelationships/Canal_2.csv', 'rb')
     reader = csv.reader(f)
 
     st,firstfrm = cap.read()
     nrows       = int(np.size(firstfrm,0))
     ncols       = int(np.size(firstfrm,1))
 
-    fig = plt.figure('vis')
-    axL = plt.subplot(1,1,1)
-    im  = plt.imshow(np.zeros([nrows,ncols,3]))
-    plt.axis('off')
+    # fig = plt.figure('vis')
+    # axL = plt.subplot(1,1,1)
+    # im  = plt.imshow(np.zeros([nrows,ncols,3]))
+    # plt.axis('off')
 
 
     dots = []
     kk = 0
-    for ii in range(0,1000,4):
+    frame_idx = 10280
+    GTupperL_list = []
+    GTLowerR_list = []
+    GTcenterXY_list = []
+
+    while frame_idx<17030:
         temp = np.array(reader.next())
         if np.double(temp[0])<frame_idx: # new car
             color = np.array([np.random.randint(0,255) \
@@ -40,24 +46,39 @@ def visGT():
                     .reshape(int(1000),3)
 
         frame_idx = np.double(temp[0])
+        GTupperL = np.double(temp[1:3])  #upper left
+        GTLowerR = np.double(temp[3:5])  #lower right
         GTcenterXY = np.double(temp[-2:])
 
-        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , frame_idx)
-        st,frame = cap.read()
+        # cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , frame_idx)
+        # st,frame = cap.read()
 
 
-        im.set_data(frame[:,:,::-1])
-        plt.draw()
+        # im.set_data(frame[:,:,::-1])
+        # plt.draw()
 
-        dots.append(axL.scatter(GTcenterXY[0], GTcenterXY[1], s=10, color=(color[100].T)/255.,edgecolor='none')) 
-        plt.draw()
-        plt.show()
-        plt.pause(0.00001)
-        dots = []
+        # dots.append(axL.scatter(GTcenterXY1[0], GTcenterXY1[1], s=10, color=(color[100].T)/255.,edgecolor='none')) 
+        # dots.append(axL.scatter(GTcenterXY2[0], GTcenterXY2[1], s=10, color=(color[200].T)/255.,edgecolor='none')) 
+        # dots.append(axL.scatter(GTcenterXY3[0], GTcenterXY3[1], s=10, color=(color[300].T)/255.,edgecolor='none')) 
+
+        # plt.draw()
+        # plt.show()
+        # plt.pause(0.00001)
+        # dots = []
 
         # name = '../GTfigure/'+str(int(kk).zfill(6)+'.jpg'
         # kk = kk+1
         # plt.savefig(name) ##save figure
+
+        GTupperL_list.append(GTupperL)
+        GTLowerR_list.append(GTLowerR)
+        GTcenterXY_list.append(GTcenterXY)
+
+    pickle.dump('../GroundTruth/Canal_2_GTupperL_list',GTupperL_list)
+    pickle.dump('../GroundTruth/Canal_2_GTLowerR_list',GTLowerR_list)
+    pickle.dump('../GroundTruth/Canal_2_GTcenterXY_list',GTcenterXY_list)
+
+
 
 
 def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
