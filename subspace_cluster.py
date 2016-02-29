@@ -1,3 +1,5 @@
+import pdb
+import os
 import copy
 import glob
 import matplotlib.pyplot as plt
@@ -13,8 +15,6 @@ from sklearn import (mixture)
 from sklearn.cluster import *
 from sklearn.manifold import *
 from sklearn.utils import check_random_state
-import pdb
-import os
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
 
