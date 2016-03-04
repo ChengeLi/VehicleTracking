@@ -1,0 +1,44 @@
+### add color information to the adj
+
+'convert BGR to HSV'
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

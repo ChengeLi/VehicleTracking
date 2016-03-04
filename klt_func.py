@@ -35,29 +35,11 @@ if __name__ == '__main__':
     # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
     savePath = DataPathobj.kltpath
 
-    # useBlobCenter = True
-    useBlobCenter = False
+    useBlobCenter = True
+    # useBlobCenter = False
     isVisualize   = False
     dataSource    = 'DoT'
     subSampRate   = 6
-
-    # ===== JayJohnson
-    # frame_idx_bias = 84600 #start from the 47th minute
-    # isVideo= False
-    # useBlobCenter = False
-    # isVisualize = False
-    # dataSource = 'Johnson'
-    # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
-    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/')
-    # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
-
-    # ===== JayJohnson new
-    # frame_idx_bias = 0 #johnson new
-    # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/1st.mov')
-    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/JohnsonNew/subSamp/klt/')
-    # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
-
-
 
     # -- utilities
     if isVisualize: plt.figure(num=None, figsize=(8, 11))
@@ -77,11 +59,7 @@ if __name__ == '__main__':
         feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, 
                               blockSize=5)  # old jayst 
     
-    # idx             = 0
-    # track_len       = 10
-    # pregood         = []
-    trunclen        = 600
-    # lenoffset       = 0
+    trunclen = 600
     detect_interval = 5
     if detect_interval < subSampRate:
         detect_interval = 1
@@ -197,6 +175,7 @@ if __name__ == '__main__':
             try:
                 cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
                 status, frame[:,:,:] = cap.read()
+
             except:
                 print "exception!!"
                 frame_idx = nframe
@@ -207,8 +186,8 @@ if __name__ == '__main__':
             BlobCenterCurFrm    = blobCenterLists[np.mod(frame_idx,trunclen)]
             pdb.set_trace()
 
-        frameL[:,:]  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
-        
+        frameL[:,:] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+        frame_hsv   = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         ## histogram equalization, more contrast
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         frameL_he = clahe.apply(frameL)
@@ -247,16 +226,17 @@ if __name__ == '__main__':
                 if x != -100:
                     # if x>frameLp.shape[1] or y>frameLp.shape[0]:
                     #     print x, y
+                    hue = frame_hsv[y,x,0]
                     if useBlobCenter:
                         blobInd    = BlobIndMatrixCurFrm[y,x]
                         if blobInd!=0:
                             blobCenter = BlobCenterCurFrm[blobInd-1]
-                            tracksdic[idx].append((x,y,frame_idx,np.int8(blobInd),blobCenter[0],blobCenter[1]))
+                            tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[0],blobCenter[1]))
                         else:
-                            tracksdic[idx].append((x,y,frame_idx,0,np.NaN,np.NaN))
+                            tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
 
                     else:
-                        tracksdic[idx].append((x,y,frame_idx))
+                        tracksdic[idx].append((x,y,frame_idx,hue))
                 cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
 
 
@@ -277,12 +257,13 @@ if __name__ == '__main__':
                     tracksdic[dicidx] = [] 
                     start[dicidx]     = frame_idx
                     end[dicidx]       = -1
+                    hue = frame_hsv[y,x,0]
                     if useBlobCenter:
                         blobInd    = BlobIndMatrixCurFrm[y,x]
                         blobCenter = BlobCenterCurFrm[blobInd]
-                        tracksdic[dicidx].append((x,y,frame_idx,np.int(blobInd),blobCenter[0],blobCenter[1]))
+                        tracksdic[dicidx].append((x,y,frame_idx,hue,np.int(blobInd),blobCenter[0],blobCenter[1]))
                     else:
-                        tracksdic[dicidx].append((x,y,frame_idx))
+                        tracksdic[dicidx].append((x,y,frame_idx,hue))
                     dicidx += 1
 
         # print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
@@ -378,7 +359,6 @@ if __name__ == '__main__':
             # points except the last one (in order to track into the next
             # frame).
             deadtrj   = np.array(end.keys())[np.array(end.values())>=0]# ==0 is for the case when the tracks ends at 0 frame
-            # lenoffset += len(deadtrj)
             for i in sorted(tracksdic.keys()):   
                 if i in deadtrj:
                     tracksdic.pop(i)
