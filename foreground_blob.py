@@ -11,8 +11,9 @@ from scipy.sparse import csr_matrix
 import scipy.ndimage as ndimg 
 from scipy.io import loadmat
 
-from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+# from DataPathclass import *
+# DataPathobj = DataPath(VideoIndex)
+import h5py
 
 """blob detector doesn't work..."""
 """
@@ -91,24 +92,27 @@ def ContourBlob(mask,ori_img):
 
 
 def blobImg2blobmatrix(maskgray):
-	# maskgray                 = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
-	# ret,thresholded               = cv2.threshold(maskgray,127,255,0)
+	# maskgray = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
+	# ret,thresholded = cv2.threshold(maskgray,127,255,0)
 	(blobLabelMatrix, numFgPixel) = ndimg.measurements.label(maskgray)
 	# BlobCenters = np.array(ndimg.measurements.center_of_mass(thresholded,blobLabelMatrix,range(1,numFgPixel+1)))
 	BlobCenters = np.array(ndimg.measurements.center_of_mass(maskgray,blobLabelMatrix,range(1,numFgPixel+1)))
-	pdb.set_trace()
+	# pdb.set_trace()
+	# blobCenter_X_Matrix = np.zeros_like(blobLabelMatrix)
+	# blobCenter_Y_Matrix = np.zeros_like(blobLabelMatrix)
+	# for ii in range(numFgPixel):
+	# 	blobCenter_X_Matrix[blobCenterMatrix==ii]=BlobCenters[ii][0];
+	# 	blobCenter_Y_Matrix[blobCenterMatrix==ii]=BlobCenters[ii][1];
+	# pdb.set_trace()
 	return blobLabelMatrix, BlobCenters
 
 
 def readData():
-    matfilepath = DataPathobj.blobPath
-    matfiles = sorted(glob.glob(matfilepath + '*.mat'))
-    matfiles = matfiles[0:]
+    # matfilepath = DataPathobj.blobPath
+    # matfiles = sorted(glob.glob(matfilepath + '*.mat'))
+    matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
+    matfiles = matfiles[2:]
     return matfiles
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -124,8 +128,14 @@ if __name__ == '__main__':
 
 	matfiles = readData()
 	for matidx, matfile in enumerate(matfiles):
-		mask_tensor = loadmat(matfile)
-
+		try:  #for matfile <-v7.3
+			mask_tensor = loadmat(matfile)
+		except:  #for matfile -v7.3
+			h5pymatfile = h5py.File(matfile,'r').items()[0]
+			# variableName = h5pymatfile[0]
+			variableData = h5pymatfile[1]
+			mask_tensor = variableData.value
+			
 		trunclen  = 600
 		plt.figure()
 		subSampRate = 6
@@ -140,12 +150,13 @@ if __name__ == '__main__':
 		Ncols = 640
 		while frame_idx*subSampRate <nframe:
 			print "frame_idx: ", frame_idx*subSampRate
-			# print "mask: ", mask_list[(frame_idx*subSampRate)/choice_Interval]
-			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
 			# ori_img = cv2.imread(ori_list[(frame_idx*subSampRate)/choice_Interval])
 			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
-			maskgray = mask_mat_list[:,frame_idx].reshape((Nrows,Ncols))
-
+			pdb.set_trace()
+			ImgSlice = (mask_tensor[frame_idx*subSampRate,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
+			maskgray = ImgSlice
+			# plt.imshow(np.uint8(ImgSlice))
+			# pdb.set_trace()
 			"""blob detector doesn't work..."""
 			# keypoints = find_blob(ori_img)
 			"""use cv2.findContours, and then fill the contours..."""
@@ -161,7 +172,6 @@ if __name__ == '__main__':
 			frame_idx = frame_idx+1
 			#end of while loop
 			if (frame_idx>0) and (np.mod(frame_idx,trunclen)==0):
-				# pdb.set_trace()
 				print "Save the blob index tensor into a pickle file:"
 				# savePath = '../DoT/CanalSt@BaxterSt-96.106/'
 				# savePath = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
