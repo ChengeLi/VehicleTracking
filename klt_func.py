@@ -12,29 +12,15 @@ from matplotlib import pyplot as plt
 
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
-# dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
-# savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/klt/')
-
-
-# def klt_tracker(isVideo, \
-#  dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-#  savePath = '../DoT/CanalSt@BaxterSt-96.106/klt/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/',\
-#  useBlobCenter = True,isVisualize = False,dataSource = 'DoT'):
 
 if __name__ == '__main__':
-    # ===== DoT Canal
     frame_idx_bias = 0
     isVideo  = True
     if isVideo:
-        # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
         dataPath = DataPathobj.video
     else:
-        # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/' # only 2000 pictures
         dataPath = DataPathobj.imagePath
-    
-    # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/klt/')
     savePath = DataPathobj.kltpath
-
     useBlobCenter = True
     # useBlobCenter = False
     isVisualize   = False
@@ -103,21 +89,12 @@ if __name__ == '__main__':
         frame_idx = (0 + frame_idx_bias)
     
     start_position = frame_idx_bias
-    subsample_frmIdx = np.floor(frame_idx/subSampRate)
+    subsample_frmIdx = np.int(np.floor(frame_idx/subSampRate))
     
 
     if useBlobCenter:
-        # linux local:
-        # blobColorImgList = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-        # linux:
-        # blobColorImgList = sorted(glob.glob('/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-        # Mac
-        # blobColorImgList = sorted(glob.glob('/Volumes/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/Canal_blobImage/*.jpg'))
-        # blobPath             = '/media/TOSHIBA/DoTdata/CanalSt@BaxterSt-96.106/incPCP/'
-        blobindPath                 = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobLabels/')
-        blob_ind_sparse_matrices    = sorted(glob.glob(blobindPath + 'blob*.p'))
-        blobCenterPath              = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/BlobCenters/')
-        blob_center_sparse_lists = sorted(glob.glob(blobCenterPath + 'blob*.p'))
+        blob_ind_sparse_matrices = sorted(glob.glob(DataPathobj.blobPath + 'blobLabel*.p'))
+        blob_center_sparse_lists = sorted(glob.glob(DataPathobj.blobPath + 'blobCenter*.p'))
 
     if isVideo:
         video_src = dataPath
@@ -158,14 +135,14 @@ if __name__ == '__main__':
     # -- set low number of frames for testing
     # nframe = 1801
     while (frame_idx < nframe):
-        if useBlobCenter and (((frame_idx) % trunclen) == 0):
+        if useBlobCenter and ((subsample_frmIdx % trunclen) == 0):
             print "load foreground blob index matrix file...."
             blobIndLists       = []
-            blobIndListfile    = blob_ind_sparse_matrices[frame_idx % trunclen]
+            blobIndListfile    = blob_ind_sparse_matrices[subsample_frmIdx % trunclen]
             blobIndLists       = pickle.load( open( blobIndListfile, "rb" ) )
             
             blobCenterLists    = []
-            blobCenterListfile = blob_center_sparse_lists[frame_idx % trunclen]
+            blobCenterListfile = blob_center_sparse_lists[subsample_frmIdx % trunclen]
             blobCenterLists    = pickle.load( open( blobCenterListfile, "rb" ) )
 
             
@@ -182,12 +159,15 @@ if __name__ == '__main__':
                 continue
 
         if useBlobCenter:
-            BlobIndMatrixCurFrm = (blobIndLists[np.mod(frame_idx,trunclen)]).todense()
-            BlobCenterCurFrm    = blobCenterLists[np.mod(frame_idx,trunclen)]
-            pdb.set_trace()
+            BlobIndMatrixCurFrm = (blobIndLists[np.mod(subsample_frmIdx,trunclen)]).todense()
+            BlobCenterCurFrm    = blobCenterLists[np.mod(subsample_frmIdx,trunclen)]
+            if len(BlobCenterCurFrm)<1: #is empty
+                BlobCenterCurFrm=[(0,0)]
 
         frameL[:,:] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         frame_hsv   = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # plt.imshow(frame_hsv[:,:,0])
+        # plt.draw()
         ## histogram equalization, more contrast
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         frameL_he = clahe.apply(frameL)
@@ -259,14 +239,17 @@ if __name__ == '__main__':
                     end[dicidx]       = -1
                     hue = frame_hsv[y,x,0]
                     if useBlobCenter:
-                        blobInd    = BlobIndMatrixCurFrm[y,x]
-                        blobCenter = BlobCenterCurFrm[blobInd]
-                        tracksdic[dicidx].append((x,y,frame_idx,hue,np.int(blobInd),blobCenter[0],blobCenter[1]))
+                        blobInd = BlobIndMatrixCurFrm[y,x]                    
+                        if blobInd!=0:
+                            blobCenter = BlobCenterCurFrm[blobInd-1]
+                            tracksdic[dicidx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[0],blobCenter[1]))
+                        else:
+                            tracksdic[dicidx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
                     else:
                         tracksdic[dicidx].append((x,y,frame_idx,hue))
                     dicidx += 1
 
-        # print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
+        print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
 
         if isVisualize:
             # cv2.imshow('klt', vis)
@@ -281,11 +264,12 @@ if __name__ == '__main__':
 
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 
-        if  ((frame_idx>0) & ((subsample_frmIdx) % trunclen == 0)) or (frame_idx==nframe):
+        if  ((frame_idx>0) & (subsample_frmIdx % trunclen == 0)) or (frame_idx==nframe):
             print "saving===!!!"   
             # print('{0} - {1}'.format(frame_idx,len(tracksdic)))         
             Xtracks = np.zeros([len(tracksdic),trunclen])
             Ytracks = np.zeros([len(tracksdic),trunclen])
+            Huetracks = np.zeros([len(tracksdic),trunclen])
             # initialize T track using numbers that will never appear in reality
             # "won't-appear" fillers": frame_idx+3*trunclen
             # this way, we won't lose the REAL 0's, i.e. starts from 0 frame, when filtering in the trj_filter.py
@@ -327,30 +311,33 @@ if __name__ == '__main__':
                 tstart, tstop = st_ind/subSampRate-offset, en_ind/subSampRate-offset+1
 
                 if en_ind==-1:
-                    Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])] = ttrack[0,:]
-                    Ytracks[ii,:][tstart:tstart+len(ttrack[1,:])] = ttrack[1,:]
-                    Ttracks[ii,:][tstart:tstart+len(ttrack[2,:])] = ttrack[2,:]
+                    Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])]   = ttrack[0,:]
+                    Ytracks[ii,:][tstart:tstart+len(ttrack[1,:])]   = ttrack[1,:]
+                    Ttracks[ii,:][tstart:tstart+len(ttrack[2,:])]   = ttrack[2,:]
+                    Huetracks[ii,:][tstart:tstart+len(ttrack[3,:])] = ttrack[3,:]
                     if useBlobCenter:
-                        BlobIndtracks[ii,:][tstart:] = ttrack[3,:]
-                        BlobCenterX[ii,:][tstart:]   = ttrack[4,:]
-                        BlobCenterY[ii,:][tstart:]   = ttrack[5,:]
+                        BlobIndtracks[ii,:][tstart:] = ttrack[4,:]
+                        BlobCenterY[ii,:][tstart:]   = ttrack[5,:] #first dim is Y (vertical)
+                        BlobCenterX[ii,:][tstart:]   = ttrack[6,:]
 
                 else:
-                    Xtracks[ii,:][tstart:tstop] = ttrack[0,:]
-                    Ytracks[ii,:][tstart:tstop] = ttrack[1,:]
-                    Ttracks[ii,:][tstart:tstop] = ttrack[2,:]
+                    Xtracks[ii,:][tstart:tstop]   = ttrack[0,:]
+                    Ytracks[ii,:][tstart:tstop]   = ttrack[1,:]
+                    Ttracks[ii,:][tstart:tstop]   = ttrack[2,:]
+                    Huetracks[ii,:][tstart:tstop] = ttrack[3,:]
                     if useBlobCenter:
-                        BlobIndtracks[ii,:][tstart:tstop] = ttrack[3,:]
-                        BlobCenterX[ii,:][tstart:tstop]   = ttrack[4,:]
+                        BlobIndtracks[ii,:][tstart:tstop] = ttrack[4,:]
                         BlobCenterY[ii,:][tstart:tstop]   = ttrack[5,:]
+                        BlobCenterX[ii,:][tstart:tstop]   = ttrack[6,:]
 
             # put tracks into sparse matrix
             trk ={}
             # Ttracks = Ttracks+frame_idx_bias # use the actual frame index as the key, to save data
-            trk['xtracks']       = csr_matrix(Xtracks)
-            trk['ytracks']       = csr_matrix(Ytracks)
-            trk['Ttracks']       = Ttracks
-            trk['trjID']         = tracksdic.keys()
+            trk['xtracks']   = csr_matrix(Xtracks)
+            trk['ytracks']   = csr_matrix(Ytracks)
+            trk['Ttracks']   = Ttracks
+            trk['Huetracks'] = csr_matrix(Huetracks)
+            trk['trjID'] = tracksdic.keys()
             if useBlobCenter:
                 trk['fg_blob_index']    = csr_matrix(BlobIndtracks)
                 trk['fg_blob_center_X'] = csr_matrix(BlobCenterX)

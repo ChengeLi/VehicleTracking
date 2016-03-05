@@ -36,12 +36,16 @@ def readData():
     matfilepath = DataPathobj.blobPath
     matfiles = sorted(glob.glob(matfilepath + '*.mat'))
     # matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
-    matfiles = matfiles[5:]
-    return matfiles
+	'==============================================================================='
+	'change the offset!!'
+	'==============================================================================='
+    offset = 0
+    matfiles = matfiles[offset:]
+    return matfiles,offset
 
 
 if __name__ == '__main__':
-	matfiles = readData()
+	matfiles,offset = readData()
 	for matidx, matfile in enumerate(matfiles):
 	# for	matidx in range(1,len(matfiles)):
 	# 	matfile = matfiles[matidx]
@@ -79,12 +83,12 @@ if __name__ == '__main__':
 			#end of while loop
 			if (frame_idx>0) and (np.mod(frame_idx,trunclen)==0):
 				print "Save the blob index tensor into a pickle file:"
-				savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1).zfill(3)+'.p')
+				savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
 				pickle.dump(blobLabelMtxList, open( savename, "wb" ))
 				blobLabelMtxList = []
 
 				print "Save the blob centers..."
-				savename = os.path.join(DataPathobj.blobPath,'blobCenterList'+str(matidx+1).zfill(3)+'.p')
+				savename = os.path.join(DataPathobj.blobPath,'blobCenterList'+str(matidx+1+offset).zfill(3)+'.p')
 				pickle.dump(blobCenterList, open( savename, "wb" ))
 				blobCenterList = []
 
