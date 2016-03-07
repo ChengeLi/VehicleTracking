@@ -191,7 +191,7 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			plt.draw()
 	plt.show()
 
-def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,  ptstrj,matfile):
+def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile):
 	ptstrj['xtracks'] = csr_matrix(x_smooth_mtx)
 	ptstrj['ytracks'] = csr_matrix(y_smooth_mtx)
 	ptstrj['polyfitCoef'] = p3
@@ -216,9 +216,8 @@ def main(matidx):
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
 	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx)
 	# kmeansPolyCoeff(p3)
-	pdb.set_trace()
-	plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
-	# saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+	# plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
+	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 

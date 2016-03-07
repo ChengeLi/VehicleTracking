@@ -18,7 +18,6 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minsp
     x_re          = []
     y_re          = []
     t_re          = []
-    blob_index_re = []
     xspd          = []
     yspd          = []
 
@@ -41,10 +40,9 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minsp
                         mask_re.append(mask[i]) # ID 
                         x_re.append(x[i,:])
                         y_re.append(y[i,:])
-                        t_re.append(t[i,:])
+                        t_re.append(t[i,:]) 
                         xspd.append(xspeed[i,:])
                         yspd.append(yspeed[i,:])
-                        blob_index_re.append(blob_index[i,:])
             except:
                 pass
     # spdfile.close()
@@ -52,10 +50,9 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minsp
     x_re          = np.array(x_re)
     y_re          = np.array(y_re)
     t_re          = np.array(t_re)
-    blob_index_re = np.array(blob_index_re)
     xspd          = np.array(xspd)
     yspd          = np.array(yspd)
-    return mask_re, x_re, y_re, t_re, blob_index_re, xspd, yspd
+    return mask_re, x_re, y_re, t_re, xspd, yspd
 
 def FindAllNanRow(aa):
     index = range(aa.shape[0])
@@ -93,12 +90,7 @@ if __name__ == '__main__':
         x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
         y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
         t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        if useBlobCenter:
-            blob_index   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
-            blob_centerY = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
-            blob_centerX = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
-        else:
-            blob_index = []
+
         if len(t)>0: 
             t[t==np.max(t)]=np.nan
         
@@ -129,7 +121,6 @@ if __name__ == '__main__':
                 xspeed[ii, :] = 0 # discard
                 yspeed[ii, :] = 0 
             else:
-                # pdb.set_trace()
                 xspeed[ii, int(max(startPt[ii]-1,0))]      = 0 
                 xspeed[ii, int(min(endPt[ii],trunclen-2))] = 0 
                 yspeed[ii, int(max(startPt[ii]-1,0))]      = 0 
@@ -139,9 +130,7 @@ if __name__ == '__main__':
         
         print "Num of original samples is " , Numsample
         minspdth = 10
-        mask_re, x_re, y_re, t_re, blob_index_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps = fps, minspdth = minspdth)
-        # print('initialization finished....')
-        
+        mask_re, x_re, y_re, t_re, xspd,yspd = trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps = fps, minspdth = minspdth)
         # delete all nan rows 
         if x_re!=[]:
             allnanInd = FindAllNanRow(t_re)
@@ -159,22 +148,27 @@ if __name__ == '__main__':
             pass 
         NumGoodsample = len(x_re)
         print "Num of Good samples is" , NumGoodsample
-        result            = {}
-        result['trjID']   = mask_re
-        result['xtracks'] = x_re       
-        result['ytracks'] = y_re
-        result['Ttracks'] = t_re
-        result['xspd']    = xspd
-        result['yspd']    = yspd
-        
+        # result            = {}
+        # result['trjID']   = mask_re
+        # result['xtracks'] = x_re       
+        # result['ytracks'] = y_re
+        # result['Ttracks'] = t_re
+        # result['xspd']    = xspd
+        # result['yspd']    = yspd
 
-        if useBlobCenter:
-            result['fg_blob_index'] = blob_index_re	
+        ptstrj['trjID']   = mask_re
+        ptstrj['xtracks'] = x_re       
+        ptstrj['ytracks'] = y_re
+        ptstrj['Ttracks'] = t_re
+        ptstrj['xspd']    = xspd
+        ptstrj['yspd']    = yspd
+
         if smooth:
             savename = os.path.join(savePath,'smooth_len4minSpd'+str(minspdth)+'_'+str(matidx+1).zfill(3)+'.mat')
         else:
             savename = os.path.join(savePath,'len4minSpd'+str(minspdth)+'_'+str(matidx+1).zfill(3))
-        savemat(savename,result)
+        # savemat(savename,result)
+        savemat(savename,ptstrj)
 
 
 

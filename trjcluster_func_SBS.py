@@ -12,17 +12,17 @@ import matplotlib.pyplot as plt
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
 
-def getMuSigma(x,y,xspd,yspd):
+def getMuSigma(dataForKernel):
+    if len(dataForKernel)==7:
+        [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
+    sxdiffAll    = []
+    sydiffAll    = []
+    mdisAll      = []
+    huedisAll    = []
+    centerDisAll = []
 
-    sxdiffAll = []
-    sydiffAll = []
-    mdisAll = []
-
-
-    # build adjacent mtx
     for i in range(NumGoodsample):
         # print "i", i
-        # plt.cla()
         for j in range(i, min(NumGoodsample,i+1000)):
             tmp1 = x[i,:]!=0
             tmp2 = x[j,:]!=0
@@ -32,27 +32,38 @@ def getMuSigma(x,y,xspd,yspd):
                 sidx   = idx[0:-1] # for speed
                 sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                 sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
-                mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-                
+                # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+                mdis   = np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2)
+                centerDis = np.sqrt((fg_blob_center_X[i,idx]-fg_blob_center_X[j,idx])**2+(fg_blob_center_Y[i,idx]-fg_blob_center_Y[j,idx])**2)
+        
+                huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+
                 sxdiffAll.append(sxdiff)
                 sydiffAll.append(sydiff)
                 mdisAll.append(mdis)
+                centerDisAll.append(centerDis)
+                huedisAll.append(huedis)
+
 
     mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
     mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
     mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
+    mu_center_distance,sigma_center_distance = fitGaussian(centerDisAll)
+    mu_hue_distance,sigma_hue_distance = fitGaussian(huedisAll)
 
-    return mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance
+    mean_std_ForKernel = np.array([mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_center_distance,sigma_center_distance,mu_hue_distance,sigma_hue_distance])
+    return mean_std_ForKernel
 
 
 def adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd, SBS,useSBS = False):
     # sigma_xspd_diff = 0.7
     # sigma_yspd_diff = 0.7
     # sigma_spatial_distance = 200
+
     if useSBS:
-        adj_element = np.exp((-sxdiff**2/stdx**2)+(-sydiff**2/stdy**2)+(-mdis**2/stdd**2) + SBS)
+        adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2) + (-huedis**2/2*stdhue**2) +(-blobCenterdis**2/2*stdblob**2) )
     else:
-        adj_element = np.exp((-sxdiff**2/stdx**2)+(-sydiff**2/stdy**2)+(-mdis**2/stdd**2))
+        adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
     # if math.isnan(adj_element):
     #     pdb.set_trace()
     return adj_element
@@ -68,7 +79,7 @@ def adj_cosine_element(i_trj,j_trj):
     return cos_element
 
 
-def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
+def get_adj_element(adj_element,sxdiff, sydiff,mdis,sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd,SBSij,dataSource,useSBS):
     # dth     = 300 #30*1.5
     # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
     # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
@@ -87,8 +98,16 @@ def adj_thresholding_element(sxdiff, sydiff,mdis,dataSource):
         xspdth = 5 #x speed threshold
 
     if (sxdiff <xspdth ) & (sydiff<yspdth ) & (mdis < dth):
-        adj_element = 1
-        # adj[i,j] = construct_adj(sxdiff, sydiff, mdis)
+        if adj_element =="Thresholding":
+            adj_element = 1
+
+        if adj_element =="Gaussian":
+            adj_element = adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd,SBSij,useSBS)
+
+        if adj_element == "Cosine":
+            i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
+            j_trj    = np.concatenate((x[j,idx], xspd[j,sidx],y[j,idx],yspd[j,sidx]), axis=1)
+            adj[i,j] = adj_cosine_element(i_trj,j_trj)
         """visualize the neighbours"""
         # lines = ax.plot(x[i,idx], y[i,idx],color = (color[i-1].T)/255.,linewidth=2)
         # lines = ax.plot(x[j,idx], y[j,idx],color = (color[j-1].T)/255.,linewidth=2)
@@ -116,14 +135,9 @@ def prepare_input_data(isAfterWarpping,isLeft,dataSource):
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
     else:
         if dataSource == 'DoT':
-            """for linux"""
             matfilepath = DataPathobj.filteredKltPath
             savePath    = DataPathobj.adjpath
-        if dataSource == 'Johnson':
-            """Jay & Johnson"""
-            matfilepath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/')
-            savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/adj/')
-        
+
         if smooth:
             matfiles = sorted(glob.glob(matfilepath + 'smooth_len*.mat'))
         else:
@@ -165,18 +179,20 @@ if __name__ == '__main__':
         xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
         yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
         
+        hue   = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
+
         if useSBS:
             FgBlobIndex   = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             FgBlobIndex[FgBlobIndex==0]=np.nan
+            fg_blob_center_X   = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
+            fg_blob_center_Y   = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
         else:
             FgBlobIndex = []
 
-
+        dataForKernel = np.array([x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y])
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
-
-
-        color         = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
+        color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
         NumGoodsample = len(x)
         # construct adjacency matrix
         print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
@@ -185,8 +201,7 @@ if __name__ == '__main__':
         num = np.arange(fnum)
 
         if adj_element =="Gaussian":
-            ux,stdx,uy,stdy,ud,stdd = getMuSigma(x,y,xspd,yspd)
-
+            mean_std_ForKernel = getMuSigma(dataForKernel)
 
         # build adjacent mtx
         for i in range(NumGoodsample):
@@ -201,27 +216,22 @@ if __name__ == '__main__':
                     sidx   = idx[0:-1] # for speed
                     sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
                     sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
-                    mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-                    
-                    sxdiffAll.append(sxdiff)
-                    sydiffAll.append(sydiff)
-                    mdisAll.append(mdis)
-                    trj1     = [x[i,idx],y[i,idx]]
-                    trj2     = [x[j,idx],y[j,idx]]
-                    
+                    # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+                    mdis   = np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2)
+                    centerDis = np.sqrt((fg_blob_center_X[i,idx]-fg_blob_center_X[j,idx])**2+(fg_blob_center_Y[i,idx]-fg_blob_center_Y[j,idx])**2)
+                    huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+
+                    trj1 = [x[i,idx],y[i,idx]]
+                    trj2 = [x[j,idx],y[j,idx]]
+    
+                    dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
+    
                     """counting the sharing blob numbers of two trjs"""
                     if useSBS:
                         SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
-                    if adj_element =="Thresholding":
-                        adj[i,j] = adj_thresholding_element(sxdiff,sydiff,mdis,dataSource)
+                    
+                    adj[i,j] = get_adj_element(adj_element,dataForKernel_ele,mean_std_ForKernel,dataSource,useSBS)
 
-                    if adj_element =="Gaussian":
-                        adj[i,j] = adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd,SBS[i,j],useSBS)
-
-                    if adj_element == "Cosine":
-                        i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
-                        j_trj    = np.concatenate((x[j,idx], xspd[j,sidx],y[j,idx],yspd[j,sidx]), axis=1)
-                        adj[i,j] = adj_cosine_element(i_trj,j_trj)
                 else: # overlapping too short
                     if i==j:
                         if useSBS:
