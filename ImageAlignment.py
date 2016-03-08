@@ -25,10 +25,10 @@ def getPerspectiveMtx(img):
 	M = cv2.getPerspectiveTransform(pts1,pts2)
 	return M
 
+
 def perspectiveWarp(img, M,frame_idx,isSave):
 	# dst = cv2.warpPerspective(img,M,(400,1100)) # johnson # new jayst lower
 	dst = cv2.warpPerspective(img,M,(350,600))  # canal
-
 	if isSave:
 		name = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/'+str(frame_idx).zfill(6)+'.jpg'
 		cv2.imwrite(name, dst)
@@ -75,6 +75,29 @@ if __name__ == '__main__':
 
 	# pickle.dump(warpMtx,open('CanalWarpMtx_left','wb'))
 	# pickle.dump(warpMtx,open('CanalWarpMtx_right','wb'))
+
+
+def warp2parallel(trj, warpingMtx):
+	dst = cv2.warpPerspective(frame,warpingMtx,(350,600))  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
