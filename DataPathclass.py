@@ -54,10 +54,11 @@ class DataPath(object):
 
 """Some Useful functions"""
 from scipy.stats import norm
+import numpy as np
 # fitting Gaussian and get rid of the outlier(too large p3)
 def fitGaussian(data):
 	# Fit a normal distribution to the data:
-	mu, std = norm.fit(data)
+	mu, std = norm.fit(np.array(data)[~np.isnan(data)])
 	## Plot the histogram.
 	# plt.hist(data, bins=25, normed=True, alpha=0.6, color='g')
 	# Plot the PDF.

@@ -15,35 +15,53 @@ from sets import Set
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
 
-def polyFitTrj(x,y):
+def filteringCriterion(xk,yk,xspd,yspd):
+	minspdth = 5
+	fps = 30
+	transth = 100*fps/6
+	speed = np.abs(xspd)+np.abs(yspd)
+	livelong      =  len(xk)>4   # chk if trj is long enough
+	if not livelong:
+		return False
+	else:
+		notStationary = sum(speed<3) < transth
+		moving1       = max(speed)>minspdth # check if it is a moving point
+		moving2       = (np.abs(np.sum(xspd))>=1e-2) and (np.abs(np.sum(yspd))>=1e-2)
+		loc_change    = (np.max(xk)-np.min(xk)>=5) or (np.max(yk)-np.min(yk)>=5)
+		
+		# if (np.sum(xspd)<=1e-2 and np.sum(xaccelerate)<=1e-1) or (np.sum(yspd)<=1e-2 and np.sum(yaccelerate)<=1e-1):
+		# if len(xspd)<=3 and (np.sum(xspd)<=1e-2) and (np.sum(xaccelerate)<=1e-1):
+		# if ((np.abs(np.sum(xspd))<=1e-2) and (np.abs(np.sum(yspd))<=1e-2)) or ((np.max(xk)-np.min(xk)<=5) and (np.max(yk)-np.min(yk)<=5)):
+		return bool(livelong*notStationary*moving1*moving2*loc_change)
+
+
+
+def polyFitTrj(x,y,xspd_mtx,yspd_mtx):
 	badTrj  = []
 	goodTrj = []
 	p3      = [] #polynomial coefficients, order 3
 	for kk in range(x.shape[0]):
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
-		xspd = np.diff(xk[xk!=0])
-		xaccelerate = np.diff(xspd)
-		yspd = np.diff(yk[yk!=0])
-		yaccelerate = np.diff(yspd)
+		
+		# xaccelerate = np.diff(xspd)
+		# yaccelerate = np.diff(yspd)
+
+		xspd = xspd_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]
+		yspd = yspd_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]
+
 		# print sum(xspd)
 		# print sum(accelerate)
-		# if (np.sum(xspd)<=1e-2 and np.sum(xaccelerate)<=1e-1) or (np.sum(yspd)<=1e-2 and np.sum(yaccelerate)<=1e-1):
-		# if len(xspd)<=3 and (np.sum(xspd)<=1e-2) and (np.sum(xaccelerate)<=1e-1):
-		if ((np.abs(np.sum(xspd))<=1e-2) and (np.abs(np.sum(yspd))<=1e-2)) or ((np.max(xk)-np.min(xk)<=5) and (np.max(yk)-np.min(yk)<=5)):
-		# if len(xspd)<=5:	
-			# print "xspd",xspd
-			# print "yspd",yspd
+		satisfyCriterion = filteringCriterion(xk,yk,xspd,yspd)
+		if not satisfyCriterion:
 			badTrj.append(kk)
 			# plt.plot(x[kk,:][x[kk,:]!=0],y[kk,:][y[kk,:]!=0])
 			# pdb.set_trace()
 		else:
 			goodTrj.append(kk)
-			# pdb.set_trace()
 			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
 			#### p3.append(np.polyfit( y[kk,:][y[kk,:]!=0], x[kk,:][x[kk,:]!=0],3))
 			p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
-
 
 	outlierID =[]
 	p3 = np.array(p3)
@@ -131,23 +149,20 @@ def kmeansPolyCoeff(p3):
 	    # ax.w_zaxis.set_ticklabels([])
 	    fignum = fignum + 1
 
-def readData(matidx = 0):
-	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
-	matfilepath = DataPathobj.kltpath
-	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-	start_position = 0 
-	matfiles       = matfiles[start_position:]
-	matfile = matfiles[matidx]
+def readData(matfile):
 	# print "Processing truncation...", str(matidx+1)
 	ptstrj = loadmat(matfile)
 	x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
 	y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-	return x,y,ptstrj,matfile
+	return x,y,ptstrj
 
 
 def getSmoothMtx(x,y):
 	x_smooth_mtx = np.zeros(x.shape)
 	y_smooth_mtx = np.zeros(y.shape)
+	xspd_smooth_mtx = np.zeros(x.shape)
+	yspd_smooth_mtx = np.zeros(y.shape)
+
 	for kk in range(0,x.shape[0],1):
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
@@ -155,7 +170,13 @@ def getSmoothMtx(x,y):
 			x_smooth, y_smooth = smooth(xk, yk)
 			x_smooth_mtx[kk,:][x[kk,:]!=0]=x_smooth
 			y_smooth_mtx[kk,:][y[kk,:]!=0]=y_smooth
-	return x_smooth_mtx,y_smooth_mtx
+			xspd_smooth = np.diff(x_smooth)
+			# xaccelerate = np.diff(xspd_smooth)
+			yspd_smooth = np.diff(y_smooth)
+			# yaccelerate = np.diff(yspd_smooth)
+			xspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=xspd_smooth
+			yspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=yspd_smooth
+	return x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx
 
 
 def plotTrj(x,y,p3=[],Trjchoice=[]):
@@ -191,33 +212,44 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			plt.draw()
 	plt.show()
 
-def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile):
-	ptstrj['xtracks'] = csr_matrix(x_smooth_mtx)
-	ptstrj['ytracks'] = csr_matrix(y_smooth_mtx)
-	ptstrj['polyfitCoef'] = p3
-	ptstrj['goodTrjInd'] = goodTrj
-	# savename = matfile[:-4]+'_smooth'+'.mat'
-	parentPath = os.path.dirname(matfile)
-	smoothPath = os.path.join(parentPath,'smooth/')
-	if not os.path.exists(smoothPath):
-		os.mkdir(smoothPath)
-	onlyFileName = matfile[len(parentPath)+1:]
-	savename = os.path.join(smoothPath,'smooth_'+onlyFileName)
-	savemat(savename,ptstrj)
+def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile):
+	print "saving smooth new trj:", matfile
+	'only keep the goodTrj, delete all bad ones'
+	ptstrjNew = {}
+	ptstrjNew['xtracks'] = csr_matrix(x_smooth_mtx[goodTrj,:])
+	ptstrjNew['ytracks'] = csr_matrix(y_smooth_mtx[goodTrj,:])
+	ptstrjNew['Ttracks'] = ptstrj['Ttracks'][goodTrj,:]
+	ptstrjNew['Huetracks'] = ptstrj['Huetracks'][goodTrj,:]
+	ptstrjNew['trjID']     = ptstrj['trjID'][:,goodTrj]
+	ptstrjNew['fg_blob_index']    = ptstrj['fg_blob_index'][goodTrj,:] 
+	ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
+	ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
+	ptstrjNew['polyfitCoef'] = p3
+
+	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
+	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
+
+	# parentPath = os.path.dirname(matfile)
+	# smoothPath = os.path.join(parentPath,'smooth/')
+	# if not os.path.exists(smoothPath):
+	# 	os.mkdir(smoothPath)
+	# onlyFileName = matfile[len(parentPath)+1:]
+	onlyFileName = matfile[len(DataPathobj.kltpath):]
+	savename = os.path.join(DataPathobj.smoothpath,onlyFileName)
+	savemat(savename,ptstrjNew)
 
 
 
-
-def main(matidx):
-	x,y,ptstrj,matfile = readData(matidx)
+def main(matfile):
 	# "if consecutive points are similar to each other, merge them, using one to represent"
 	# didn't do this, smooth and resample instead
-	x_smooth_mtx,y_smooth_mtx = getSmoothMtx(x,y)
+	x,y,ptstrj = readData(matfile)
+	x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y)
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
-	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx)
+	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
 	# kmeansPolyCoeff(p3)
 	# plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
-	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 
@@ -230,16 +262,15 @@ if __name__ == '__main__':
 
 	start_Y = 100;
 	end_Y   = 500;
-	for matidx in range(6):
-		main(matidx)
-		pdb.set_trace()
 
+	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
+	matfilepath = DataPathobj.kltpath
+	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+	start_position = 0 
+	matfiles       = matfiles[start_position:]
 
-
-
-
-
-
+	for matidx,matfile in enumerate(matfiles):
+		main(matfile)
 
 
 

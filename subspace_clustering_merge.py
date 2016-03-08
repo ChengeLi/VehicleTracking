@@ -274,25 +274,12 @@ def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
             matfiles = sorted(glob.glob(loadPath + 'warpped_Adj_' + '*.mat'))
             savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/'
     else:
-        # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'*.mat'))
-        # matfiles = sorted(glob.glob('./mat/20150222_Mat/adj/'+'HR'+'_adj_withT_'+'*.mat'))
-        # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_'
-        # savePath = './mat/20150222_Mat/labels/'+'HR'+'_label_withT_'
-
-        # matfiles = sorted(glob.glob('../DoT/5Ave@42St-96.81/adj/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' +'*.mat'))
-        # savePath = '../DoT/5Ave@42St-96.81/labels/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' 
-        if dataSource == 'DoT':
-            # for linux
-            # matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/adj/' + '*.mat')))
-            # savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/ssc_')
-            if smooth:
+       if dataSource == 'DoT':
+          if smooth:
                 matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'smooth_*.mat')))
             else:
                 matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat'))) 
             savePath = DataPathobj.sscpath
-            # for mac
-            # matfiles = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/adj/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/Adj_' +'*.mat'))
-            # savePath = '../DoT/CanalSt@BaxterSt-96.106/labels/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc_'
 
         if dataSource == 'Johnson':
             # Jay & Johnson
