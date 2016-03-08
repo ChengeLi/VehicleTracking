@@ -77,9 +77,6 @@ if __name__ == '__main__':
 	# pickle.dump(warpMtx,open('CanalWarpMtx_right','wb'))
 
 
-def warp2parallel(trj, warpingMtx):
-	dst = cv2.warpPerspective(frame,warpingMtx,(350,600))  
-
 
 
 
