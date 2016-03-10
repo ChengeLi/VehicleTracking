@@ -2,69 +2,57 @@
 import numpy as np
 import cv2
 
+def perspectiveTransform_chenge():  # implement perspectiveTransform by Chenge, same as cv func
+
+	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,600,2))
+
+	xy1TupleMtx = np.zeros((x_smooth_mtx[goodTrj,:].shape[0],x_smooth_mtx[goodTrj,:].shape[1],3))
+	xy1TupleMtx[:,:,0] = np.array(x_smooth_mtx[goodTrj,:],dtype='float32')  #first dim is X!
+	xy1TupleMtx[:,:,1] = np.array(y_smooth_mtx[goodTrj,:],dtype='float32')
+	xy1TupleMtx[:,:,2] = np.ones(x_smooth_mtx[goodTrj,:].shape)
+
+	xy1TupleList = np.array(xy1TupleMtx.reshape((-1,3)))
+	xyw_prime = np.matrix(warpingMtx)*np.matrix(xy1TupleList).T
+	x_prime = xyw_prime[0,:]
+	y_prime = xyw_prime[1,:]
+	w_prime = xyw_prime[2,:]
+
+	warpped_x = x_prime/w_prime
+	warpped_y = y_prime/w_prime
 
 
+def loadWarpMtx():
+	# homography_filename = '/home/chengeli/CUSP/AIG/Saunier/Canal_homographyNEW.txt'
+	# warpingMtxFromFile = loadtext(homography_filename) # not accurate
 
-def loadWarpMtx(homography_filename):
-	# warpingMtx = np.loadtxt(homography_filename)
-	pts1 = np.float32([[242, 192],[179,500],[289,190],[447,417]])  #([x,y]) canal st, right lane
-	pts2 = np.float32([[125,97],[684,621],[179,48],[719,548]]) #canal world
-	# pts2 = np.float32([[0,0],[0,81],[81,0],[81,736]]) #canal
+	ptsLeft = np.float32([[161, 147],[224,147], [73,519],[399,397]])  # canal st, left lane
+	ptsRight = np.float32([[229, 164],[340,151], [451,444],[703,331]])  # canal st, right lane
+	ptsinWorldScale_half = np.float32([[0,0],[81,0],[0,736],[81,736]]) 
 
+	Mleft = cv2.getPerspectiveTransform(ptsLeft,ptsinWorldScale_half)
+	Mright = cv2.getPerspectiveTransform(ptsRight,ptsinWorldScale_half)
 
-	pts1 = np.float32([[161, 147],[224,147], [73,519],[399,397]])  # canal st, left lane
-	pts1 = np.float32([[229, 164],[340,151], [451,444],[703,331]])  # canal st, right lane
-	pts2 = np.float32([[0,0],[81,0],[0,736],[81,731]]) #canal
-
-	M = cv2.getPerspectiveTransform(pts1,pts2)
-
-	dst1 = cv2.warpPerspective(frame,M,(81,736))  # for image
-
-	dst = np.zeros((736,81,3))
- 
-	# for src_y in range(73,399,1):
-	# 	for src_x in range(147,519,1):
-	# 		dst_x = np.dot([src_x,src_y,1],M[0,:])/np.dot([src_x,src_y,1],M[2,:])	
-	# 		dst_y = np.dot([src_x,src_y,1],M[1,:])/np.dot([src_x,src_y,1],M[2,:])
-	# 		dst[np.floor(dst_y),np.floor(dst_x)] = frame[src_y,src_x,:]
+	'NO NEED TO SPLIT INTO LEFT OR RIGHT!'
+	ptsinImage = np.float32([[154, 145],[340,151], [73,519],[703,316]])  # canal st, left lane
+	ptsinWorldScale = np.float32([[0,0],[81*2,0],[0,736],[81*2,736]]) 
+	M = cv2.getPerspectiveTransform(ptsinImage,ptsinWorldScale)
+	# dstFrm = cv2.warpPerspective(frame,M,(81*2,736))
 
 
-	a = np.array([[1, 2], [4, 5], [7, 8]],dtype='float32')
-
-
-	dsttest = cv2.perspectiveTransform(np.array([trj]), np.array(M,dtype='float32'))
-
-
-
-	pdb.set_trace()
-
-
-	return warpingMtx
-
-def warpTrj2parallel(frame, warpingMtx):
-	dst = cv2.warpPerspective(frame,warpingMtx*1000,(350,600))  
-	# dst2 = cv2.warpPerspective(frame,M,(81,736))
-	# dst2 = cv2.warpPerspective(frame,M,(719,548))
-	dst2 = cv2.warpPerspective(frame,M,(719,548))
-
+	# dstleft = cv2.warpPerspective(frame,Mleft,(81,736))  # for image
+	# dstright = cv2.warpPerspective(frame,Mright,(81,736))  
+	(limitX, limitY) = (81*2,736)
+	return Mleft, Mright, M, limitX, limitY
 
 
 
 
-
-
-homography_filename = '/home/chengeli/CUSP/AIG/Saunier/Canal_homographyNEW.txt'
-warpingMtx = loadWarpMtx(homography_filename)
 
 # frame = cv2.imread('/home/chengeli/CUSP/AIG/Saunier/00000012.jpg')
-frame = cv2.imread('../DoT/CanalSt@BaxterSt-96.106/imgs/00000011.jpg')
-world_frame = cv2.imread('/home/chengeli/CUSP/AIG/Saunier/canal_baxter_world.jpg')
+# # frame = cv2.imread('../DoT/CanalSt@BaxterSt-96.106/imgs/00000011.jpg')
+# world_frame = cv2.imread('/home/chengeli/CUSP/AIG/Saunier/canal_baxter_world.jpg')
 
-leftLane = frame[190:500,179:447,:]
-
-
-
-
+	
 
 
 

@@ -15,8 +15,6 @@ from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
 
 
-
-
 def blobImg2blobmatrix(maskgray):
 	# maskgray = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
 	# ret,thresholded = cv2.threshold(maskgray,127,255,0)

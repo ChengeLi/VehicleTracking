@@ -14,6 +14,34 @@ from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
+from warpTrj2parallel import loadWarpMtx
+import cv2
+
+
+def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
+	'warp the trj and save to warpped'
+	xyTupleMtx = np.zeros((x_mtx.shape[0],x_mtx.shape[1],2))
+	xyTupleMtx[:,:,0] = np.array(x_mtx,dtype='float32')  #first dim is X!
+	xyTupleMtx[:,:,1] = np.array(y_mtx,dtype='float32')
+
+	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,600,2))
+
+	# warpped_x_mtx = np.int16(warpped_xyTupleMtx[:,:,0])
+	# warpped_y_mtx = np.int16(warpped_xyTupleMtx[:,:,1])
+	warpped_x_mtx = warpped_xyTupleMtx[:,:,0]
+	warpped_y_mtx = warpped_xyTupleMtx[:,:,1]
+
+	'how to deal with out of range?????'
+	warpped_x_mtx[warpped_x_mtx<0] = 0 
+	warpped_y_mtx[warpped_y_mtx<0] = 0 
+	warpped_x_mtx[warpped_x_mtx>=limitX] = limitX
+	warpped_y_mtx[warpped_y_mtx>=limitY] = limitY
+
+	warpped_x_mtx[x_mtx==0]=0
+	warpped_y_mtx[y_mtx==0]=0
+
+	return warpped_x_mtx,warpped_y_mtx
+
 
 def filteringCriterion(xk,yk,xspd,yspd):
 	minspdth = 5
@@ -36,7 +64,7 @@ def filteringCriterion(xk,yk,xspd,yspd):
 
 
 
-def polyFitTrj(x,y,xspd_mtx,yspd_mtx):
+def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 	badTrj  = []
 	goodTrj = []
 	p3      = [] #polynomial coefficients, order 3
@@ -160,8 +188,8 @@ def readData(matfile):
 def getSmoothMtx(x,y):
 	x_smooth_mtx = np.zeros(x.shape)
 	y_smooth_mtx = np.zeros(y.shape)
-	xspd_smooth_mtx = np.zeros(x.shape)
-	yspd_smooth_mtx = np.zeros(y.shape)
+	# xspd_smooth_mtx = np.zeros(x.shape)
+	# yspd_smooth_mtx = np.zeros(y.shape)
 
 	for kk in range(0,x.shape[0],1):
 		xk = x[kk,:][x[kk,:]!=0]
@@ -170,12 +198,17 @@ def getSmoothMtx(x,y):
 			x_smooth, y_smooth = smooth(xk, yk)
 			x_smooth_mtx[kk,:][x[kk,:]!=0]=x_smooth
 			y_smooth_mtx[kk,:][y[kk,:]!=0]=y_smooth
-			xspd_smooth = np.diff(x_smooth)
-			# xaccelerate = np.diff(xspd_smooth)
-			yspd_smooth = np.diff(y_smooth)
-			# yaccelerate = np.diff(yspd_smooth)
-			xspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=xspd_smooth
-			yspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=yspd_smooth
+
+			# xspd_smooth = np.diff(x_smooth)
+			# # xaccelerate = np.diff(xspd_smooth)
+			# yspd_smooth = np.diff(y_smooth)
+			# # yaccelerate = np.diff(yspd_smooth)
+			# xspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=xspd_smooth
+			# yspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=yspd_smooth
+	'dont use loop, use mtx diff'
+	xspd_smooth_mtx = np.hstack((np.zeros((x_smooth_mtx.shape[0],1)),np.diff(x_smooth_mtx)))
+	yspd_smooth_mtx = np.hstack((np.zeros((y_smooth_mtx.shape[0],1)),np.diff(y_smooth_mtx)))
+
 	return x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx
 
 
@@ -225,9 +258,28 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
 	ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
 	ptstrjNew['polyfitCoef'] = p3
-
 	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
 	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
+
+	warpped_x_mtx,warpped_y_mtx = warpTrj2parallel(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
+
+	ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
+	ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
+	warpped_xspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_x_mtx)))
+	warpped_yspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_y_mtx)))
+	ptstrjNew['xspd_warpped'] = csr_matrix(warpped_xspd_mtx)
+	ptstrjNew['yspd_warpped'] = csr_matrix(warpped_yspd_mtx)
+
+
+	# plt.figure()
+	# for ii in range(len(goodTrj)):
+	# 	# xraw = x_smooth_mtx[goodTrj,:][ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
+	# 	# yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
+	# 	xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
+	# 	ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
+	# 	# plt.plot(xraw,yraw)
+	# 	plt.plot(xnew,ynew)
+	# 	plt.draw()
 
 	# parentPath = os.path.dirname(matfile)
 	# smoothPath = os.path.join(parentPath,'smooth/')
@@ -240,13 +292,15 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 
 
 
+
+
 def main(matfile):
 	# "if consecutive points are similar to each other, merge them, using one to represent"
 	# didn't do this, smooth and resample instead
 	x,y,ptstrj = readData(matfile)
 	x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y)
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
-	p3,goodTrj = polyFitTrj(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
+	p3,goodTrj = polyFitTrj_filtering(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
 	# kmeansPolyCoeff(p3)
 	# plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
 	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
@@ -262,7 +316,8 @@ if __name__ == '__main__':
 
 	start_Y = 100;
 	end_Y   = 500;
-
+	
+	_, _, warpingMtx, limitX, limitY = loadWarpMtx()
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))

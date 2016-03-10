@@ -23,11 +23,14 @@ def getMuSigma(dataForKernel):
 
     for i in range(NumGoodsample):
         # print "i", i
-        for j in range(i, min(NumGoodsample,i+1000)):
+        # for j in range(i, min(NumGoodsample,i+1000)):
+        for j in range(i, NumGoodsample):
             tmp1 = x[i,:]!=0
             tmp2 = x[j,:]!=0
             idx  = num[tmp1&tmp2]
+            
             if len(idx)>5: # has overlapping
+                # print len(idx)
             # if len(idx)>=30: # at least overlap for 100 frames
                 sidx   = idx[0:-1] # for speed
                 sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
@@ -39,6 +42,14 @@ def getMuSigma(dataForKernel):
                 cxj = np.nanmedian(fg_blob_center_X[j,idx])
                 cyj = np.nanmedian(fg_blob_center_Y[j,idx])
 
+
+                if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
+                    cxi = np.nanmedian(x[i,idx])
+                    cyi = np.nanmedian(y[i,idx])
+                if np.isnan(cxj) or np.isnan(cyj):
+                    cxj = np.nanmedian(x[j,idx])
+                    cyj = np.nanmedian(y[j,idx])
+
                 centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
         
                 huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
@@ -49,33 +60,59 @@ def getMuSigma(dataForKernel):
                 centerDisAll.append(centerDis)
                 huedisAll.append(huedis)
 
-    mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
-    mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
-    mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
-    mu_hue_distance,sigma_hue_distance = fitGaussian(huedisAll)
-    mu_center_distance,sigma_center_distance = fitGaussian(centerDisAll)
+        # plt.plot(fg_blob_center_X[i,:][fg_blob_center_X[i,:]!=0],fg_blob_center_Y[i,:][fg_blob_center_X[i,:]!=0],'b')
+        # plt.plot(fg_blob_center_X[i,idx],fg_blob_center_Y[i,idx],'g')
+        # plt.plot(cxi,cyi,'r')
+        # plt.draw()
 
-    mean_std_ForKernel = np.array([mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance,mu_center_distance,sigma_center_distance])
-    return mean_std_ForKernel
+    # mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
+    # mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
+    # mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
+    # try:
+    #     mu_hue_distance,sigma_hue_distance = fitGaussian(huedisAll)
+    #     mu_center_distance,sigma_center_distance = fitGaussian(centerDisAll)
+    # except: #if empty
+    #     (mu_hue_distance,sigma_hue_distance) = (np.nan, np.nan)
+    #     (mu_center_distance,sigma_center_distance) = (np.nan, np.nan)
+
+    # mean_std_ForKernel = np.array([mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance,mu_center_distance,sigma_center_distance])
+
+    mean_std_ForKernel = []
+    extremeValue = np.array([min(sxdiffAll[:]),max(sxdiffAll[:]), min(sydiffAll[:]),max(sydiffAll[:]),min(mdisAll[:]),max(mdisAll[:]),min(huedisAll[:]),max(huedisAll[:]),min(centerDisAll[:]),max(centerDisAll[:])])
+    return mean_std_ForKernel, extremeValue
 
 
-# def adj_gaussian_element(sxdiff, sydiff, mdis,ux,stdx,uy,stdy,ud,stdd, SBS,useSBS = False):
-def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,useSBS = True):
+
+
+def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS):
     # sigma_xspd_diff = 0.7
     # sigma_yspd_diff = 0.7
     # sigma_spatial_distance = 200
 
     [sxdiff,sydiff,mdis,huedis,centerDis] = dataForKernel_ele
-    [mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance, mu_center_distance,sigma_center_distance] =     mean_std_ForKernel 
+    # [mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance, mu_center_distance,sigma_center_distance] =     mean_std_ForKernel 
+
+    [min_sx,max_sx,min_sy,max_sy,min_mdis,max_mdis,min_hue,max_hue,min_center,max_center]=extremeValue
+
+    'normalize'
+    sxdiff_normalized = (sxdiff-min_sx)/(max_sx-min_sx)
+    sydiff_normalized = (sydiff-min_sy)/(max_sy-min_sy)
+    mdis_normalized = (mdis-min_mdis)/(max_mdis-min_mdis)
+    huedis_normalized = (huedis-min_hue)/(max_hue-min_hue)
+    centerDis_normalized = (centerDis-min_center)/(max_center-min_center)
+
 
     if useSBS:
-        adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis**2/(2*sigma_hue_distance**2)) +(-centerDis**2/(2*sigma_center_distance**2)) ))
+        # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis**2/(2*sigma_hue_distance**2)) +(-centerDis**2/(2*sigma_center_distance**2)) ))
     
         # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis/100) +(-centerDis/100)))
+
+        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
     else:
         adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
-    # if math.isnan(adj_element):
-    #     pdb.set_trace()
+    
+    if math.isnan(adj_element):
+        pdb.set_trace()
     return adj_element
 
 
@@ -89,7 +126,7 @@ def adj_cosine_element(i_trj,j_trj):
     return cos_element
 
 
-def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,useSBS):
+def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS):
     # dth     = 300 #30*1.5
     # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
     # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
@@ -103,15 +140,21 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,useSBS):
     #     yspdth = 5
     #     xspdth = 1
 
-    dth    = 300 #??!!!!
-    yspdth = 5 #y speed threshold
-    xspdth = 5 #x speed threshold
+    if not useWarpped:
+        dth    = 300 #??!!!!
+        yspdth = 5 #y speed threshold
+        xspdth = 5 #x speed threshold
+    else:
+        dth = 210 #mean+std
+        yspdth = 40
+        xspdth = 30
+
     if (sxdiff <xspdth ) & (sydiff<yspdth ) & (mdis < dth):
         if adj_methods =="Thresholding":
             adj_element = 1
 
         if adj_methods =="Gaussian":
-            adj_element=adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,useSBS)
+            adj_element=adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS)
 
         if adj_methods == "Cosine":
             i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
@@ -132,37 +175,26 @@ def sameBlobScore(fgBlobInd1,fgBlobInd2):
     SBS = np.sum(fgBlobInd1 == fgBlobInd2)
     return SBS
 
-def prepare_input_data(isAfterWarpping,isLeft):
-    if isAfterWarpping:
-        if isLeft:
-            matPath  = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
-        else:
-            matPath  = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
-            matfiles = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
+def prepare_input_data():
+    if smooth:
+        matfilepath = DataPathobj.smoothpath
+        matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
     else:
-        if smooth:
-            matfilepath = DataPathobj.smoothpath
-            matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
-        else:
-            matfilepath = DataPathobj.filteredKltPath
-            matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
+        matfilepath = DataPathobj.filteredKltPath
+        matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
     
     savePath = DataPathobj.adjpath
     matfiles = matfiles[0:]
     return matfiles,savePath
 
-# def trjcluster(useSBS,dataSource):
 if __name__ == '__main__':
-    isAfterWarpping = False
-    isLeft          = False
-    useSBS          = True
+    useSBS      = True
     isVisualize = False
-    smooth = True
+    smooth      = True
+    useWarpped  = True
 
-    matfiles,savePath = prepare_input_data(isAfterWarpping,isLeft)
+
+    matfiles,savePath = prepare_input_data()
     # adj_methods = np.nan
     # adj_methods = "Thresholding"
     adj_methods = "Gaussian"
@@ -181,15 +213,22 @@ if __name__ == '__main__':
         if len(ptstrj['trjID'])==0:
             continue
         ptsidx = ptstrj['trjID'][0]
-        x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
-        y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-        t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-        xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
-        yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
-        
-        hue   = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
+        if not useWarpped:            
+            x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
+            y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
+            t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+            xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
+            yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
+        else:
+            x      = csr_matrix(ptstrj['xtracks_warpped'], shape=ptstrj['xtracks'].shape).toarray()
+            y      = csr_matrix(ptstrj['ytracks_warpped'], shape=ptstrj['ytracks'].shape).toarray()
+            t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+            xspd   = csr_matrix(ptstrj['xspd_warpped'], shape=ptstrj['xspd'].shape).toarray()
+            yspd   = csr_matrix(ptstrj['yspd_warpped'], shape=ptstrj['yspd'].shape).toarray()
 
+        
         if useSBS:
+            hue   = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
             FgBlobIndex      = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             fg_blob_center_X = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
             fg_blob_center_Y = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
@@ -197,10 +236,11 @@ if __name__ == '__main__':
             FgBlobIndex[FgBlobIndex==0]=np.nan
             fg_blob_center_X[FgBlobIndex==0]=np.nan
             fg_blob_center_Y[FgBlobIndex==0]=np.nan
-
-
         else:
-            FgBlobIndex = []
+            hue = []
+            fg_blob_center_X =[]
+            fg_blob_center_Y = []
+            FgBlobIndex      = []
 
         dataForKernel = np.array([x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y])
         Numsample = ptstrj['xtracks'].shape[0]
@@ -214,7 +254,7 @@ if __name__ == '__main__':
         num = np.arange(fnum)
 
         if adj_methods =="Gaussian":
-            mean_std_ForKernel = getMuSigma(dataForKernel)
+            mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
 
         # build adjacent mtx
         for i in range(NumGoodsample):
@@ -232,15 +272,29 @@ if __name__ == '__main__':
                     # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
                     mdis   = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
 
-                    huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                    if useSBS:
+                        huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                        cxi = np.nanmedian(fg_blob_center_X[i,idx])
+                        cyi = np.nanmedian(fg_blob_center_Y[i,idx])
+                        cxj = np.nanmedian(fg_blob_center_X[j,idx])
+                        cyj = np.nanmedian(fg_blob_center_Y[j,idx])
 
-                
-                    cxi = np.nanmedian(fg_blob_center_X[i,idx])
-                    cyi = np.nanmedian(fg_blob_center_Y[i,idx])
-                    cxj = np.nanmedian(fg_blob_center_X[j,idx])
-                    cyj = np.nanmedian(fg_blob_center_Y[j,idx])
-                    centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
-            
+                        if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
+                            cxi = np.nanmedian(x[i,idx])
+                            cyi = np.nanmedian(y[i,idx])
+                        if np.isnan(cxj) or np.isnan(cyj):
+                            cxj = np.nanmedian(x[j,idx])
+                            cyj = np.nanmedian(y[j,idx])
+
+                        centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
+
+                        if np.isnan(centerDis):
+                            # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
+                            pdb.set_trace()
+                    else:
+                        huedis=0
+                        centerDis=0
+                    # print 'centerDis',centerDis
                     trj1 = [x[i,idx],y[i,idx]]
                     trj2 = [x[j,idx],y[j,idx]]
     
@@ -250,7 +304,7 @@ if __name__ == '__main__':
                     # if useSBS:
                     #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                     
-                    adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,useSBS)
+                    adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS)
 
                 else: # overlapping too short
                     # SBS[i,j] = 0
@@ -271,7 +325,7 @@ if __name__ == '__main__':
         # else:
         adj_new = adj
         
-        # pdb.set_trace()
+        
         print "saving adj..."
         # print "use adj_new......"
         sparsemtx = csr_matrix(adj_new)
@@ -280,23 +334,15 @@ if __name__ == '__main__':
         result['adj']     = sparsemtx
         result['c']       = c
         result['trjID']   = ptsidx
-        # result['xtracks'] = x       
-        # result['ytracks'] = y
-        # result['Ttracks'] = t
-        # result['xspd']    = xspd
-        # result['yspd']    = yspd
 
-        if not isAfterWarpping:
-            # savename = os.path.join(savePath,adj_methods+'_Adj_'+matfiles[matidx][-7:-4].zfill(3))
-            if smooth:
-                savename = 'smooth_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1).zfill(3)
-            else:
-                savename = adj_methods+'_Adj_500_5_1_'+str(matidx+1).zfill(3)
-            savename = os.path.join(savePath,savename)
-            savemat(savename,result)
+        # pdb.set_trace()
+        if useWarpped:
+            savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1).zfill(3)
         else:
-            savename = os.path.join(savePath,'warpped_Adj_'+str(matidx+1).zfill(3))
-            savemat(savename,result)
+            savename = adj_methods+'_Adj_500_5_1_'+str(matidx+1).zfill(3)
+        savename = os.path.join(savePath,savename)
+        savemat(savename,result)
+
             
 
         """ visualization, see if connected components make sense"""
