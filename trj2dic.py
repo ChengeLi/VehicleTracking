@@ -18,7 +18,7 @@ from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 
 
 def Virctr(x,y):
@@ -344,11 +344,10 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         # pdb.set_trace()
         # if VC_filter(vcxtrj[k],vcytrj[k]):
         if True:
-            # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
-            # line_exist = 1
-            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-        else:
-            pass
+            lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
+            line_exist = 1
+            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
     # plt.draw()
@@ -371,95 +370,46 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.show()
 
 
-def prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource):
-    if isAfterWarpping:
-        if isLeft:
-            matPath         = '../DoT/CanalSt@BaxterSt-96.106/leftlane/'
-            matfiles        = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            left_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-            image_list      = left_image_list
-            # final result for vis
-            clustered_result = '../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_warpped_left'
-            savePath         = "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/"
-
-        else:
-            matPath          = '../DoT/CanalSt@BaxterSt-96.106/rightlane/'
-            matfiles         = sorted(glob.glob(matPath +'warpped_'+'*.mat'))
-            right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-            image_list       = right_image_list
-            # final result for vis
-            clustered_result = '../DoT/CanalSt@BaxterSt-96.106/rightlane/result/final_warpped_right'
-            savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/result/"
+def prepare_data_to_vis(isVideo):
+    global subSampRate
+    subSampRate = 6
+    if smooth:
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
     else:
-        if dataSource == 'DoT':
-            """Linux Canal"""
-            global subSampRate
-            subSampRate = 6
-            if smooth:
-                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'smooth*.mat')))
-                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'smooth_*.mat')))
-            else:
-                matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
-                clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))
 
 
-            savePath = DataPathobj.dicpath
-            result_file_Ind        = 0 # use the clustered result for the 2nd truncs(26-50)
-            clustered_result       = clustered_result_files[result_file_Ind]
-            """Mac Canal"""
-            # matfiles   = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/mat/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/filtered/len' +'*.mat'))
-            # clustered_result       = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/priorssc5030' 
-            # savePath   = '../DoT/CanalSt@BaxterSt-96.106/dic/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'        
-            
-            if isVideo:
-                # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
-                dataPath = DataPathobj.video
-            else:
-                dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-
-        if dataSource == 'Johnson':
-            """Jay & Johnson"""
-            global subSampRate
-            subSampRate = 6
-            # for linux
-            matfiles         = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/klt/filtered/' +'*.mat')))
-            dataPath         = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/')
-            clustered_result = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/complete_500-5-1Result/Complete_result')
-            savePath         = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/')
-            result_file_Ind  = 0 # use complete result
-            # for mac
-            # matfiles         = sorted(glob.glob('../Jay&Johnson/roi2/klt/filtered/' +'*.mat'))
-            # dataPath         = '../Jay&Johnson/roi2/imgs/'
-            # clustered_result = '../Jay&Johnson/roi2/Complete_result' 
-            # savePath         = '../Jay&Johnson/roi2/dic/'
-            # clustered_result = '../Jay&Johnson/roi2/onlyBigGroup_Complete_result'
-            # savePath         = '../Jay&Johnson/roi2/dic/onlyBigGroup/'
-            # result_file_Ind  = 0 # use complete result
+    savePath = DataPathobj.dicpath
+    result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
+    clustered_result = clustered_result_files[result_file_Ind]
+    
+    if isVideo:
+        # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
+        dataPath = DataPathobj.video
+    else:
+        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
 
     return matfiles,dataPath,clustered_result,savePath,result_file_Ind
 
 
 
 if __name__ == '__main__':
-# def trj2dic_main(isVideo, dataSource):
     isVideo    = True
-    dataSource = 'DoT'
-
     # isVideo    = False
-    # dataSource = 'Johnson'
+    smooth = True
     trunclen         = 600
     isClustered      = True
-    isAfterWarpping  = False
     isVisualize      = True
     useVirtualCenter = False
-    isLeft           = False
     isSave           = False
-    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isAfterWarpping,isLeft,isVideo, dataSource)
+    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     start_frame_idx = 0
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
-    # matfiles        = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
+    # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
 
 

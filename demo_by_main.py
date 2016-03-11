@@ -4,8 +4,6 @@
 
 #stdbuf -oL python demo_by_main.py 4 >../CanalVideos/log4 &
 
-
-
 import time
 import sys
 import numpy as np
@@ -21,7 +19,7 @@ print t1
 
 print("filter the trjs...")
 t0 = time.time()
-execfile('trj_filter.py')
+execfile('fit_extrapolate.py')
 t2 = time.time() - t0  # t2 = 2460.27871799469
 print t2  
 

@@ -5,7 +5,7 @@ import cPickle as pickle
 import numpy as np
 from scipy.io import loadmat,savemat
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 
 def unify_label(matfiles,savename):
     atmp     = []
@@ -94,34 +94,15 @@ def unify_label(matfiles,savename):
 
 
 if __name__ == '__main__':
-    # dataSource = 'Johnson'
-    dataSource = 'DoT'
-# def unify_label_main(dataSource):
-    if dataSource == 'DoT':
-        # for linux
-        # matfilePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/ssc/')
-        # savePath    = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/unifiedLabel/')
-        matfilePath   = DataPathobj.sscpath
-        savePath      = DataPathobj.unifiedLabelpath
-        # for mac
-        # matfilePath = '../DoT/CanalSt@BaxterSt-96.106/...???'
-        # savePath    = '../DoT/CanalSt@BaxterSt-96.106/finalresult/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-    if dataSource == 'Johnson':
-        # Jay & Johnson
-        # matfilePath ='/media/My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/'
-        # savePath    = '/media/My Book/CUSP/AIG/Jay&Johnson/roi2/unifiedLabel/'
-        # for mac
-        matfilePath = '../Jay&Johnson/roi2/ssc/'
-        savePath = '../Jay&Johnson/roi2/'
-
-
-
-    matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
+    smooth = True
+    matfilePath   = DataPathobj.sscpath
+    savePath      = DataPathobj.unifiedLabelpath
+    matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))
     numTrunc    = len(matfilesAll)
 
     if numTrunc<=200:
         if smooth:
-            savename = os.path.join(savePath,'smooth_Complete_result')
+            savename = os.path.join(savePath,'usewarpped_Complete_result')
         else:
             savename = os.path.join(savePath,'Complete_result')
         unify_label(matfilesAll,savename)

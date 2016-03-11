@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 from warpTrj2parallel import loadWarpMtx
 import cv2
 
@@ -24,7 +24,7 @@ def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
 	xyTupleMtx[:,:,0] = np.array(x_mtx,dtype='float32')  #first dim is X!
 	xyTupleMtx[:,:,1] = np.array(y_mtx,dtype='float32')
 
-	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,600,2))
+	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,trunclen,2))
 
 	# warpped_x_mtx = np.int16(warpped_xyTupleMtx[:,:,0])
 	# warpped_y_mtx = np.int16(warpped_xyTupleMtx[:,:,1])
@@ -48,7 +48,7 @@ def filteringCriterion(xk,yk,xspd,yspd):
 	fps = 30
 	transth = 100*fps/6
 	speed = np.abs(xspd)+np.abs(yspd)
-	livelong      =  len(xk)>4   # chk if trj is long enough
+	livelong =  len(xk)>4   # chk if trj is long enough
 	if not livelong:
 		return False
 	else:

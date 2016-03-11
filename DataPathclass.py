@@ -1,36 +1,41 @@
 import os
 import platform
 import glob as glob
+import pdb
+import cv2
 
 class DataPath(object):
-    # def __init__(self):
-    #     if platform.system()=='Darwin':   # on mac
-    #         self.sysPathHeader = '/Volumes/TOSHIBA/'
-    #     else:   # on linux
-    #         self.sysPathHeader = '/media/TOSHIBA/'
+	def __init__(self,dataSource,VideoIndex):  # different VideoIndex for different videos
+		if dataSource == 'Johnson':
+			self.sysPathHeader = '/media/My Book/CUSP/AIG/Jay&Johnson/'
+			self.videoPath = os.path.join(self.sysPathHeader,'CUSPvideos/')
+			self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+			self.video = self.videoList[VideoIndex]
+			self.videoTime = self.video[47:-4]
 
-	def __init__(self,VideoIndex):  # different VideoIndex for different videos
-		if platform.system()=='Darwin':   # on mac
-			self.sysPathHeader = '/Volumes/TOSHIBA/'
-			self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
-			self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
-		else:   # on linux
-			if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
-				self.sysPathHeader = '../CanalVideos/Canal@Baxter/'
-				self.videoPath = os.path.join(self.sysPathHeader,'avi/')
-				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-			else:
-				self.sysPathHeader = '/media/My Book/DOT Video/'
+		if dataSource == 'DoT':
+			if platform.system()=='Darwin':   # on mac
+				self.sysPathHeader = '/Volumes/TOSHIBA/'
 				self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
 				self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
+			else:   # on linux
+				if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
+					self.sysPathHeader = '../CanalVideos/Canal@Baxter/'
+					self.videoPath = os.path.join(self.sysPathHeader,'avi/')
+					self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+				else:
+					self.sysPathHeader = '/media/My Book/DOT Video/'
+					self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
+					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
+			self.video = self.videoList[VideoIndex]
+			self.videoTime = self.video[-31:-17]
 
 
-		self.video     = self.videoList[VideoIndex]
-		self.videoTime = self.video[-31:-17]
+		self.cap = cv2.VideoCapture(self.video)
 		self.DataPath = os.path.join(self.sysPathHeader,self.videoTime)
 		if not os.path.exists(self.DataPath):
 			os.mkdir(self.DataPath)
-
+			
 		
 		self.imagePath = []
 		self.kltpath = os.path.join(self.DataPath,"klt/")

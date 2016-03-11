@@ -10,7 +10,7 @@ from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 
 def getMuSigma(dataForKernel):
     if len(dataForKernel)==7:
@@ -260,7 +260,7 @@ if __name__ == '__main__':
         for i in range(NumGoodsample):
             print "i", i
             # plt.cla()
-            for j in range(i+1, min(NumGoodsample,i+1000)):
+            for j in range(i+1, NumGoodsample):
                 tmp1 = x[i,:]!=0
                 tmp2 = x[j,:]!=0
                 idx  = num[tmp1&tmp2]

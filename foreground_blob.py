@@ -12,7 +12,9 @@ import scipy.ndimage as ndimg
 from scipy.io import loadmat
 
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 
 def blobImg2blobmatrix(maskgray):
@@ -31,15 +33,15 @@ def blobImg2blobmatrix(maskgray):
 
 
 def readData():
-    matfilepath = DataPathobj.blobPath
-    matfiles = sorted(glob.glob(matfilepath + '*.mat'))
-    # matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
+	matfilepath = DataPathobj.blobPath
+	matfiles = sorted(glob.glob(matfilepath + '*.mat'))
+	# matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
 	'==============================================================================='
 	'change the offset!!'
 	'==============================================================================='
-    offset = 0
-    matfiles = matfiles[offset:]
-    return matfiles,offset
+	offset = 0
+	matfiles = matfiles[offset:]
+	return matfiles,offset
 
 
 if __name__ == '__main__':
@@ -55,14 +57,14 @@ if __name__ == '__main__':
 			variableData = h5pymatfile[1]
 			mask_tensor = variableData.value
 			
-		trunclen  = 600
-		# plt.figure()
-		subSampRate = 6
+		trunclen  = Parameterobj.trunclen
+		subSampRate = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS
 		blobLabelMtxList = []
 		blobCenterList    = []
 		frame_idx = 0 
-		Nrows = 480
-		Ncols = 640
+		Nrows  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+		Ncols  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+
 		while frame_idx*subSampRate <subSampRate*trunclen:
 			print "frame_idx: ", frame_idx*subSampRate +subSampRate*trunclen*matidx
 			# ori_img = cv2.imread(ori_list[(frame_idx*subSampRate)/choice_Interval])

@@ -17,10 +17,11 @@ from sklearn.manifold import *
 from sklearn.utils import check_random_state
 import itertools
 
+from scipy.sparse import csr_matrix
 
 
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -262,62 +263,41 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
     return trjID, labels
 
 
-def prepare_input_data(isAfterWarpping, isLeft, dataSource, usingLinux=True):
-    global savePath
-    if isAfterWarpping:
-        if isLeft:
-            loadPath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/adj/'
-            matfiles = sorted(glob.glob(loadPath + 'warpped_Adj_' + '*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/leftlane/sscLabels/'
-        else:
-            loadPath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/adj/'
-            matfiles = sorted(glob.glob(loadPath + 'warpped_Adj_' + '*.mat'))
-            savePath = '../DoT/CanalSt@BaxterSt-96.106/rightlane/sscLabels/'
-    else:
-       if dataSource == 'DoT':
-          if smooth:
-                matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'smooth_*.mat')))
-            else:
-                matfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat'))) 
-            savePath = DataPathobj.sscpath
+def prepare_input_data():
+    global savePath      
+    adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*.mat')))
+    savePath = DataPathobj.sscpath
+    trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
 
-        if dataSource == 'Johnson':
-            # Jay & Johnson
-            if usingLinux:
-                matfiles = sorted(glob.glob(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/adj/' + '*.mat')))
-                savePath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/Jay&Johnson/roi2/ssc/ssc_')
-            else:
-                matfiles = sorted(glob.glob('../Jay&Johnson/roi2/adj/' + '*.mat'))
-                savePath = '../Jay&Johnson/roi2/ssc/ssc_'
-
-        matfiles = matfiles[0:]
-    return matfiles, savePath
+    adjmatfiles = adjmatfiles[0:]
+    trjmatfiles = trjmatfiles[0:]
+    return adjmatfiles, trjmatfiles, savePath
 
 
 if __name__ == '__main__':
-
-    dataSource = 'DoT'
     """With constructed adjacency matrix """
-    matfiles, savePath = prepare_input_data()
+    adjmatfiles, trjmatfiles, savePath = prepare_input_data()
     isSave      = False
     isVisualize = True
-    global smooth = True
-    for matidx, matfile in enumerate(matfiles):
-        pdb.set_trace()
-        file = scipy_io.loadmat(matfile)
+    for matidx, matfile in enumerate(adjmatfiles):
+        adjfile = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
-        trjID, labels,small_connected_comp = ssc_with_Adj_CC(file)
+        trjID, labels,small_connected_comp = ssc_with_Adj_CC(adjfile)
         """ construct adj use ssc"""
-        # trjID,labels, adj = sscConstructedAdj_CC(file)
+        # trjID,labels, adj = sscConstructedAdj_CC(adjfile)
 
         """ construct adj use ssc, with Neighbour adj as constraint"""
-        # trjID,labels = sscAdj_inNeighbour(file)
+        # trjID,labels = sscAdj_inNeighbour(adjfile)
 
         if isVisualize:
             # visualize different classes for each Connected Component
             """  use the x_re and y_re from adj mat files  """
-            xtrj = file['xtracks']
-            ytrj = file['ytracks']
+            trjfile = scipy_io.loadmat(trjmatfiles[matidx])
+            # xtrj = csr_matrix(trjfile['xtracks'], shape=trjfile['xtracks'].shape).toarray()
+            # ytrj = csr_matrix(trjfile['ytracks'], shape=trjfile['ytracks'].shape).toarray()
+            xtrj = csr_matrix(trjfile['xtracks_warpped'], shape=trjfile['xtracks_warpped'].shape).toarray()
+            ytrj = csr_matrix(trjfile['ytracks_warpped'], shape=trjfile['ytracks_warpped'].shape).toarray()
+
 
             color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(int(max(labels) + 1), 3)
             fig999 = plt.figure()
@@ -326,10 +306,16 @@ if __name__ == '__main__':
 
             newtrjID  = list(trjID[0])
             newlabels = list(labels)
-            for i in range(int(max(labels)) + 1):
+
+            label_id = {} #one adj for each predicted class
+
+            # for i in range(int(max(labels)) + 1):
+            for i in labels:
+                # pdb.set_trace()
                 trjind = np.where(labels == i)[0]
+                label_id[i] = trjind
                 # print "trjind = ", str(trjind)
-                if len(trjind) <= 20:
+                if len(trjind) <= 5:
 					# newlabels.remove(i)
 					newlabels = [x for x in newlabels if x!=i]
 					newtrjID = [x for x in newtrjID if x not in trjID[0][trjind]]
@@ -341,18 +327,27 @@ if __name__ == '__main__':
                     endlimit   = np.max(np.where(xtrj[trjind[jj],:]!=0))
                     # lines = ax.plot(x_re[trjind[jj],startlimit:endlimit], y_re[trjind[jj],startlimit:endlimit],color = (0,1,0),linewidth=2)
                     lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
-                   
-     
+                    # plt.annotate(str(trjind[jj]),(xtrj[trjind[jj],endlimit], ytrj[trjind[jj],endlimit] ))
+                    plt.draw()
+                one_class_adj = csr_matrix(adjfile['adj'], shape=adjfile['adj'].shape).toarray()[trjind,:][:,trjind]
+                # one_class_adj_color = cv2.applyColorMap(np.hstack((one_class_adj,one_class_adj,one_class_adj)).reshape((one_class_adj.shape[0],-1,3)), cv2.COLORMAP_JET)
+
+                # plt.imshow(one_class_adj,cmap = 'jet')
+                # plt.draw()
+            pdb.set_trace()
+            
+        
+        pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
+
+        
         if isSave:
             print "saving the labels..."
             labelsave = {}
             labelsave['label'] = labels
             labelsave['trjID'] = trjID
-            labelsave['newlabel'] = newlabels
-            labelsave['newtrjID'] = newtrjID
-            if smooth:
-                savename =os.path.join(savePath,'smooth_'+matfiles[matidx][-7:-4].zfill(3))
-            else:
-                savename = os.path.join(savePath, + matfiles[matidx][-7:-4].zfill(3))
+            # labelsave['newlabel'] = newlabels
+            # labelsave['newtrjID'] = newtrjID
+
+            savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
             savemat(savename, labelsave)
 

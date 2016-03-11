@@ -11,10 +11,11 @@ from scipy.sparse import csr_matrix
 from matplotlib import pyplot as plt
 
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource,VideoIndex)
 
 if __name__ == '__main__':
     frame_idx_bias = 0
+    start_position = frame_idx_bias
     isVideo  = True
     if isVideo:
         dataPath = DataPathobj.video
@@ -24,8 +25,6 @@ if __name__ == '__main__':
     useBlobCenter = True
     # useBlobCenter = False
     isVisualize   = False
-    dataSource    = 'DoT'
-    subSampRate   = 6
 
     # -- utilities
     if isVisualize: plt.figure(num=None, figsize=(8, 11))
@@ -44,13 +43,6 @@ if __name__ == '__main__':
         #                       blockSize=7)  
         feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, 
                               blockSize=5)  # old jayst 
-    
-    trunclen = 600
-    detect_interval = 5
-    if detect_interval < subSampRate:
-        detect_interval = 1
-    else:
-        detect_interval = np.floor(detect_interval/subSampRate)
 
 
     previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
@@ -83,26 +75,14 @@ if __name__ == '__main__':
         tracksdic = {} 
         start     = {}
         end       = {}
-    if len(previousLastFiles)>0:
-        frame_idx = len(previousLastFiles)*600*subSampRate
-    else:
-        frame_idx = (0 + frame_idx_bias)
-    
-    start_position = frame_idx_bias
-    subsample_frmIdx = np.int(np.floor(frame_idx/subSampRate))
-    
 
-    if useBlobCenter:
-        blob_ind_sparse_matrices = sorted(glob.glob(DataPathobj.blobPath + 'blobLabel*.p'))
-        blob_center_sparse_lists = sorted(glob.glob(DataPathobj.blobPath + 'blobCenter*.p'))
-
+    
     if isVideo:
         video_src = dataPath
         cap       = cv2.VideoCapture(video_src)
         # if not cap.isOpened():
         #    raise Exception("video not opened!")
-        nrows  = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-        ncols  = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+
         nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         fps    = np.int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         print 'reading buffer...'
@@ -127,8 +107,29 @@ if __name__ == '__main__':
             frameLp = np.zeros_like(frameL)
 
 
+    trunclen = 600
+    subSampRate = fps/5
+    if len(previousLastFiles)>0:
+        frame_idx = len(previousLastFiles)*trunclen*subSampRate
+    else:
+        frame_idx = (0 + frame_idx_bias)
 
-    # pdb.set_trace()
+    detect_interval = 5
+    if detect_interval < subSampRate:
+        detect_interval = 1
+    else:
+        detect_interval = np.floor(detect_interval/subSampRate)
+
+
+    subsample_frmIdx = np.int(np.floor(frame_idx/subSampRate))
+    
+
+    if useBlobCenter:
+        blob_ind_sparse_matrices = sorted(glob.glob(DataPathobj.blobPath + 'blobLabel*.p'))
+        blob_center_sparse_lists = sorted(glob.glob(DataPathobj.blobPath + 'blobCenter*.p'))
+
+
+
     # -- set mask, all ones = no mask
     mask = 255*np.ones_like(frameL)
 
@@ -359,7 +360,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+'sub6'+str(np.int(subsample_frmIdx/trunclen)).zfill(3))
+            savename = os.path.join(savePath,'klt_'+str(np.int(subsample_frmIdx/trunclen)).zfill(3))
             savemat(savename,trk)
 
 
