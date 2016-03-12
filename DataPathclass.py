@@ -5,30 +5,34 @@ import pdb
 import cv2
 
 class DataPath(object):
-	def __init__(self,dataSource,VideoIndex):  # different VideoIndex for different videos
-		if dataSource == 'Johnson':
-			self.sysPathHeader = '/media/My Book/CUSP/AIG/Jay&Johnson/'
-			self.videoPath = os.path.join(self.sysPathHeader,'CUSPvideos/')
+	def __init__(self,dataSource,VideoIndex): 
+		if platform.system()=='Darwin':   # on mac for test only, please ignore this....
+			
+			self.sysPathHeader = '/Users/Chenge/Documents/github/AIG/Jay&Johnson/'
+			self.videoPath = os.path.join(self.sysPathHeader,'./00115_ROI/')
 			self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-			self.video = self.videoList[VideoIndex]
-			self.videoTime = self.video[47:-4]
+			self.video = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+			self.videoTime = '00115_ROI'
 
-		if dataSource == 'DoT':
-			if platform.system()=='Darwin':   # on mac
-				self.sysPathHeader = '/Volumes/TOSHIBA/'
-				self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
-				self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
-			else:   # on linux
+		else:  # please start here and mofigy accordingly
+			if dataSource == 'Johnson':
+				self.sysPathHeader = '/media/My Book/CUSP/AIG/Jay&Johnson/'
+				self.videoPath = os.path.join(self.sysPathHeader,'CUSPvideos/')
+				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+				self.video = self.videoList[VideoIndex]
+				self.videoTime = self.video[47:-4]
+
+			if dataSource == 'DoT':
 				if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
 					self.sysPathHeader = '../CanalVideos/Canal@Baxter/'
 					self.videoPath = os.path.join(self.sysPathHeader,'avi/')
 					self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-				else:
+				else:# on badminton linux
 					self.sysPathHeader = '/media/My Book/DOT Video/'
 					self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
 					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
-			self.video = self.videoList[VideoIndex]
-			self.videoTime = self.video[-31:-17]
+				self.video = self.videoList[VideoIndex]
+				self.videoTime = self.video[-31:-17]
 
 
 		self.cap = cv2.VideoCapture(self.video)

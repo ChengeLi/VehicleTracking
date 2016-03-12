@@ -67,11 +67,16 @@ def getMuSigma(dataForKernel):
                 centerDisAll.append(centerDis)
                 huedisAll.append(huedis)
 
+    n, bins, patches = plt.hist(sxdiffAll, 100, normed=1, facecolor='green', alpha=0.75)
+    plt.draw()
+    plt.show()
+    pdb.set_trace()
         # plt.plot(fg_blob_center_X[i,:][fg_blob_center_X[i,:]!=0],fg_blob_center_Y[i,:][fg_blob_center_X[i,:]!=0],'b')
         # plt.plot(fg_blob_center_X[i,idx],fg_blob_center_Y[i,idx],'g')
         # plt.plot(cxi,cyi,'r')
         # plt.draw()
 
+    'fit Gaussian to find mu and sigma'
     # mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
     # mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
     # mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
@@ -83,8 +88,8 @@ def getMuSigma(dataForKernel):
     #     (mu_center_distance,sigma_center_distance) = (np.nan, np.nan)
 
     # mean_std_ForKernel = np.array([mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance,mu_center_distance,sigma_center_distance])
-
     mean_std_ForKernel = []
+
     extremeValue = np.array([min(sxdiffAll[:]),max(sxdiffAll[:]), min(sydiffAll[:]),max(sydiffAll[:]),min(mdisAll[:]),max(mdisAll[:]),min(huedisAll[:]),max(huedisAll[:]),min(centerDisAll[:]),max(centerDisAll[:])])
     return mean_std_ForKernel, extremeValue
 
