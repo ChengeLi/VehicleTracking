@@ -16,12 +16,15 @@ from sklearn.cluster import *
 from sklearn.manifold import *
 from sklearn.utils import check_random_state
 import itertools
-
+import pickle as pickle
 from scipy.sparse import csr_matrix
 
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
+
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -264,8 +267,11 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
 
 
 def prepare_input_data():
-    global savePath      
-    adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*.mat')))
+    global savePath
+    if Parameterobj.useWarpped:      
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*.mat')))
+    else:
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
     savePath = DataPathobj.sscpath
     trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
 
@@ -277,8 +283,8 @@ def prepare_input_data():
 if __name__ == '__main__':
     """With constructed adjacency matrix """
     adjmatfiles, trjmatfiles, savePath = prepare_input_data()
-    isSave      = False
-    isVisualize = True
+    isSave      = True
+    isVisualize = False
     for matidx, matfile in enumerate(adjmatfiles):
         adjfile = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
@@ -293,10 +299,12 @@ if __name__ == '__main__':
             # visualize different classes for each Connected Component
             """  use the x_re and y_re from adj mat files  """
             trjfile = scipy_io.loadmat(trjmatfiles[matidx])
-            # xtrj = csr_matrix(trjfile['xtracks'], shape=trjfile['xtracks'].shape).toarray()
-            # ytrj = csr_matrix(trjfile['ytracks'], shape=trjfile['ytracks'].shape).toarray()
-            xtrj = csr_matrix(trjfile['xtracks_warpped'], shape=trjfile['xtracks_warpped'].shape).toarray()
-            ytrj = csr_matrix(trjfile['ytracks_warpped'], shape=trjfile['ytracks_warpped'].shape).toarray()
+            if Parameterobj.useWarpped:
+                xtrj = csr_matrix(trjfile['xtracks_warpped'], shape=trjfile['xtracks_warpped'].shape).toarray()
+                ytrj = csr_matrix(trjfile['ytracks_warpped'], shape=trjfile['ytracks_warpped'].shape).toarray()
+            else:
+                xtrj = csr_matrix(trjfile['xtracks'], shape=trjfile['xtracks'].shape).toarray()
+                ytrj = csr_matrix(trjfile['ytracks'], shape=trjfile['ytracks'].shape).toarray()
 
 
             color = np.array([np.random.randint(0, 255) for _ in range(3 * int(max(labels) + 1))]).reshape(int(max(labels) + 1), 3)
@@ -337,7 +345,7 @@ if __name__ == '__main__':
             pdb.set_trace()
             
         
-        pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
+            pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
 
         
         if isSave:
@@ -347,7 +355,9 @@ if __name__ == '__main__':
             labelsave['trjID'] = trjID
             # labelsave['newlabel'] = newlabels
             # labelsave['newtrjID'] = newtrjID
-
-            savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
+            if Parameterobj.useWarpped:
+                savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
+            else:
+                savename = os.path.join(savePath,str(matidx+1).zfill(3))
             savemat(savename, labelsave)
 

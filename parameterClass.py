@@ -13,25 +13,29 @@ class parameter(object):
 		'for KLT tracker'
 		self.klt_detect_interval = 5
 		if dataSource == 'Johnson':
+			self.useSBS = True
 			self.useWarpped = False
 			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
 
 		""" canal st """
 		if dataSource == 'DoT':
+			self.useSBS = True
 			self.useWarpped = True
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, blockSize=5)  # old jayst 
 
 
-
 		'for fit_extrapolate filtering'
 		self.minspdth = 5
 		self.transth = 100*self.targetFPS  #100s
-		self.livelong_thresh = 4   # chk if trj is long enough
+		self.livelong_thresh = 1*self.targetFPS   # chk if trj is long enough, 1s
 
-		self.trjoverlap_len_thresh = 5
+
+		'for adj SBS'
+		self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+
 		if not self.useWarpped:
 			self.dth    = 300 #??!!!!
 			self.yspdth = 5 #y speed threshold

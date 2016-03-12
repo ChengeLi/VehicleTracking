@@ -11,6 +11,9 @@ from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
+
 
 def getMuSigma(dataForKernel):
     if len(dataForKernel)==7:
@@ -37,23 +40,27 @@ def getMuSigma(dataForKernel):
                 sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
                 # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
                 mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
-                cxi = np.nanmedian(fg_blob_center_X[i,idx])
-                cyi = np.nanmedian(fg_blob_center_Y[i,idx])
-                cxj = np.nanmedian(fg_blob_center_X[j,idx])
-                cyj = np.nanmedian(fg_blob_center_Y[j,idx])
+                if Parameterobj.useSBS:
+                    cxi = np.nanmedian(fg_blob_center_X[i,idx])
+                    cyi = np.nanmedian(fg_blob_center_Y[i,idx])
+                    cxj = np.nanmedian(fg_blob_center_X[j,idx])
+                    cyj = np.nanmedian(fg_blob_center_Y[j,idx])
+
+                    if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
+                        cxi = np.nanmedian(x[i,idx])
+                        cyi = np.nanmedian(y[i,idx])
+                    if np.isnan(cxj) or np.isnan(cyj):
+                        cxj = np.nanmedian(x[j,idx])
+                        cyj = np.nanmedian(y[j,idx])
+
+                    centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
+                    huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                else:
+                    centerDis = np.nan
+                    huedis = np.nan
 
 
-                if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
-                    cxi = np.nanmedian(x[i,idx])
-                    cyi = np.nanmedian(y[i,idx])
-                if np.isnan(cxj) or np.isnan(cyj):
-                    cxj = np.nanmedian(x[j,idx])
-                    cyj = np.nanmedian(y[j,idx])
-
-                centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
-        
-                huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
-
+                
                 sxdiffAll.append(sxdiff)
                 sydiffAll.append(sydiff)
                 mdisAll.append(mdis)
@@ -95,10 +102,10 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
     [min_sx,max_sx,min_sy,max_sy,min_mdis,max_mdis,min_hue,max_hue,min_center,max_center]=extremeValue
 
     'normalize'
-    sxdiff_normalized = (sxdiff-min_sx)/(max_sx-min_sx)
-    sydiff_normalized = (sydiff-min_sy)/(max_sy-min_sy)
-    mdis_normalized = (mdis-min_mdis)/(max_mdis-min_mdis)
-    huedis_normalized = (huedis-min_hue)/(max_hue-min_hue)
+    sxdiff_normalized    = (sxdiff-min_sx)/(max_sx-min_sx)
+    sydiff_normalized    = (sydiff-min_sy)/(max_sy-min_sy)
+    mdis_normalized      = (mdis-min_mdis)/(max_mdis-min_mdis)
+    huedis_normalized    = (huedis-min_hue)/(max_hue-min_hue)
     centerDis_normalized = (centerDis-min_center)/(max_center-min_center)
 
 
@@ -139,22 +146,30 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValu
     #     dth    = 500
     #     yspdth = 5
     #     xspdth = 1
-
-    if not useWarpped:
-        dth    = 300 #??!!!!
-        yspdth = 5 #y speed threshold
-        xspdth = 5 #x speed threshold
+    # pdb.set_trace()
+    if not Parameterobj.useWarpped:
+        dth= 80
+        # dth    = 300 #??!!!!
+        # yspdth = 5 #y speed threshold
+        # xspdth = 5 #x speed threshold
     else:
-        dth = 210 #mean+std
-        yspdth = 40
-        xspdth = 30
+        dth = 0.4*DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+    try:
+        yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
+        xspdth = mean_std_ForKernel[0]+mean_std_ForKernel[1]
+    except:
+        yspdth = 0.4*extremeValue[3] #if mean is empty
+        xspdth = 0.4*extremeValue[1]
 
-    if (sxdiff <xspdth ) & (sydiff<yspdth ) & (mdis < dth):
+    if mdis < dth:
         if adj_methods =="Thresholding":
-            adj_element = 1
+            if (sxdiff <xspdth ) & (sydiff<yspdth):
+                adj_element = 1
+            else:
+                adj_element = 0
 
         if adj_methods =="Gaussian":
-            adj_element=adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS)
+            adj_element=adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
 
         if adj_methods == "Cosine":
             i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
@@ -176,25 +191,35 @@ def sameBlobScore(fgBlobInd1,fgBlobInd2):
     return SBS
 
 def prepare_input_data():
-    if smooth:
-        matfilepath = DataPathobj.smoothpath
-        matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
-    else:
-        matfilepath = DataPathobj.filteredKltPath
-        matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
+    # if smooth:
+    matfilepath = DataPathobj.smoothpath
+    matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
+    # else:
+    #     matfilepath = DataPathobj.filteredKltPath
+    #     matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
     
     savePath = DataPathobj.adjpath
-    matfiles = matfiles[0:]
-    return matfiles,savePath
+    start_position_offset = 0
+    matfiles = matfiles[start_position_offset:]
+    return matfiles,savePath, start_position_offset
+
+def get_spd_dis_diff(xspd_i,xspd_j,yspd_i,yspd_j,xi,xj,yi,yj):
+    'use mean of the spd diff'
+    # sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+    # sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
+    'use MAX of the spd diff!'
+    sxdiff = np.max(np.abs(xspd[i,sidx]-xspd[j,sidx])[:])
+    sydiff = np.max(np.abs(yspd[i,sidx]-yspd[j,sidx])[:])                    
+
+    # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+    mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
+    return sxdiff,sydiff,mdis
+
 
 if __name__ == '__main__':
-    useSBS      = True
     isVisualize = False
-    smooth      = True
-    useWarpped  = True
 
-
-    matfiles,savePath = prepare_input_data()
+    matfiles,savePath,start_position_offset = prepare_input_data()
     # adj_methods = np.nan
     # adj_methods = "Thresholding"
     adj_methods = "Gaussian"
@@ -213,7 +238,7 @@ if __name__ == '__main__':
         if len(ptstrj['trjID'])==0:
             continue
         ptsidx = ptstrj['trjID'][0]
-        if not useWarpped:            
+        if not Parameterobj.useWarpped:            
             x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
             y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
             t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
@@ -227,7 +252,7 @@ if __name__ == '__main__':
             yspd   = csr_matrix(ptstrj['yspd_warpped'], shape=ptstrj['yspd'].shape).toarray()
 
         
-        if useSBS:
+        if Parameterobj.useSBS:
             hue   = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
             FgBlobIndex      = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             fg_blob_center_X = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
@@ -267,12 +292,10 @@ if __name__ == '__main__':
                 if len(idx)>5: # has overlapping
                 # if len(idx)>=30: # at least overlap for 100 frames
                     sidx   = idx[0:-1] # for speed
-                    sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                    sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
-                    # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-                    mdis   = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
+                    sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
 
-                    if useSBS:
+
+                    if Parameterobj.useSBS:
                         huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
                         cxi = np.nanmedian(fg_blob_center_X[i,idx])
                         cyi = np.nanmedian(fg_blob_center_Y[i,idx])
@@ -304,7 +327,7 @@ if __name__ == '__main__':
                     # if useSBS:
                     #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                     
-                    adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS)
+                    adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
 
                 else: # overlapping too short
                     # SBS[i,j] = 0
@@ -315,31 +338,19 @@ if __name__ == '__main__':
 
         adj = adj + adj.transpose() 
         np.fill_diagonal(adj, 1)
-
-        # if useSBS:
-        #     temp = np.multiply(adj.transpose(),(1/np.diagonal(adj)))
-        #     adj_new = temp.transpose()
-        #     adj_new = adj_new + adj_new.transpose() #add diag twice
-        #     np.fill_diagonal(adj_new, np.diagonal(adj_new)/2)
-        #     adj_new[adj_new<10**(-4)]=0
-        # else:
-        adj_new = adj
-        
         
         print "saving adj..."
-        # print "use adj_new......"
-        sparsemtx = csr_matrix(adj_new)
+        sparsemtx = csr_matrix(adj)
         s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
         result    = {}
         result['adj']     = sparsemtx
         result['c']       = c
         result['trjID']   = ptsidx
 
-        # pdb.set_trace()
-        if useWarpped:
-            savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1).zfill(3)
+        if Parameterobj.useWarpped:
+            savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
         else:
-            savename = adj_methods+'_Adj_500_5_1_'+str(matidx+1).zfill(3)
+            savename = adj_methods+'_spd_max_value_'+str(matidx+1+start_position_offset).zfill(3)
         savename = os.path.join(savePath,savename)
         savemat(savename,result)
 

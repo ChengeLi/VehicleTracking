@@ -6,6 +6,9 @@ import numpy as np
 from scipy.io import loadmat,savemat
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
+
 
 def unify_label(matfiles,savename):
     atmp     = []
@@ -97,7 +100,10 @@ if __name__ == '__main__':
     smooth = True
     matfilePath   = DataPathobj.sscpath
     savePath      = DataPathobj.unifiedLabelpath
-    matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))
+    if Parameterobj.useWarpped:
+        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
+    else:
+        matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
     numTrunc    = len(matfilesAll)
 
     if numTrunc<=200:

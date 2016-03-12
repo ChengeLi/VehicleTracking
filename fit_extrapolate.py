@@ -12,10 +12,12 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
+from warpTrj2parallel import loadWarpMtx
+
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
-from warpTrj2parallel import loadWarpMtx
-import cv2
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 
 def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
@@ -32,6 +34,7 @@ def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
 	warpped_y_mtx = warpped_xyTupleMtx[:,:,1]
 
 	'how to deal with out of range?????'
+	pdb.set_trace()
 	warpped_x_mtx[warpped_x_mtx<0] = 0 
 	warpped_y_mtx[warpped_y_mtx<0] = 0 
 	warpped_x_mtx[warpped_x_mtx>=limitX] = limitX
@@ -44,11 +47,11 @@ def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
 
 
 def filteringCriterion(xk,yk,xspd,yspd):
-	minspdth = 5
-	fps = 30
-	transth = 100*fps/6
+	minspdth = Parameterobj.minspdth
+	transth = Parameterobj.transth
 	speed = np.abs(xspd)+np.abs(yspd)
-	livelong =  len(xk)>4   # chk if trj is long enough
+	livelong =  len(xk)>Parameterobj.livelong_thresh   # chk if trj is long enough
+
 	if not livelong:
 		return False
 	else:
@@ -194,7 +197,7 @@ def getSmoothMtx(x,y):
 	for kk in range(0,x.shape[0],1):
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
-		if len(xk)>5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels  # loger than 5, otherwise all zero out
+		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels  # loger than 5, otherwise all zero out
 			x_smooth, y_smooth = smooth(xk, yk)
 			x_smooth_mtx[kk,:][x[kk,:]!=0]=x_smooth
 			y_smooth_mtx[kk,:][y[kk,:]!=0]=y_smooth
@@ -222,7 +225,7 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 		kk = Trjchoice[ii]
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
-		if len(xk)>=5 and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
+		if len(xk)>=Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
 			# plt.plot(xk)
 			# plt.plot(yk)
 			# plt.plot(xk, yk)
@@ -240,10 +243,13 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			# '''2'''
 			# y_fit = np.linspace(yk.min(), yk.max(), 200)
 			# x_fit = pow(y_fit,3)*p3[ii,0] + pow(y_fit,2)*p3[ii,1] + pow(y_fit,1)*p3[ii,2]+ p3[ii,3]
-			plt.plot(x_fit_extra, y_fit_extra,'r')
-			plt.plot(x_fit, y_fit,'g')
+			
+			# plt.plot(x_fit_extra, y_fit_extra,'r')
+			# plt.plot(x_fit, y_fit,'g')
+			plt.plot(x_fit, y_fit)
 			plt.draw()
 	plt.show()
+	pdb.set_trace()
 
 def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile):
 	print "saving smooth new trj:", matfile
@@ -252,23 +258,25 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	ptstrjNew['xtracks'] = csr_matrix(x_smooth_mtx[goodTrj,:])
 	ptstrjNew['ytracks'] = csr_matrix(y_smooth_mtx[goodTrj,:])
 	ptstrjNew['Ttracks'] = ptstrj['Ttracks'][goodTrj,:]
-	ptstrjNew['Huetracks'] = ptstrj['Huetracks'][goodTrj,:]
 	ptstrjNew['trjID']     = ptstrj['trjID'][:,goodTrj]
-	ptstrjNew['fg_blob_index']    = ptstrj['fg_blob_index'][goodTrj,:] 
-	ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
-	ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
+	if Parameterobj.useSBS:
+		ptstrjNew['Huetracks'] = ptstrj['Huetracks'][goodTrj,:]
+		ptstrjNew['fg_blob_index']    = ptstrj['fg_blob_index'][goodTrj,:] 
+		ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
+		ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
 	ptstrjNew['polyfitCoef'] = p3
 	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
 	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
 
-	warpped_x_mtx,warpped_y_mtx = warpTrj2parallel(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
+	if Parameterobj.useWarpped:
+		warpped_x_mtx,warpped_y_mtx = warpTrj2parallel(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
 
-	ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
-	ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
-	warpped_xspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_x_mtx)))
-	warpped_yspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_y_mtx)))
-	ptstrjNew['xspd_warpped'] = csr_matrix(warpped_xspd_mtx)
-	ptstrjNew['yspd_warpped'] = csr_matrix(warpped_yspd_mtx)
+		ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
+		ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
+		warpped_xspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_x_mtx)))
+		warpped_yspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_y_mtx)))
+		ptstrjNew['xspd_warpped'] = csr_matrix(warpped_xspd_mtx)
+		ptstrjNew['yspd_warpped'] = csr_matrix(warpped_yspd_mtx)
 
 
 	# plt.figure()

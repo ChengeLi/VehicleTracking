@@ -12,6 +12,9 @@ from matplotlib import pyplot as plt
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
+
 
 if __name__ == '__main__':
     frame_idx_bias = 0
@@ -22,27 +25,13 @@ if __name__ == '__main__':
     else:
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
-    useBlobCenter = True
-    # useBlobCenter = False
+    useBlobCenter = Parameterobj.useSBS
     isVisualize   = False
 
     # -- utilities
     if isVisualize: plt.figure(num=None, figsize=(8, 11))
-    """ new jay st """
-    if dataSource == 'Johnson':
-        lk_params = dict(winSize=(5, 5), maxLevel=2, 
-                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
-        feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, 
-                              blockSize=3)  #qualityLevel, below which dots will be rejected
-
-    """ canal st """
-    if dataSource == 'DoT':
-        lk_params = dict(winSize=(10, 10), maxLevel=2, 
-                         criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
-        # feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7, 
-        #                       blockSize=7)  
-        feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, 
-                              blockSize=5)  # old jayst 
+    lk_params = Parameterobj.lk_params
+    feature_params = Parameterobj.feature_params
 
 
     previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
@@ -322,6 +311,8 @@ if __name__ == '__main__':
                         BlobCenterX[ii,:][tstart:]   = ttrack[6,:]
 
                 else:
+                    if frame_idx==nframe:
+                        pdb.set_trace()
                     Xtracks[ii,:][tstart:tstop]   = ttrack[0,:]
                     Ytracks[ii,:][tstart:tstop]   = ttrack[1,:]
                     Ttracks[ii,:][tstart:tstop]   = ttrack[2,:]

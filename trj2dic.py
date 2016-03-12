@@ -19,7 +19,8 @@ from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
-
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 def Virctr(x,y):
     '''
@@ -330,6 +331,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             # pdb.set_trace()
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
+    plt.ion()
     dots = []
     line_exist = 0
     # print labinf
@@ -344,19 +346,20 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         # pdb.set_trace()
         # if VC_filter(vcxtrj[k],vcytrj[k]):
         if True:
-            lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
-            line_exist = 1
-            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+            # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
+            # line_exist = 1
+            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
 
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
     # plt.draw()
     plt.pause(0.00001) 
-    plt.title('frame '+str(frame_idx))
-    name = os.path.join(DataPathobj.DataPath,'vis2',str(frame_idx).zfill(6)+'.jpg')
-    plt.savefig(name) ##save figure
+    # plt.title('frame '+str(frame_idx))
+    # name = os.path.join(DataPathobj.DataPath,str(frame_idx).zfill(6)+'.jpg')
+    # plt.savefig(name) ##save figure
     plt.draw()
     plt.show()
+    # pdb.set_trace()
 
     while line_exist:
         try:
@@ -372,7 +375,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 
 def prepare_data_to_vis(isVideo):
     global subSampRate
-    subSampRate = 6
+    subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     if smooth:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
