@@ -27,6 +27,15 @@ class parameter(object):
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, blockSize=5)  # old jayst 
 
 
+		if dataSource == 'laurier':
+			self.useSBS = True
+			self.useWarpped = False
+			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
+			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
+			self.targetFPS = 30
+
+
+
 		'for fit_extrapolate filtering'
 		self.minspdth = 5
 		self.transth = 100*self.targetFPS  #100s

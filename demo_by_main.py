@@ -8,8 +8,10 @@ import time
 import sys
 import numpy as np
 
-VideoIndex = np.int(sys.argv[1])
+# VideoIndex = np.int(sys.argv[1])
 # VideoIndex = 48
+
+execfile('foreground_blob.py')
 
 print("running KLT...")
 t0 = time.time()
