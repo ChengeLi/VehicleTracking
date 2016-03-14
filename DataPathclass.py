@@ -36,8 +36,8 @@ class DataPath(object):
 				self.videoTime = self.video[-31:-17]
 			
 			if dataSource == 'laurier':
-				self.sysPathHeader = '/home/chengeli/CUSP/AIG/Saunier/'
-				self.videoPath = os.path.join(self.sysPathHeader,'laurier/')
+				self.sysPathHeader = '/media/My Book/Saunier/'
+				self.videoPath = '/home/chengeli/CUSP/AIG/Saunier/laurier/'
 				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
 				self.video = self.videoList[VideoIndex]
 				self.videoTime = 'ourAlgo_'+self.video[40:-4]

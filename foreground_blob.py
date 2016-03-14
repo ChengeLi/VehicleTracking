@@ -46,7 +46,9 @@ def readData():
 
 if __name__ == '__main__':
 	matfiles,offset = readData()
+	frame_idx = 0 
 	for matidx, matfile in enumerate(matfiles):
+		pdb.set_trace()
 	# for	matidx in range(1,len(matfiles)):
 		# matfile = matfiles[matidx]
 		try:  #for matfile <-v7.3
@@ -61,31 +63,34 @@ if __name__ == '__main__':
 		subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
 		blobLabelMtxList = []
 		blobCenterList   = []
-		frame_idx = 0 
+		# frame_idx = 0 
 		Nrows  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 		Ncols  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-
+		'in the incPCP code, mask file is saved as a mtx with width=fps/5*600'
+		MaskMatfileShape=int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/5*trunclen))
 		while frame_idx*subSampRate <mask_tensor.shape[0]:
 			print "frame_idx: ", int(frame_idx*subSampRate +subSampRate*trunclen*matidx)
 			# ori_img = cv2.imread(ori_list[(frame_idx*subSampRate)/choice_Interval])
 			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
 			ImgSlice = (mask_tensor[frame_idx*subSampRate,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
 			maskgray = ImgSlice
-			# plt.imshow(np.uint8(ImgSlice))
-
+			plt.imshow(np.uint8(ImgSlice))
+			plt.draw()
+			
 			"""use ndimage.measurements"""
 			blobLabelMatrix, BlobCenters = blobImg2blobmatrix(maskgray)
 			sparse_slice = csr_matrix(blobLabelMatrix)
 			blobLabelMtxList.append(sparse_slice)
 			blobCenterList.append(BlobCenters)
-
+			pdb.set_trace()
 			frame_idx = frame_idx+1
 			#end of while loop
 			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate==mask_tensor.shape[0]):
 				print "Save the blob index tensor into a pickle file:"
 				# savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
-				index = ((offset+matidx)*mask_tensor.shape[0]+frame_idx*subSampRate)%trunclen
-				pdb.set_trace()
+				# index = ((offset+matidx)*MaskMatfileShape+frame_idx*subSampRate)/trunclen
+				index = (frame_idx*subSampRate)/trunclen+1
+				print 'index',index
 				savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(index).zfill(3)+'.p')
 
 				pickle.dump(blobLabelMtxList, open( savename, "wb" ))

@@ -73,7 +73,7 @@ if __name__ == '__main__':
         #    raise Exception("video not opened!")
 
         nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        fps    = np.int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+        fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
         print 'reading buffer...'
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
         status, frame = cap.read()
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
 
     trunclen = 600
-    subSampRate = fps/5
+    subSampRate = fps/Parameterobj.targetFPS
     if len(previousLastFiles)>0:
         frame_idx = len(previousLastFiles)*trunclen*subSampRate
     else:
