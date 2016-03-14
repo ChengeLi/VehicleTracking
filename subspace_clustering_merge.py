@@ -11,7 +11,7 @@ import sklearn
 from scipy import linalg
 from scipy.io import savemat
 from scipy.sparse import *
-from sklearn import (mixture)
+from sklearn import mixture
 from sklearn.cluster import *
 from sklearn.manifold import *
 from sklearn.utils import check_random_state
@@ -77,13 +77,29 @@ class sparse_subspace_clustering:
 
     def manifold(self):
         random_state = check_random_state(self.random_state)
-        self.embedding_ = spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
-                                             random_state=random_state) * 1000
+
+        'if provide adj'
+        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+                                             random_state=random_state) * 1000   ##old version???
+
+        'if provide the raw data'
+        # model = sklearn.manifold.SpectralEmbedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+        #                                      random_state=random_state,affinity='precomputed')
+        # self.embedding_ = model.fit_transform(data_sampl_*feature_)
+
+        'locally linear embedding_'
+        # model = sklearn.manifold.LocallyLinearEmbedding(n_neighbors=5, n_components=self.n_dimension, reg=0.001, eigen_solver='auto', tol=1e-06, max_iter=100, 
+        #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
+        # self.embedding_ = model.fit_transform(data_sampl_*feature_)
+
+
+
 
     def clustering_DPGMM(self, n_components, alpha):
         model = mixture.DPGMM(n_components=n_components, alpha=alpha, n_iter=1000)
         model.fit(self.embedding_)
         self.label = model.predict(self.embedding_)
+        # pdb.set_trace()
         return self.label, model
 
     def get_adjacency(self, adjacency):
@@ -99,7 +115,7 @@ class sparse_subspace_clustering:
         return self.label
     
     def clustering_spectral(self, num_cluster):  #Ncut chenge
-        model = SpectralClustering(n_clusters=num_cluster)
+        model = sklearn.cluster.SpectralClustering(n_clusters=num_cluster,affinity='precomputed')
         self.label = model.fit_predict(self.adjacency)  # no embedding
         return self.label
 
@@ -137,6 +153,16 @@ def visulize(data, labels, clf, colors):
     # plt.yticks(())
     plt.show()
 
+def uniqulizeLabel(labels):
+    j = 0
+    labels_new = np.zeros(labels.shape)
+    unique_array = np.unique(labels[labels!=-222])
+    for i in range(unique_array.size):
+        labels_new[np.where(labels == unique_array[i])] = j
+        j = j + 1
+    return labels_new
+
+
 
 def ssc_with_Adj_CC(file, useBinaryAdj = False):
     small_connected_comp = []
@@ -146,7 +172,9 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
         feature = (file['adj']).astype('float')  
     CClabel = file['c']  # labels from connected Component
     trjID = file['trjID']
-    labels = np.ones(CClabel.size)*(-222)
+    labels_DPGMM = np.ones(CClabel.size)*(-222)
+    labels_spectral = np.ones(CClabel.size)*(-222)
+
     color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
     print 'np.unique(CClabel):',np.unique(CClabel)
     for i in np.unique(CClabel):
@@ -155,41 +183,46 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
         sub_index = np.where(CClabel == i)[1]  # noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
         sub_matrix = feature[sub_index][:, sub_index]
         if sub_index.size > 3:
-            project_dimension = int(np.floor(sub_index.size / 100) + 1)
-            print "project dimension is: ", str(project_dimension)
+            project_dimension = int(np.floor(sub_index.size / 5) + 1)
+            print "project dimension is: ", str(project_dimension)  ## embeded lower dimension
             ssc = sparse_subspace_clustering(2000000, feature, n_dimension=project_dimension)
             ssc.get_adjacency(sub_matrix)
             ssc.manifold()
             'DPGMM'
+            print 'DPGMM n_components =', int(np.floor(sub_index.size / 4) + 1)
             sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.001)
             num_cluster_prior = len(np.unique(sub_labels_DPGMM))
             # visulize(ssc.embedding_,sub_labels,model,color)
             'k-means'
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
             'N cut spectral'
-            # sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
+            # pdb.set_trace()
+            print 'spectral clustering num_cluster is', num_cluster_prior
+            sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
 
-            sub_labels = sub_labels_DPGMM
-            labels[sub_index] = max(np.max(labels),0) + (sub_labels + 1)
-            print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
-                    sub_labels).size
+            labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
+            labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
+
+            # print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
+            #         sub_labels).size
         else:  ## if size small, treat as one group
             sub_labels = np.ones(sub_index.size)
-            labels[sub_index] = max(np.max(labels),0) + sub_labels
+            labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + sub_labels
+            labels_spectral[sub_index] = max(np.max(labels_spectral),0) + sub_labels
             small_connected_comp.append(sub_index)
             # print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
-    j = 0
-    labels_new = np.zeros(labels.shape)
-    unique_array = np.unique(labels[labels!=-222])
-    for i in range(unique_array.size):
-        labels_new[np.where(labels == unique_array[i])] = j
-        j = j + 1
-    labels = labels_new
+    
+    labels_DPGMM = uniqulizeLabel(labels_DPGMM)
+    labels_spectral = uniqulizeLabel(labels_spectral)
+    
     # plt.figure()
     # plt.plot(sub_labels_spectral,'g')
     # plt.plot(labels_new,'r')
     # pdb.set_trace()
-    return trjID, labels, small_connected_comp
+    return trjID, labels_DPGMM, labels_spectral, small_connected_comp
+
+
+
 
 
 def sscConstructedAdj_CC(file):  # use ssc to construct adj, use any samples except the sample itself
@@ -288,7 +321,7 @@ if __name__ == '__main__':
     for matidx, matfile in enumerate(adjmatfiles):
         adjfile = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
-        trjID, labels,small_connected_comp = ssc_with_Adj_CC(adjfile)
+        trjID, labels_DPGMM,labels_spectral,small_connected_comp = ssc_with_Adj_CC(adjfile)
         """ construct adj use ssc"""
         # trjID,labels, adj = sscConstructedAdj_CC(adjfile)
 
@@ -296,6 +329,8 @@ if __name__ == '__main__':
         # trjID,labels = sscAdj_inNeighbour(adjfile)
 
         if isVisualize:
+            labels = labels_DPGMM
+            # labels = labels_spectral
             # visualize different classes for each Connected Component
             """  use the x_re and y_re from adj mat files  """
             trjfile = scipy_io.loadmat(trjmatfiles[matidx])
@@ -343,18 +378,16 @@ if __name__ == '__main__':
                 # plt.imshow(one_class_adj,cmap = 'jet')
                 # plt.draw()
             pdb.set_trace()
-            
-        
             pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
 
         
         if isSave:
             print "saving the labels..."
             labelsave = {}
-            labelsave['label'] = labels
+            labelsave['labels_DPGMM'] = labels_DPGMM
+            labelsave['labels_spectral'] = labels_spectral
             labelsave['trjID'] = trjID
-            # labelsave['newlabel'] = newlabels
-            # labelsave['newtrjID'] = newtrjID
+
             if Parameterobj.useWarpped:
                 savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
             else:

@@ -68,9 +68,20 @@ def getMuSigma(dataForKernel):
                 huedisAll.append(huedis)
 
     # n, bins, patches = plt.hist(sxdiffAll, 100, normed=1, facecolor='green', alpha=0.75)
+    # n, bins, patches = plt.hist(sydiffAll, 100, normed=1, facecolor='green', alpha=0.75)
+    # n, bins, patches = plt.hist(mdisAll, 100, normed=1, facecolor='green', alpha=0.75)
+    # n, bins, patches = plt.hist(centerDisAll, 100, normed=1, facecolor='green', alpha=0.75)
+    # n, bins, patches = plt.hist(huedisAll, 100, normed=1, facecolor='green', alpha=0.75)
     # plt.draw()
     # plt.show()
+
+    # pickle.dump(sxdiffAll,open('./sxdiffAll_johnson','wb'))
+    # pickle.dump(sydiffAll,open('./sydiffAll_johnson','wb'))
+    # pickle.dump(mdisAll,open('./mdisAll_johnson','wb'))
+    # pickle.dump(centerDisAll, open('./centerDisAll_johnson','wb'))
+    # pickle.dump(huedisAll,open('./huedisAll_johnson','wb'))
     # pdb.set_trace()
+
         # plt.plot(fg_blob_center_X[i,:][fg_blob_center_X[i,:]!=0],fg_blob_center_Y[i,:][fg_blob_center_X[i,:]!=0],'b')
         # plt.plot(fg_blob_center_X[i,idx],fg_blob_center_Y[i,idx],'g')
         # plt.plot(cxi,cyi,'r')
@@ -121,8 +132,10 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
 
         adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
     else:
-        adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
-    
+        # adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
+        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized
+        )
+
     if math.isnan(adj_element):
         pdb.set_trace()
     return adj_element
@@ -151,14 +164,14 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValu
     #     dth    = 500
     #     yspdth = 5
     #     xspdth = 1
-    # pdb.set_trace()
     if not Parameterobj.useWarpped:
         dth= 80
         # dth    = 300 #??!!!!
         # yspdth = 5 #y speed threshold
         # xspdth = 5 #x speed threshold
     else:
-        dth = 0.4*DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+        # dth = 0.4*DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+        dth = 40
     try:
         yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
         xspdth = mean_std_ForKernel[0]+mean_std_ForKernel[1]

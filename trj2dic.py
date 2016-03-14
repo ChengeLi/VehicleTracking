@@ -246,14 +246,16 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
                             vy = vcytrj[k][-1]
                         # else: append nan's
-                        elif np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
+                        if np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
                             vy = vcytrj[k][-1]
+                            
                 else:
                     vx = list(x)
                     vy = list(y)
                 # pdb.set_trace()
-                # if vx<=0 or vy<=0:  # why exist negative????                        
+                # if vx<=0 or vy<=0:  # why exist negative???? 
+
                 vcxtrj[k].extend(list(vx)) 
                 vcytrj[k].extend(list(vy))
                 if len(x)!=len(y):
@@ -375,10 +377,12 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 
 def prepare_data_to_vis(isVideo):
     global subSampRate
-    subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
+    subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     if smooth:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*DPGMM.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*spectral.mat')))
     else:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))

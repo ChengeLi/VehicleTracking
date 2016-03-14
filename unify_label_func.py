@@ -10,7 +10,7 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
-def unify_label(matfiles,savename):
+def unify_label(matfiles,savename,label_choice):
     atmp     = []
     flab     = [] #final labels
     ftrjID   = [] #final trjID
@@ -18,7 +18,7 @@ def unify_label(matfiles,savename):
 
     for matidx in range(len(matfiles)-1): 
         if matidx == 0:
-            L1 = loadmat(matfiles[matidx])['label'][0]
+            L1 = loadmat(matfiles[matidx])[label_choice][0]
             L1 = L1+1 # class label starts from 1 instead of 0
             M1 = loadmat(matfiles[matidx])['trjID'][0]
 
@@ -29,7 +29,7 @@ def unify_label(matfiles,savename):
             L1 = L2
             M1 = M2
 
-        L2 = loadmat(matfiles[matidx+1])['label'][0]
+        L2 = loadmat(matfiles[matidx+1])[label_choice][0]
         L2 = L2+1
         M2 = loadmat(matfiles[matidx+1])['trjID'][0]
         # L2 = loadmat(matfiles[matidx+1])['newlabel'][0]
@@ -88,7 +88,6 @@ def unify_label(matfiles,savename):
         savetrjID.pop(k)
 
     result          = {}
-    # pdb.set_trace()
     result['label'] = labels
     result['trjID'] = savetrjID
     savemat(savename,result)
@@ -100,6 +99,10 @@ if __name__ == '__main__':
     smooth = True
     matfilePath   = DataPathobj.sscpath
     savePath      = DataPathobj.unifiedLabelpath
+    label_choice = 'labels_DPGMM'
+    # label_choice = 'labels_spectral'
+
+
     if Parameterobj.useWarpped:
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
     else:
@@ -107,17 +110,17 @@ if __name__ == '__main__':
     numTrunc    = len(matfilesAll)
 
     if numTrunc<=200:
-        if smooth:
-            savename = os.path.join(savePath,'usewarpped_Complete_result')
+        if Parameterobj.useWarpped:
+            savename = os.path.join(savePath,'usewarpped_Complete_result'+label_choice)
         else:
-            savename = os.path.join(savePath,'Complete_result')
-        unify_label(matfilesAll,savename)
+            savename = os.path.join(savePath,'Complete_result'+label_choice)
+        unify_label(matfilesAll,savename,label_choice)
     else:
         for kk in range(0,numTrunc,25):
             print "saved trunk",str(kk+1).zfill(3),'to' ,str(min(kk+25,numTrunc)).zfill(3)
             matfiles = matfilesAll[kk:min(kk+25,numTrunc)]
-            savename = os.path.join(savePath,'result_'+str(kk+1).zfill(3)+'-'+str(min(kk+25,numTrunc)).zfill(3))
-            unify_label(matfiles,savename)
+            savename = os.path.join(savePath,'result_'+label_choice+str(kk+1).zfill(3)+'-'+str(min(kk+25,numTrunc)).zfill(3))
+            unify_label(matfiles,savename,label_choice)
             
 
 
