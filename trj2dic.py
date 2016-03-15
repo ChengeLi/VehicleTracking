@@ -382,14 +382,12 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_data_to_vis(isVideo):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
-    if smooth:
+    if Parameterobj.useWarpped:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*DPGMM.mat')))
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*spectral.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'.mat')))
     else:
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*.mat')))
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'.mat')))
 
 
     savePath = DataPathobj.dicpath

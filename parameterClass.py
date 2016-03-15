@@ -9,7 +9,6 @@ class parameter(object):
 		self.trunclen  = 600
 		self.targetFPS = 5 #subsampRate = FPS/targetFPS
 
-
 		'for KLT tracker'
 		self.klt_detect_interval = 5
 		if dataSource == 'Johnson':
@@ -75,6 +74,8 @@ class parameter(object):
 		# self.DPGMM_num_component_shirink_factor = 4
 
 
+		self.clustering_choice = 'labels_DPGMM'
+		# self.clustering_choice = 'labels_spectral'
 
 
 

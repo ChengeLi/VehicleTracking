@@ -99,8 +99,7 @@ if __name__ == '__main__':
     smooth = True
     matfilePath   = DataPathobj.sscpath
     savePath      = DataPathobj.unifiedLabelpath
-    label_choice = 'labels_DPGMM'
-    # label_choice = 'labels_spectral'
+    label_choice = Parameterobj.clustering_choice
 
 
     if Parameterobj.useWarpped:
