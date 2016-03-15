@@ -167,9 +167,9 @@ def uniqulizeLabel(labels):
 def ssc_with_Adj_CC(file, useBinaryAdj = False):
     small_connected_comp = []
     if useBinaryAdj:
-        feature = (file['adj'] > 0).astype('float')  
+        trjAdj = (file['adj'] > 0).astype('float')  
     else:
-        feature = (file['adj']).astype('float')  
+        trjAdj = (file['adj']).astype('float')  
     CClabel = file['c']  # labels from connected Component
     trjID = file['trjID']
     labels_DPGMM = np.ones(CClabel.size)*(-222)
@@ -177,16 +177,20 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
 
     color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
     print 'np.unique(CClabel):',np.unique(CClabel)
+
+    FeatureMtx = pickle.load(open('./FeatureMtx', 'rb'))
+
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)
         # print "connected component No. " ,str(i)
         sub_index = np.where(CClabel == i)[1]  # noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
-        sub_matrix = feature[sub_index][:, sub_index]
+        sub_adjMtx = trjAdj[sub_index][:, sub_index]
+        sub_FeatureMtx = FeatureMtx[sub_index,:]
         if sub_index.size > 3:
             project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             print "project dimension is: ", str(project_dimension)  ## embeded lower dimension
-            ssc = sparse_subspace_clustering(2000000, feature, n_dimension=project_dimension)
-            ssc.get_adjacency(sub_matrix)
+            ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=project_dimension)
+            ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             'DPGMM'
             print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
@@ -249,7 +253,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
     xspd = file['xspd']
     yspd = file['yspd']
     trjID = file['trjID']
-    feature = (file['adj'] > 0).astype('float')  ## adj mtx
+    trjAdj = (file['adj'] > 0).astype('float')  ## adj mtx
     CClabel = file['c']  # labels from connected Component
 
     # dataFeature = np.concatenate((xtrj,xspd,ytrj,yspd), axis = 1)
@@ -268,9 +272,9 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
                 ssc.construct_adjacency()
             else:
                 project_dimension = int(np.floor(sub_index.size / 100) + 1)
-                sub_matrix = feature[sub_index][:, sub_index]
-                ssc = sparse_subspace_clustering(lambd=2000000, dataset=feature, n_dimension=project_dimension)
-                ssc.get_adjacency(sub_matrix)
+                sub_adjMtx = trjAdj[sub_index][:, sub_index]
+                ssc = sparse_subspace_clustering(lambd=2000000, dataset=trjAdj, n_dimension=project_dimension)
+                ssc.get_adjacency(sub_adjMtx)
 
             """adj assignment not successful!!! whyyyyyyyy"""
             # adjInNeighbour = ssc.adjacency

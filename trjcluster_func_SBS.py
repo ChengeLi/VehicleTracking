@@ -15,9 +15,31 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
+def getRawFeatureMtx(dataForKernel):
+    if len(dataForKernel)==7:
+        [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
+    FeatureMtx = np.hstack((x,y,xspd,yspd))
+
+    for ii in range(4, dataForKernel.shape[0]):
+        if len(dataForKernel[ii])>0:
+            FeatureMtx = np.hstack(FeatureMtx,dataForKernel[ii])
+
+    return FeatureMtx
+
+
+
+
+
 def getMuSigma(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
+
+    FeatureMtx = np.hstack((x,y,xspd,yspd))
+    for ii in range(4, dataForKernel.shape[0]):
+        if len(dataForKernel[ii])>0:
+            FeatureMtx = np.hstack(FeatureMtx,dataForKernel[ii])
+
+    pdb.set_trace()
     sxdiffAll    = []
     sydiffAll    = []
     mdisAll      = []
@@ -58,8 +80,6 @@ def getMuSigma(dataForKernel):
                 else:
                     centerDis = np.nan
                     huedis = np.nan
-
-
                 
                 sxdiffAll.append(sxdiff)
                 sydiffAll.append(sydiff)
