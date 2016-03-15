@@ -183,14 +183,15 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
         sub_index = np.where(CClabel == i)[1]  # noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
         sub_matrix = feature[sub_index][:, sub_index]
         if sub_index.size > 3:
-            project_dimension = int(np.floor(sub_index.size / 5) + 1)
+            project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             print "project dimension is: ", str(project_dimension)  ## embeded lower dimension
             ssc = sparse_subspace_clustering(2000000, feature, n_dimension=project_dimension)
             ssc.get_adjacency(sub_matrix)
             ssc.manifold()
             'DPGMM'
-            print 'DPGMM n_components =', int(np.floor(sub_index.size / 4) + 1)
-            sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.001)
+            print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
+            sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
+        
             num_cluster_prior = len(np.unique(sub_labels_DPGMM))
             # visulize(ssc.embedding_,sub_labels,model,color)
             'k-means'

@@ -154,16 +154,17 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         print("frame {0}\r".format(frame_idx)),
         sys.stdout.flush()
         if subsample_frmIdx%trunclen == 0:
-            trunkTrjFile = loadmat(matfiles[np.int(np.floor(subsample_frmIdx/trunclen))])
+            matidx = np.int(np.floor(subsample_frmIdx/trunclen))
+            trunkTrjFile = loadmat(matfiles[matidx])
             xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
-            if len(trunkTrjFile['trjID'])==0:
+            if len(trunkTrjFile['trjID'])==0: ##encounter empty file, move on
                 subsample_frmIdx = subsample_frmIdx+trunclen
                 continue
-            IDintrunk    = trunkTrjFile['trjID'][0]
-            Nsample      = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
-            ttrj         = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
-
+            IDintrunk = trunkTrjFile['trjID'][0]
+            Nsample   = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
+            ttrj      = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+            ttrj[ttrj==np.max(ttrj[:])]=np.nan
             startT = np.int32(np.ones([Nsample,1])*-999)
             endT   = np.int32(np.ones([Nsample,1])*-999)
             for i in range(Nsample):  # for the ith sample## get the time T (where the pt appears and disappears)
@@ -191,8 +192,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 if k !=-1:      
                     t1list = startT[labinT==k]  # consider all IDs in the trunk, not only alive in curFrm
                     t2list = endT[labinT==k]
-                    t1     = t1list[t1list!=-999]
-                    t2     = t2list[t2list!=-999]
+                    t1 = t1list[t1list!=-999]
+                    t2 = t2list[t2list!=-999]
                     if len(t1)*len(t2)!=0:
                         startfrm = np.int(np.min(t1))   # earliest appering time in this trj group
                         endfrm   = np.int(np.max(t2))   # latest disappering time in this trj group
@@ -236,9 +237,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # print "labinf: ",labinf
         for k in np.unique(labinf):
             if k != -1:
-                x = xtrj.T[subsample_frmIdx%trunclen][(labinT==k)&PtsInCurFrm]
-                y = ytrj.T[subsample_frmIdx%trunclen][(labinT==k)&PtsInCurFrm]
-                
+                x = xtrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
+                y = ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 if useVirtualCenter:
                     vx,vy = Virctr(x,y) # find virtual center
                     if len(vcxtrj[k])>1:
@@ -264,7 +264,11 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
         if isVisualize:
             if isVideo:
+                trueLoc = start_frame_idx+(trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+                if trueLoc!=frame_idx:
+                    pdb.set_trace()
+
                 status, frame = cap.read()
             else:
                 frame = cv2.imread(image_list[frame_idx])
@@ -380,8 +384,8 @@ def prepare_data_to_vis(isVideo):
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     if smooth:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*DPGMM.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*DPGMM.mat')))
         # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'*spectral.mat')))
     else:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.filteredKltPath,'len*.mat')))
@@ -406,7 +410,7 @@ if __name__ == '__main__':
     isVideo    = True
     # isVideo    = False
     smooth = True
-    trunclen         = 600
+    trunclen         = Parameterobj.trunclen
     isClustered      = True
     isVisualize      = True
     useVirtualCenter = False

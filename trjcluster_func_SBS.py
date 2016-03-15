@@ -171,7 +171,8 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValu
         # xspdth = 5 #x speed threshold
     else:
         # dth = 0.4*DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-        dth = 40
+        dth = 40  ## for NGSIM
+        
     try:
         yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
         xspdth = mean_std_ForKernel[0]+mean_std_ForKernel[1]

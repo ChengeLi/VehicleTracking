@@ -6,6 +6,7 @@ import cv2
 
 class DataPath(object):
 	def __init__(self,dataSource,VideoIndex): 
+
 		if platform.system()=='Darwin':   # on mac for test only, please ignore this....
 			if dataSource == 'Johnson':
 				self.sysPathHeader = '/Users/Chenge/Documents/github/AIG/Jay&Johnson/'

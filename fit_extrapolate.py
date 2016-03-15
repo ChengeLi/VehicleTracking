@@ -188,31 +188,65 @@ def readData(matfile):
 	return x,y,ptstrj
 
 
+
+def lowessSmooth(xk,yk):
+	import statsmodels.api as sm
+	## fit (x,y)  # use smooth() func to do spatial smooth
+	# lowessXY = sm.nonparametric.lowess(yk, xk, frac=0.1)
+	# plt.figure()
+	# plt.plot(xk, yk, '+')
+	# plt.plot(lowessXY[:, 0], lowessXY[:, 1])
+	# plt.show()
+
+
+	#fit x(t) and y(t) seperately
+	lowessX = sm.nonparametric.lowess(xk,range(len(xk)), frac=0.1)
+	# plt.figure('smooth X(t)')
+	# plt.plot(range(len(xk)), xk, '+')
+	# plt.plot(lowessX[:, 0], lowessX[:, 1])
+	# plt.show()
+	xk_smooth = lowessX[:, 1]
+
+	lowessY = sm.nonparametric.lowess(yk,range(len(yk)), frac=0.1)
+	# plt.figure('smooth Y(t)')
+	# plt.plot(range(len(yk)), yk, '+')
+	# plt.plot(lowessY[:, 0], lowessY[:, 1])
+	# plt.show()
+	yk_smooth = lowessY[:, 1]
+	return xk_smooth, yk_smooth
+
+def getSpdMtx(dataMtx_withnan):
+	spdMtx = np.hstack((np.ones((dataMtx_withnan.shape[0],1))*np.nan,np.diff(dataMtx_withnan)))
+	spdMtx[np.isnan(spdMtx)]=0 # change every nan to 0
+	return spdMtx
+
 def getSmoothMtx(x,y):
-	x_smooth_mtx = np.zeros(x.shape)
-	y_smooth_mtx = np.zeros(y.shape)
-	# xspd_smooth_mtx = np.zeros(x.shape)
-	# yspd_smooth_mtx = np.zeros(y.shape)
+	x_spatial_smooth_mtx = np.zeros(x.shape)
+	y_spatial_smooth_mtx = np.zeros(y.shape)
+
+	x_time_smooth_mtx = np.ones(x.shape)*np.nan
+	y_time_smooth_mtx = np.ones(y.shape)*np.nan
 
 	for kk in range(0,x.shape[0],1):
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
 		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels  # loger than 5, otherwise all zero out
-			x_smooth, y_smooth = smooth(xk, yk)
-			x_smooth_mtx[kk,:][x[kk,:]!=0]=x_smooth
-			y_smooth_mtx[kk,:][y[kk,:]!=0]=y_smooth
+			x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
+			x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
 
-			# xspd_smooth = np.diff(x_smooth)
-			# # xaccelerate = np.diff(xspd_smooth)
-			# yspd_smooth = np.diff(y_smooth)
-			# # yaccelerate = np.diff(yspd_smooth)
-			# xspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=xspd_smooth
-			# yspd_smooth_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]=yspd_smooth
+
+			x_spatial_smooth_mtx[kk,:][x[kk,:]!=0]=x_spatial_smooth
+			y_spatial_smooth_mtx[kk,:][y[kk,:]!=0]=y_spatial_smooth
+
+			x_time_smooth_mtx[kk,:][x[kk,:]!=0]=x_time_smooth
+			y_time_smooth_mtx[kk,:][y[kk,:]!=0]=y_time_smooth
+
 	'dont use loop, use mtx diff'
-	xspd_smooth_mtx = np.hstack((np.zeros((x_smooth_mtx.shape[0],1)),np.diff(x_smooth_mtx)))
-	yspd_smooth_mtx = np.hstack((np.zeros((y_smooth_mtx.shape[0],1)),np.diff(y_smooth_mtx)))
-
-	return x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx
+	xspd_smooth_mtx = getSpdMtx(x_time_smooth_mtx)
+	yspd_smooth_mtx = getSpdMtx(y_time_smooth_mtx)
+	x_time_smooth_mtx[np.isnan(x_time_smooth_mtx)]=0  # change nan back to zero for sparsity
+	y_time_smooth_mtx[np.isnan(y_time_smooth_mtx)]=0
+	return x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx
 
 
 def plotTrj(x,y,p3=[],Trjchoice=[]):
@@ -251,6 +285,10 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 	plt.show()
 	pdb.set_trace()
 
+
+
+
+
 def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile):
 	print "saving smooth new trj:", matfile
 	'only keep the goodTrj, delete all bad ones'
@@ -268,16 +306,20 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
 	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
 
+	ptstrjNew['Xdir'] = np.sum(xspd_smooth_mtx[goodTrj,:],1)>0
+	ptstrjNew['Ydir'] = np.sum(yspd_smooth_mtx[goodTrj,:],1)>0
+
+
 	if Parameterobj.useWarpped:
 		warpped_x_mtx,warpped_y_mtx = warpTrj2parallel(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
 
 		ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
 		ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
-		warpped_xspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_x_mtx)))
-		warpped_yspd_mtx = np.hstack((np.zeros((warpped_x_mtx.shape[0],1)),np.diff(warpped_y_mtx)))
+		warpped_xspd_mtx = getSpdMtx(warpped_x_mtx)
+		warpped_yspd_mtx = getSpdMtx(warpped_y_mtx)
+
 		ptstrjNew['xspd_warpped'] = csr_matrix(warpped_xspd_mtx)
 		ptstrjNew['yspd_warpped'] = csr_matrix(warpped_yspd_mtx)
-
 
 	# plt.figure()
 	# for ii in range(len(goodTrj)):
@@ -299,19 +341,17 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	savemat(savename,ptstrjNew)
 
 
-
-
-
 def main(matfile):
 	# "if consecutive points are similar to each other, merge them, using one to represent"
 	# didn't do this, smooth and resample instead
-	x,y,ptstrj = readData(matfile)
-	x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y)
+	x,y,ptstrj = readData(matfile)	
+	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y)
+
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
-	p3,goodTrj = polyFitTrj_filtering(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
+	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
 	# kmeansPolyCoeff(p3)
-	# plotTrj(x_smooth_mtx,y_smooth_mtx,p3,goodTrj)
-	saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
+	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,p3,goodTrj)
+	saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 

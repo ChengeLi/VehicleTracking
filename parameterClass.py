@@ -17,6 +17,9 @@ class parameter(object):
 			self.useWarpped = False
 			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
+			self.embedding_projection_factor = 20
+			self.DPGMM_num_component_shirink_factor = 4
+
 
 		""" canal st """
 		if dataSource == 'DoT':
@@ -25,7 +28,8 @@ class parameter(object):
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, blockSize=5)  # old jayst 
-
+			self.embedding_projection_factor = 10
+			self.DPGMM_num_component_shirink_factor = 4
 
 		if dataSource == 'laurier':
 			self.useSBS = True
@@ -33,7 +37,8 @@ class parameter(object):
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
 			self.targetFPS = 30
-
+			self.embedding_projection_factor = 10
+			self.DPGMM_num_component_shirink_factor = 4
 
 		if dataSource == 'NGSIM':
 			self.useSBS = False
@@ -41,7 +46,8 @@ class parameter(object):
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
 			self.targetFPS = 10
-
+			self.embedding_projection_factor = 30
+			self.DPGMM_num_component_shirink_factor = 4
 
 
 
@@ -65,12 +71,8 @@ class parameter(object):
 
 
 		'for PCA, DPGMM in subspace_clutering_merge.py'
-        # project_dimension = int(np.floor(sub_index.size / 100) + 1)
-        # sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size / 4) + 1), alpha=0.001)
-
-
-
-
+		# self.embedding_projection_factor = 10
+		# self.DPGMM_num_component_shirink_factor = 4
 
 
 
