@@ -17,7 +17,7 @@ class parameter(object):
 			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
 			self.embedding_projection_factor = 20
-			self.DPGMM_num_component_shirink_factor = 4
+			self.DPGMM_num_component_shirink_factor = 10
 
 
 		""" canal st """
@@ -37,7 +37,7 @@ class parameter(object):
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
 			self.targetFPS = 30
 			self.embedding_projection_factor = 10
-			self.DPGMM_num_component_shirink_factor = 4
+			self.DPGMM_num_component_shirink_factor = 10
 
 		if dataSource == 'NGSIM':
 			self.useSBS = False
@@ -46,7 +46,7 @@ class parameter(object):
 			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
 			self.targetFPS = 10
 			self.embedding_projection_factor = 30
-			self.DPGMM_num_component_shirink_factor = 4
+			self.DPGMM_num_component_shirink_factor = 2
 
 
 

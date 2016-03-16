@@ -115,7 +115,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     if len(lasttrunkTrjFile['trjID'])<1:
         lasttrunkTrjFile = loadmat(matfiles[-2])  # in case the last one is empty
     IDintrunklast    = lasttrunkTrjFile['trjID'][0]
-    color            = np.array([np.random.randint(0,255) \
+    color = np.array([np.random.randint(0,255) \
                        for _ in range(3*int(max(IDintrunklast)))])\
                        .reshape(int(max(IDintrunklast)),3)
 
@@ -138,7 +138,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vctime[i]=[] 
             clusterSize[i] = []
     else:
-        mlabels = np.int(np.ones(max(IDintrunklast)+1)*-1)  #initial to be -1
+        mlabels = np.int32(np.ones(max(IDintrunklast)+1)*-1)  #initial to be -1
         for i in range(max(IDintrunklast)+1): 
             vcxtrj[i]=[]
             vcytrj[i]=[]
@@ -260,7 +260,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 vcytrj[k].extend(list(vy))
                 if len(x)!=len(y):
                     pdb.set_trace()
-                clusterSize[k].extend([len(x)])
+                if isClustered:clusterSize[k].extend([len(x)])
 
         if isVisualize:
             if isVideo:
@@ -272,7 +272,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 status, frame = cap.read()
             else:
                 frame = cv2.imread(image_list[frame_idx])
-            visualize_trj(fig,axL,im,labinf,vcxtrj,vcytrj,frame,color,frame_idx)
+            visualize_trj(fig,axL,im,np.unique(labinf)[1:],vcxtrj,vcytrj,frame,color,frame_idx)
             
 
         if isSave: #not clustered yet
@@ -339,9 +339,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.ion()
     dots = []
+    annos = []
     line_exist = 0
     # print labinf
-    for k in np.unique(labinf)[1:]: #if k !=-1
+    for k in labinf:
         # print "x,y",vcxtrj[k],vcytrj[k]
         if useVirtualCenter:
             xx = np.array(vcxtrj[k])[~np.isnan(vcxtrj[k])]
@@ -355,6 +356,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             # line_exist = 1
             dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
@@ -363,9 +365,17 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.title('frame '+str(frame_idx))
     # name = os.path.join(DataPathobj.DataPath,str(frame_idx).zfill(6)+'.jpg')
     # plt.savefig(name) ##save figure
+    'sort the annotation list base dn x location. from left to right'
+    annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
+    
+    for jj in range(len(annolist)):
+        print np.int(annolist[jj].get_text())
+
+
+
     plt.draw()
     plt.show()
-    # pdb.set_trace()
+    pdb.set_trace()
 
     while line_exist:
         try:
@@ -374,9 +384,11 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             line_exist = 0
     for i in dots:
         i.remove()
-    # dots= []
+    for anno in annos:
+        anno.remove()    
     plt.draw()
     plt.show()
+    
 
 
 def prepare_data_to_vis(isVideo):
@@ -406,10 +418,9 @@ def prepare_data_to_vis(isVideo):
 
 if __name__ == '__main__':
     isVideo    = True
-    # isVideo    = False
     smooth = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = True
+    isClustered      = False
     isVisualize      = True
     useVirtualCenter = False
     isSave           = False

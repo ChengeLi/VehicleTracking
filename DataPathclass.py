@@ -120,7 +120,3 @@ def fitGaussian(data):
 # 			plt.draw()
 # 	plt.show()
 
-
-
-
-

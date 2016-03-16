@@ -14,19 +14,25 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
-
-def getRawFeatureMtx(dataForKernel):
+def getRawDataFeatureMtx(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
-    FeatureMtx = np.hstack((x,y,xspd,yspd))
 
+    FeatureMtx = np.hstack((x,y,xspd,yspd))
     for ii in range(4, dataForKernel.shape[0]):
         if len(dataForKernel[ii])>0:
-            FeatureMtx = np.hstack(FeatureMtx,dataForKernel[ii])
+            FeatureMtx = np.hstack((FeatureMtx,dataForKernel[ii]))
+    FeatureMtx[FeatureMtx==0]=np.nan
+    FeatureMtx_norm = np.zeros(FeatureMtx.shape)
+    for ii in range(len(dataForKernel)):
+        maxV = np.nanmax(FeatureMtx[:,ii*Parameterobj.trunclen:(ii+1)*Parameterobj.trunclen])
+        minV = np.nanmin(FeatureMtx[:,ii*Parameterobj.trunclen:(ii+1)*Parameterobj.trunclen])
+        FeatureMtx_norm[:,ii*Parameterobj.trunclen:(ii+1)*Parameterobj.trunclen] = (FeatureMtx[:,ii*Parameterobj.trunclen:(ii+1)*Parameterobj.trunclen]-minV)/(maxV-minV)*1
 
-    return FeatureMtx
-
-
+    FeatureMtx_norm[np.isnan(FeatureMtx_norm)] = 0
+    # pickle.dump(FeatureMtx, open('./Johnson00115_FeatureMtx','wb'))
+    # pickle.dump(FeatureMtx_norm, open('./Johnson00115_FeatureMtx_normalized','wb'))  
+    return FeatureMtx_norm
 
 
 
@@ -34,12 +40,6 @@ def getMuSigma(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
 
-    FeatureMtx = np.hstack((x,y,xspd,yspd))
-    for ii in range(4, dataForKernel.shape[0]):
-        if len(dataForKernel[ii])>0:
-            FeatureMtx = np.hstack(FeatureMtx,dataForKernel[ii])
-
-    pdb.set_trace()
     sxdiffAll    = []
     sydiffAll    = []
     mdisAll      = []
@@ -151,6 +151,7 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
         # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis/100) +(-centerDis/100)))
 
         adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
+
     else:
         # adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
         adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized
@@ -278,17 +279,17 @@ if __name__ == '__main__':
             continue
         ptsidx = ptstrj['trjID'][0]
         if not Parameterobj.useWarpped:            
-            x      = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
-            y      = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-            t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-            xspd   = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
-            yspd   = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
+            x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
+            y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
+            t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+            xspd = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
+            yspd = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
         else:
-            x      = csr_matrix(ptstrj['xtracks_warpped'], shape=ptstrj['xtracks'].shape).toarray()
-            y      = csr_matrix(ptstrj['ytracks_warpped'], shape=ptstrj['ytracks'].shape).toarray()
-            t      = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
-            xspd   = csr_matrix(ptstrj['xspd_warpped'], shape=ptstrj['xspd'].shape).toarray()
-            yspd   = csr_matrix(ptstrj['yspd_warpped'], shape=ptstrj['yspd'].shape).toarray()
+            x    = csr_matrix(ptstrj['xtracks_warpped'],shape=ptstrj['xtracks'].shape).toarray()
+            y    = csr_matrix(ptstrj['ytracks_warpped'],shape=ptstrj['ytracks'].shape).toarray()
+            t    = csr_matrix(ptstrj['Ttracks'],shape=ptstrj['Ttracks'].shape).toarray()
+            xspd = csr_matrix(ptstrj['xspd_warpped'], shape=ptstrj['xspd'].shape).toarray()
+            yspd = csr_matrix(ptstrj['yspd_warpped'], shape=ptstrj['yspd'].shape).toarray()
 
         
         if Parameterobj.useSBS:

@@ -83,8 +83,11 @@ class sparse_subspace_clustering:
                                              random_state=random_state) * 1000   ##old version???
 
         'if provide the raw data'
-        # model = sklearn.manifold.SpectralEmbedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
-        #                                      random_state=random_state,affinity='precomputed')
+        model = sklearn.manifold.SpectralEmbedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+                                             random_state=random_state,affinity='rbf')
+        model = sklearn.manifold.SpectralEmbedding(n_components=50, affinity='nearest_neighbors', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
+
+
         # self.embedding_ = model.fit_transform(data_sampl_*feature_)
 
         'locally linear embedding_'
@@ -166,6 +169,8 @@ def uniqulizeLabel(labels):
 
 def ssc_with_Adj_CC(file, useBinaryAdj = False):
     small_connected_comp = []
+    one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
+
     if useBinaryAdj:
         trjAdj = (file['adj'] > 0).astype('float')  
     else:
@@ -178,8 +183,10 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
     color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
     print 'np.unique(CClabel):',np.unique(CClabel)
 
-    FeatureMtx = pickle.load(open('./FeatureMtx', 'rb'))
-
+    # FeatureMtx = pickle.load(open('./NGSIM_FeatureMtx', 'rb'))
+    FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
+    FeatureMtx[np.isnan(FeatureMtx)] = 0
+    pdb.set_trace()
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)
         # print "connected component No. " ,str(i)
@@ -195,7 +202,37 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
             'DPGMM'
             print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
             sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
-        
+            sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
+           
+            sub_adjMtx_rearrange = np.zeros(sub_adjMtx.shape)
+            arrange_index = []
+            lastLen = 0
+            for ii in np.unique(sub_labels_DPGMM):
+                arrange_index = arrange_index+ list(np.where(sub_labels_DPGMM==ii)[0])
+                thisLen = np.sum(sub_labels_DPGMM==ii)
+                sub_adjMtx_rearrange[lastLen:lastLen+thisLen,:][:,lastLen:lastLen+thisLen] = sub_adjMtx[sub_labels_DPGMM==ii,:][:,sub_labels_DPGMM==ii]
+                lastLen = lastLen+thisLen
+            plt.figure();
+            plt.title('after rearrangement');
+            plt.imshow(sub_adjMtx_rearrange)
+            plt.draw()
+
+            plt.figure()
+            plt.title('after rearrangement');
+            plt.imshow(sub_adjMtx[arrange_index, :][:,arrange_index])
+            plt.draw()
+
+            plt.figure()
+            plt.title('original sub_adjMtx')
+            plt.imshow(sub_adjMtx)
+            plt.draw()
+
+
+
+
+                
+
+
             num_cluster_prior = len(np.unique(sub_labels_DPGMM))
             # visulize(ssc.embedding_,sub_labels,model,color)
             'k-means'
@@ -207,7 +244,7 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
 
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
-
+            pdb.set_trace()
             # print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
             #         sub_labels).size
         else:  ## if size small, treat as one group
@@ -216,7 +253,7 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + sub_labels
             small_connected_comp.append(sub_index)
             # print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
-    
+        
     labels_DPGMM = uniqulizeLabel(labels_DPGMM)
     labels_spectral = uniqulizeLabel(labels_spectral)
     
@@ -323,6 +360,8 @@ if __name__ == '__main__':
     adjmatfiles, trjmatfiles, savePath = prepare_input_data()
     isSave      = True
     isVisualize = False
+
+
     for matidx, matfile in enumerate(adjmatfiles):
         adjfile = scipy_io.loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
