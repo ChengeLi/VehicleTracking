@@ -8,7 +8,7 @@ class parameter(object):
 
 		self.trunclen  = 600
 		self.targetFPS = 5 #subsampRate = FPS/targetFPS
-
+		
 		'for KLT tracker'
 		self.klt_detect_interval = 5
 		if dataSource == 'Johnson':
@@ -18,7 +18,11 @@ class parameter(object):
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
 			self.embedding_projection_factor = 20
 			self.DPGMM_num_component_shirink_factor = 10
-
+			
+			'for adj SBS'
+			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
+			#a car len: ~=100 to 200
 
 		""" canal st """
 		if dataSource == 'DoT':
@@ -30,6 +34,13 @@ class parameter(object):
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 4
 
+			
+			'for adj SBS'
+			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
+			#a car len: ~=100 to 200
+
+
 		if dataSource == 'laurier':
 			self.useSBS = True
 			self.useWarpped = False
@@ -39,6 +50,13 @@ class parameter(object):
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 10
 
+			
+			'for adj SBS'
+			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
+			#a car len: ~=100 to 200
+
+
 		if dataSource == 'NGSIM':
 			self.useSBS = False
 			self.useWarpped = False
@@ -47,7 +65,11 @@ class parameter(object):
 			self.targetFPS = 10
 			self.embedding_projection_factor = 30
 			self.DPGMM_num_component_shirink_factor = 2
-
+			
+			'for adj SBS'
+			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+			self.nullDist_for_adj = 40#if dis>= this value, adj[i,j] will be set to 0 
+			#a car len: ~=100 to 200
 
 
 		'for fit_extrapolate filtering'
@@ -56,22 +78,9 @@ class parameter(object):
 		self.livelong_thresh = 1*self.targetFPS   # chk if trj is long enough, 1s
 
 
-		'for adj SBS'
-		self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
-
-		if not self.useWarpped:
-			self.dth    = 300 #??!!!!
-			self.yspdth = 5 #y speed threshold
-			self.xspdth = 5 #x speed threshold
-		else:
-			self.dth = 210 #mean+std
-			self.yspdth = 40
-			self.xspdth = 30
-
-
 		'for PCA, DPGMM in subspace_clutering_merge.py'
-		# self.embedding_projection_factor = 10
-		# self.DPGMM_num_component_shirink_factor = 4
+		self.embedding_projection_factor = 10
+		self.DPGMM_num_component_shirink_factor = 4
 
 
 		self.clustering_choice = 'labels_DPGMM'

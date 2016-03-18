@@ -356,7 +356,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             # line_exist = 1
             dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
@@ -366,16 +366,16 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # name = os.path.join(DataPathobj.DataPath,str(frame_idx).zfill(6)+'.jpg')
     # plt.savefig(name) ##save figure
     'sort the annotation list base dn x location. from left to right'
-    annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
+    # annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
     
-    for jj in range(len(annolist)):
-        print np.int(annolist[jj].get_text())
+    # for jj in range(len(annolist)):
+    #     print np.int(annolist[jj].get_text())
 
 
 
     plt.draw()
     plt.show()
-    pdb.set_trace()
+    # pdb.set_trace()
 
     while line_exist:
         try:
@@ -420,7 +420,7 @@ if __name__ == '__main__':
     isVideo    = True
     smooth = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = False
+    isClustered      = True
     isVisualize      = True
     useVirtualCenter = False
     isSave           = False

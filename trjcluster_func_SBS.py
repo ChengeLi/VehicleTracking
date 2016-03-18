@@ -14,6 +14,39 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+
+
+'test for PCA'
+from sklearn.decomposition import PCA
+def PCAembedding(data,n_components):
+    print 'PCA projecting...'
+    pca = PCA(n_components= n_components,whiten=False)
+    pca.fit(data)
+    return pca
+
+
+
+pca = PCAembedding(FeatureMtx_norm,200)
+FeatureAfterPCA = pca.transform(FeatureMtx_norm)
+
+pca3 = PCAembedding(FeatureMtx_norm,3)
+FeatureAfterPCA3 = pca3.transform(FeatureMtx_norm)
+
+pca50 = PCAembedding(FeatureMtx_norm,50)
+FeatureAfterPCA50 = pca50.transform(FeatureMtx_norm)
+
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+from sklearn.manifold import TSNE
+tsne = TSNE(n_components=2, perplexity=30.0, early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000, n_iter_without_progress=30, min_grad_norm=1e-07, metric='euclidean', init='random', verbose=0, random_state=None, method='barnes_hut', angle=0.5)
+
+tsne.fit_transform(FeatureMtx_norm50) 
+
+
+
+
 def getRawDataFeatureMtx(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
@@ -32,7 +65,7 @@ def getRawDataFeatureMtx(dataForKernel):
     FeatureMtx_norm[np.isnan(FeatureMtx_norm)] = 0
     # pickle.dump(FeatureMtx, open('./Johnson00115_FeatureMtx','wb'))
     # pickle.dump(FeatureMtx_norm, open('./Johnson00115_FeatureMtx_normalized','wb'))  
-    return FeatureMtx_norm
+    return FeatureMtx, FeatureMtx_norm
 
 
 
@@ -185,14 +218,6 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValu
     #     dth    = 500
     #     yspdth = 5
     #     xspdth = 1
-    if not Parameterobj.useWarpped:
-        dth= 80
-        # dth    = 300 #??!!!!
-        # yspdth = 5 #y speed threshold
-        # xspdth = 5 #x speed threshold
-    else:
-        # dth = 0.4*DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-        dth = 40  ## for NGSIM
         
     try:
         yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
@@ -201,7 +226,7 @@ def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValu
         yspdth = 0.4*extremeValue[3] #if mean is empty
         xspdth = 0.4*extremeValue[1]
 
-    if mdis < dth:
+    if mdis < Parameterobj.nullDist_for_adj:
         if adj_methods =="Thresholding":
             if (sxdiff <xspdth ) & (sydiff<yspdth):
                 adj_element = 1
@@ -308,6 +333,9 @@ if __name__ == '__main__':
             FgBlobIndex      = []
 
         dataForKernel = np.array([x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y])
+        FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
+
+
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
         color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
@@ -318,6 +346,10 @@ if __name__ == '__main__':
         # SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
 
+        
+
+
+        pdb.set_trace()
         if adj_methods =="Gaussian":
             mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
 
@@ -329,8 +361,7 @@ if __name__ == '__main__':
                 tmp1 = x[i,:]!=0
                 tmp2 = x[j,:]!=0
                 idx  = num[tmp1&tmp2]
-                if len(idx)>5: # has overlapping
-                # if len(idx)>=30: # at least overlap for 100 frames
+                if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
                     sidx   = idx[0:-1] # for speed
                     sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
 
