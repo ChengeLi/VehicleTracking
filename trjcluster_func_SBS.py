@@ -90,11 +90,18 @@ def getMuSigma(dataForKernel):
             if len(idx)>5: # has overlapping
                 # print len(idx)
             # if len(idx)>=30: # at least overlap for 100 frames
+                # sidx   = idx[0:-1] # for speed
+                # sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                # sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
+                # # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+                # mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
                 sidx   = idx[0:-1] # for speed
-                sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
-                sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
-                # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-                mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
+                sxdiff = np.max(np.abs(xspd[i,sidx]-xspd[j,sidx]))
+                sydiff = np.max(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
+                # mdis   = np.max(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
+                mdis = np.max(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))
+
+
                 if Parameterobj.useSBS:
                     cxi = np.nanmedian(fg_blob_center_X[i,idx])
                     cyi = np.nanmedian(fg_blob_center_Y[i,idx])
@@ -109,7 +116,9 @@ def getMuSigma(dataForKernel):
                         cyj = np.nanmedian(y[j,idx])
 
                     centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
-                    huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                    # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                    huedis = np.max(np.abs(hue[i,sidx]-hue[j,sidx]))
+
                 else:
                     centerDis = np.nan
                     huedis = np.nan
@@ -276,8 +285,10 @@ def get_spd_dis_diff(xspd_i,xspd_j,yspd_i,yspd_j,xi,xj,yi,yj):
     sxdiff = np.max(np.abs(xspd[i,sidx]-xspd[j,sidx])[:])
     sydiff = np.max(np.abs(yspd[i,sidx]-yspd[j,sidx])[:])                    
 
+    'use MAX of the dist diff!'
     # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
-    mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
+    # mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
+    mdis = np.max(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
     return sxdiff,sydiff,mdis
 
 
