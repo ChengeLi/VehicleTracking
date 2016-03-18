@@ -186,6 +186,11 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
     # FeatureMtx = pickle.load(open('./NGSIM_FeatureMtx', 'rb'))
     FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
     FeatureMtx[np.isnan(FeatureMtx)] = 0
+    
+    FeatureMtxLoc = []
+    for aa in one_car_trjID:
+        FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
+
     pdb.set_trace()
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)

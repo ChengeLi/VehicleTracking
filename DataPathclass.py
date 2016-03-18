@@ -14,6 +14,8 @@ class DataPath(object):
 				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
 				self.video = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
 				self.videoTime = '00115_ROI'
+
+				
 			if dataSource == 'NGSIM':
 				self.sysPathHeader = '/Volumes/Transcend/US-101/US-101-RawVideo-0750am-0805am-Cam1234/'
 				self.videoPath = os.path.join(self.sysPathHeader,'./00115_ROI/')
