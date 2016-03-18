@@ -96,14 +96,14 @@ if __name__ == '__main__':
             frameLp = np.zeros_like(frameL)
 
 
-    trunclen = 600
+    trunclen = Parameterobj.trunclen
     subSampRate = fps/Parameterobj.targetFPS
     if len(previousLastFiles)>0:
         frame_idx = len(previousLastFiles)*trunclen*subSampRate
     else:
         frame_idx = (0 + frame_idx_bias)
 
-    detect_interval = 5
+    detect_interval = Parameterobj.klt_detect_interval
     if detect_interval < subSampRate:
         detect_interval = 1
     else:
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
      
             for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
-                x = min(x,frameLp.shape[1]-1)
+                x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
                 y = min(y,frameLp.shape[0]-1)
 
                 if not good_flag:
@@ -219,8 +219,7 @@ if __name__ == '__main__':
                 cv2.circle(mask, (x, y), 5, 0, -1)    
 
             corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
-            # if frame_idx==69605:
-            #     pdb.set_trace()
+
             if corners is not None:
                 for x, y in np.float32(corners).reshape(-1, 2):
                     # create new dic item using new dicidx since these are new points:

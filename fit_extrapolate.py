@@ -12,7 +12,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
-from warpTrj2parallel import loadWarpMtx
+from warpTrj2parallel import loadWarpMtx  
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
@@ -20,7 +20,7 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
-def warpTrj2parallel(x_mtx,y_mtx,warpingMtx):
+def warpTrj_using_Mtx(x_mtx,y_mtx,warpingMtx):
 	'warp the trj and save to warpped'
 	xyTupleMtx = np.zeros((x_mtx.shape[0],x_mtx.shape[1],2))
 	xyTupleMtx[:,:,0] = np.array(x_mtx,dtype='float32')  #first dim is X!
@@ -109,6 +109,9 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 	TFid[outlierID] = False
 	goodTrj = goodTrj[TFid]
 	p3      = p3[TFid]
+
+	## what abnormal trjs are you  filtering out??? plot those bad outlier trjs
+
 	return np.array(p3),np.array(goodTrj)
 
 
@@ -174,6 +177,9 @@ def kmeansPolyCoeff(p3):
 
 	    plt.cla()
 	    ax.scatter(p3[:1000, 0], p3[:1000, 1], p3[:1000, 2], c=labels[:1000].astype(np.float))
+
+
+		"""plot the raw trjs not the coefficients. see the mean center trjs, what are they look like"""
 
 	    # ax.w_xaxis.set_ticklabels([])
 	    # ax.w_yaxis.set_ticklabels([])
@@ -311,7 +317,7 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 
 
 	if Parameterobj.useWarpped:
-		warpped_x_mtx,warpped_y_mtx = warpTrj2parallel(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
+		warpped_x_mtx,warpped_y_mtx = warpTrj_using_Mtx(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
 
 		ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
 		ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
