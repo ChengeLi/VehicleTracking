@@ -6,10 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg as np_lg
 import numpy.matlib as np_mat
-import scipy.io as scipy_io
+from scipy.io import loadmat,savemat
 import sklearn
 from scipy import linalg
-from scipy.io import savemat
 from scipy.sparse import *
 from sklearn import mixture
 from sklearn.cluster import *
@@ -368,7 +367,7 @@ if __name__ == '__main__':
 
 
     for matidx, matfile in enumerate(adjmatfiles):
-        adjfile = scipy_io.loadmat(matfile)
+        adjfile = loadmat(matfile)
         """ andy's method, not real sparse sc, just spectral clustering"""
         trjID, labels_DPGMM,labels_spectral,small_connected_comp = ssc_with_Adj_CC(adjfile)
         """ construct adj use ssc"""
@@ -382,7 +381,7 @@ if __name__ == '__main__':
             # labels = labels_spectral
             # visualize different classes for each Connected Component
             """  use the x_re and y_re from adj mat files  """
-            trjfile = scipy_io.loadmat(trjmatfiles[matidx])
+            trjfile = loadmat(trjmatfiles[matidx])
             if Parameterobj.useWarpped:
                 xtrj = csr_matrix(trjfile['xtracks_warpped'], shape=trjfile['xtracks_warpped'].shape).toarray()
                 ytrj = csr_matrix(trjfile['ytracks_warpped'], shape=trjfile['ytracks_warpped'].shape).toarray()

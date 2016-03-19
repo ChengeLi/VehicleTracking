@@ -24,27 +24,47 @@ def PCAembedding(data,n_components):
     pca.fit(data)
     return pca
 
+def TwoD_Emedding(FeatureMtx_norm):
+    # pca = PCAembedding(FeatureMtx_norm,200)
+    # FeatureAfterPCA = pca.transform(FeatureMtx_norm)
+
+    # pca3 = PCAembedding(FeatureMtx_norm,3)
+    # FeatureAfterPCA3 = pca3.transform(FeatureMtx_norm)
+
+    pca50 = PCAembedding(FeatureMtx_norm,50)
+    FeatureAfterPCA50 = pca50.transform(FeatureMtx_norm)
+
+    from mpl_toolkits.mplot3d import Axes3D
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+
+    from sklearn.manifold import TSNE, MDS
+    tsne = TSNE(n_components=2, perplexity=30.0)
+
+    tsne_data = tsne.fit_transform(FeatureAfterPCA50) 
+
+    mds = MDS(n_components=2, max_iter=100, n_init=1)
+    MDS_data = mds.fit_transform(FeatureAfterPCA50)
 
 
-pca = PCAembedding(FeatureMtx_norm,200)
-FeatureAfterPCA = pca.transform(FeatureMtx_norm)
+    sscfile = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/00115_ROI/ssc/001.mat')
+    labels_DPGMM = csr_matrix(sscfile['labels_DPGMM'], shape=sscfile['labels_DPGMM'].shape).toarray()
+    labels_spectral = csr_matrix(sscfile['labels_spectral'], shape=sscfile['labels_spectral'].shape).toarray()
+    trjID = csr_matrix(sscfile['trjID'], shape=sscfile['trjID'].shape).toarray()
 
-pca3 = PCAembedding(FeatureMtx_norm,3)
-FeatureAfterPCA3 = pca3.transform(FeatureMtx_norm)
-
-pca50 = PCAembedding(FeatureMtx_norm,50)
-FeatureAfterPCA50 = pca50.transform(FeatureMtx_norm)
-
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-from sklearn.manifold import TSNE
-tsne = TSNE(n_components=2, perplexity=30.0, early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000, n_iter_without_progress=30, min_grad_norm=1e-07, metric='euclidean', init='random', verbose=0, random_state=None, method='barnes_hut', angle=0.5)
-
-tsne.fit_transform(FeatureMtx_norm50) 
+    clustered_color = np.array([np.random.randint(0,255) for _ in range(3*int(len(np.unique(labels_DPGMM))))]).reshape(len(np.unique(labels_DPGMM)),3)
 
 
+    plt.figure()
+    plt.scatter(tsne_data[:,0],tsne_data[:,1],color=clustered_color/255)
+    plt.draw()
+    plt.figure()
+    plt.scatter(MDS_data[:,0],MDS_data[:,1])
+    plt.draw()
+
+
+
+    pdb.set_trace()
 
 
 def getRawDataFeatureMtx(dataForKernel):
@@ -357,7 +377,7 @@ if __name__ == '__main__':
         # SBS = np.zeros([NumGoodsample,NumGoodsample])
         num = np.arange(fnum)
 
-        
+        TwoD_Emedding(FeatureMtx_norm)
 
 
         pdb.set_trace()
