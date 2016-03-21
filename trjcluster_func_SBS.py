@@ -54,16 +54,14 @@ def TwoD_Emedding(FeatureMtx_norm):
 
     clustered_color = np.array([np.random.randint(0,255) for _ in range(3*int(len(np.unique(labels_DPGMM))))]).reshape(len(np.unique(labels_DPGMM)),3)
 
-
     plt.figure()
-    plt.scatter(tsne_data[:,0],tsne_data[:,1],color=clustered_color/255)
+    for ii in range(labels_DPGMM.shape[1]):
+        plt.scatter(tsne_data[ii,0],tsne_data[ii,1],color=(clustered_color/255)[labels_DPGMM[0,ii]])
     plt.draw()
+
     plt.figure()
     plt.scatter(MDS_data[:,0],MDS_data[:,1])
     plt.draw()
-
-
-
     pdb.set_trace()
 
 
@@ -329,28 +327,33 @@ if __name__ == '__main__':
     for matidx,matfile in enumerate(matfiles):
     # for matidx in range(2,4):
         # matfile = matfiles[matidx]
+        result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
         if len(ptstrj['trjID'])==0:
             continue
-        ptsidx = ptstrj['trjID'][0]
+        c = ptstrj['trjID'][0]
         if not Parameterobj.useWarpped:            
             x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
             y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
             t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
             xspd = csr_matrix(ptstrj['xspd'], shape=ptstrj['xspd'].shape).toarray()
             yspd = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
+            Xdir = csr_matrix(ptstrj['Xdir'], shape=ptstrj['Xdir'].shape).toarray()
+            Ydir = csr_matrix(ptstrj['Ydir'], shape=ptstrj['Ydir'].shape).toarray()
+
         else:
             x    = csr_matrix(ptstrj['xtracks_warpped'],shape=ptstrj['xtracks'].shape).toarray()
             y    = csr_matrix(ptstrj['ytracks_warpped'],shape=ptstrj['ytracks'].shape).toarray()
             t    = csr_matrix(ptstrj['Ttracks'],shape=ptstrj['Ttracks'].shape).toarray()
             xspd = csr_matrix(ptstrj['xspd_warpped'], shape=ptstrj['xspd'].shape).toarray()
             yspd = csr_matrix(ptstrj['yspd_warpped'], shape=ptstrj['yspd'].shape).toarray()
+            Xdir = csr_matrix(ptstrj['Xdir_warpped'], shape=ptstrj['Xdir_warpped'].shape).toarray()
+            Ydir = csr_matrix(ptstrj['Ydir_warpped'], shape=ptstrj['Ydir_warpped'].shape).toarray()
 
-        
         if Parameterobj.useSBS:
-            hue   = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
-            FgBlobIndex      = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
+            hue = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
+            FgBlobIndex = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             fg_blob_center_X = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
             fg_blob_center_Y = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
 
@@ -363,96 +366,124 @@ if __name__ == '__main__':
             fg_blob_center_Y = []
             FgBlobIndex      = []
 
-        dataForKernel = np.array([x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y])
-        FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
-
 
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
-        color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
-        NumGoodsample = len(x)
-        # construct adjacency matrix
-        print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
-        adj = np.zeros([NumGoodsample,NumGoodsample])
-        # SBS = np.zeros([NumGoodsample,NumGoodsample])
-        num = np.arange(fnum)
-
-        TwoD_Emedding(FeatureMtx_norm)
-
-
-        pdb.set_trace()
-        if adj_methods =="Gaussian":
-            mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
-
-        # build adjacent mtx
-        for i in range(NumGoodsample):
-            print "i", i
-            # plt.cla()
-            for j in range(i+1, NumGoodsample):
-                tmp1 = x[i,:]!=0
-                tmp2 = x[j,:]!=0
-                idx  = num[tmp1&tmp2]
-                if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
-                    sidx   = idx[0:-1] # for speed
-                    sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
-
-
-                    if Parameterobj.useSBS:
-                        huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
-                        cxi = np.nanmedian(fg_blob_center_X[i,idx])
-                        cyi = np.nanmedian(fg_blob_center_Y[i,idx])
-                        cxj = np.nanmedian(fg_blob_center_X[j,idx])
-                        cyj = np.nanmedian(fg_blob_center_Y[j,idx])
-
-                        if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
-                            cxi = np.nanmedian(x[i,idx])
-                            cyi = np.nanmedian(y[i,idx])
-                        if np.isnan(cxj) or np.isnan(cyj):
-                            cxj = np.nanmedian(x[j,idx])
-                            cyj = np.nanmedian(y[j,idx])
-
-                        centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
-
-                        if np.isnan(centerDis):
-                            # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
-                            pdb.set_trace()
-                    else:
-                        huedis=0
-                        centerDis=0
-                    # print 'centerDis',centerDis
-                    trj1 = [x[i,idx],y[i,idx]]
-                    trj2 = [x[j,idx],y[j,idx]]
-    
-                    dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
-    
-                    """counting the sharing blob numbers of two trjs"""
-                    # if useSBS:
-                    #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
-                    
-                    adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
-
-                else: # overlapping too short
-                    # SBS[i,j] = 0
-                    adj[i,j] = 0
-
-        # SBS = SBS + SBS.transpose()  #add diag twice
-        # np.fill_diagonal(SBS, np.diagonal(SBS)/2)
-
-        adj = adj + adj.transpose() 
-        np.fill_diagonal(adj, 1)
         
-        print "saving adj..."
-        sparsemtx = csr_matrix(adj)
-        s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
-        result    = {}
-        result['adj']     = sparsemtx
-        result['c']       = c
-        result['trjID']   = ptsidx
+
+        """First cluster using just direction Information"""
+        upup = ((Xdir>0)*(Ydir>0))[0]
+        upupind = np.array(range(Numsample))[upup]
+
+        updown = ((Xdir>0)*(Ydir<0))[0]
+        updownind = np.array(range(Numsample))[updown]
+        
+        downup = ((Xdir<0)*(Ydir>0))[0]
+        downupind = np.array(range(Numsample))[downup]
+        
+        downdown = ((Xdir<0)*(Ydir<0))[0]
+        downdownind = np.array(range(Numsample))[downdown]
+
+        DirInd = [upupind,updownind,downupind,downdownind]
+        DirName = ['upup','updown','downup','downdown']
+        for dirii in range(4):
+            sameDirInd = DirInd[dirii]
+            NumGoodsample = len(sameDirInd)
+            if NumGoodsample==0:
+                continue
+            print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
+            dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
+
+            FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
+            # TwoD_Emedding(FeatureMtx_norm)
+            color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
+            adj = np.zeros([NumGoodsample,NumGoodsample])
+            # SBS = np.zeros([NumGoodsample,NumGoodsample])
+            num = np.arange(fnum)
+
+            if adj_methods =="Gaussian":
+                mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
+
+            # build adjacent mtx
+            for i in range(NumGoodsample):
+                print "i", i
+                # plt.cla()
+                for j in range(i+1, NumGoodsample):
+                    tmp1 = x[i,:]!=0
+                    tmp2 = x[j,:]!=0
+                    idx  = num[tmp1&tmp2]
+                    if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
+                        sidx   = idx[0:-1] # for speed
+                        sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
+
+
+                        if Parameterobj.useSBS:
+                            huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                            cxi = np.nanmedian(fg_blob_center_X[i,idx])
+                            cyi = np.nanmedian(fg_blob_center_Y[i,idx])
+                            cxj = np.nanmedian(fg_blob_center_X[j,idx])
+                            cyj = np.nanmedian(fg_blob_center_Y[j,idx])
+
+                            if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
+                                cxi = np.nanmedian(x[i,idx])
+                                cyi = np.nanmedian(y[i,idx])
+                            if np.isnan(cxj) or np.isnan(cyj):
+                                cxj = np.nanmedian(x[j,idx])
+                                cyj = np.nanmedian(y[j,idx])
+
+                            centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
+
+                            if np.isnan(centerDis):
+                                # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
+                                pdb.set_trace()
+                        else:
+                            huedis=0
+                            centerDis=0
+                        # print 'centerDis',centerDis
+                        trj1 = [x[i,idx],y[i,idx]]
+                        trj2 = [x[j,idx],y[j,idx]]
+        
+                        dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
+        
+                        """counting the sharing blob numbers of two trjs"""
+                        # if useSBS:
+                        #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                        
+                        adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
+
+                    else: # overlapping too short
+                        # SBS[i,j] = 0
+                        adj[i,j] = 0
+
+            # SBS = SBS + SBS.transpose()  #add diag twice
+            # np.fill_diagonal(SBS, np.diagonal(SBS)/2)
+
+            adj = adj + adj.transpose() 
+            np.fill_diagonal(adj, 1)
+
+            print "saving adj..."
+            """save each same direction adj"""
+            sparsemtx = csr_matrix(adj)
+            s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
+            result['adj_'+DirName[dirii]]   = sparsemtx
+            result['c_'+DirName[dirii]]     = c
+            result['trjID_'+DirName[dirii]] = sameDirInd
+
+
+
+        """save all adj, not seperated by directions"""
+        # print "saving adj..."
+        # sparsemtx = csr_matrix(adj)
+        # s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
+        # result          = {}
+        # result['adj']   = sparsemtx
+        # result['c']     = c
+        # result['trjID'] = ptsidx
 
         if Parameterobj.useWarpped:
             savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
         else:
-            savename = adj_methods+'_spd_max_value_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
         savename = os.path.join(savePath,savename)
         savemat(savename,result)
 

@@ -97,21 +97,24 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 	outlierID =[]
 	p3 = np.array(p3)
 	goodTrj = np.array(goodTrj)
-	for ii in range(p3.shape[1]):
-		data = p3[:,ii]
-		outlierID = outlierID+ list(np.where(np.isnan(data)==True)[0])
+	"""Filtering based on curve shape, outlier of p3 discarded.
+	what abnormal trjs are you filtering out??? plot those bad outlier trjs"""
 
-		mu,std = fitGaussian(data[np.ones(len(data), dtype=bool)-np.isnan(data)])
-		outlierID = outlierID + list(np.where(data>=mu+std)[0])+list(np.where(data<=mu-std)[0])
-		# print p3[outlierID,:]
-	outlierID = np.unique(outlierID)
-	TFid = np.ones(len(goodTrj),'bool')
-	TFid[outlierID] = False
-	goodTrj = goodTrj[TFid]
-	p3      = p3[TFid]
+	"""Maybe we should skip this??? draw me!"""
 
-	## what abnormal trjs are you  filtering out??? plot those bad outlier trjs
+	# for ii in range(p3.shape[1]):
+	# 	data = p3[:,ii]
+	# 	outlierID = outlierID+ list(np.where(np.isnan(data)==True)[0])
 
+	# 	mu,std = fitGaussian(data[np.ones(len(data), dtype=bool)-np.isnan(data)])
+	# 	outlierID = outlierID + list(np.where(data>=mu+std)[0])+list(np.where(data<=mu-std)[0])
+	# 	# print p3[outlierID,:]
+
+	# outlierID = np.unique(outlierID)
+	# TFid = np.ones(len(goodTrj),'bool')
+	# TFid[outlierID] = False
+	# goodTrj = goodTrj[TFid]
+	# p3      = p3[TFid]
 	return np.array(p3),np.array(goodTrj)
 
 
@@ -168,23 +171,21 @@ def kmeansPolyCoeff(p3):
 
 	fignum = 1
 	for name, est in estimators.items():
-	    est.fit(p3)
-	    labels = est.labels_
-	    fig = plt.figure(fignum, figsize=(4, 3))
-	    plt.clf()
-	    plt.title(str(name))
-	    ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+		est.fit(p3)
+		labels = est.labels_
+		fig = plt.figure(fignum, figsize=(4, 3))
+		plt.clf()
+		plt.title(str(name))
+		ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
 
-	    plt.cla()
-	    ax.scatter(p3[:1000, 0], p3[:1000, 1], p3[:1000, 2], c=labels[:1000].astype(np.float))
-
-
+		plt.cla()
+		ax.scatter(p3[:1000, 0], p3[:1000, 1], p3[:1000, 2], c=labels[:1000].astype(np.float))
 		"""plot the raw trjs not the coefficients. see the mean center trjs, what are they look like"""
 
-	    # ax.w_xaxis.set_ticklabels([])
-	    # ax.w_yaxis.set_ticklabels([])
-	    # ax.w_zaxis.set_ticklabels([])
-	    fignum = fignum + 1
+		# ax.w_xaxis.set_ticklabels([])
+		# ax.w_yaxis.set_ticklabels([])
+		# ax.w_zaxis.set_ticklabels([])
+		fignum = fignum + 1
 
 def readData(matfile):
 	# print "Processing truncation...", str(matidx+1)
@@ -312,8 +313,8 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
 	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
 
-	ptstrjNew['Xdir'] = np.sum(xspd_smooth_mtx[goodTrj,:],1)>0
-	ptstrjNew['Ydir'] = np.sum(yspd_smooth_mtx[goodTrj,:],1)>0
+	ptstrjNew['Xdir'] = np.sum(xspd_smooth_mtx[goodTrj,:],1)>=0
+	ptstrjNew['Ydir'] = np.sum(yspd_smooth_mtx[goodTrj,:],1)>=0
 
 
 	if Parameterobj.useWarpped:
@@ -326,6 +327,9 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 
 		ptstrjNew['xspd_warpped'] = csr_matrix(warpped_xspd_mtx)
 		ptstrjNew['yspd_warpped'] = csr_matrix(warpped_yspd_mtx)
+
+		ptstrjNew['Xdir_warpped'] = np.sum(warpped_xspd_mtx,1)>=0
+		ptstrjNew['Ydir_warpped'] = np.sum(warpped_yspd_mtx,1)>=0
 
 	# plt.figure()
 	# for ii in range(len(goodTrj)):

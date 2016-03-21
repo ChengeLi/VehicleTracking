@@ -232,11 +232,6 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
             plt.draw()
 
 
-
-
-                
-
-
             num_cluster_prior = len(np.unique(sub_labels_DPGMM))
             # visulize(ssc.embedding_,sub_labels,model,color)
             'k-means'
@@ -368,6 +363,7 @@ if __name__ == '__main__':
 
     for matidx, matfile in enumerate(adjmatfiles):
         adjfile = loadmat(matfile)
+        pdb.set_trace()
         """ andy's method, not real sparse sc, just spectral clustering"""
         trjID, labels_DPGMM,labels_spectral,small_connected_comp = ssc_with_Adj_CC(adjfile)
         """ construct adj use ssc"""
