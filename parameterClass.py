@@ -60,8 +60,8 @@ class parameter(object):
 		if dataSource == 'NGSIM':
 			self.useSBS = False
 			self.useWarpped = False
-			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
-			self.feature_params = dict(maxCorners=500, qualityLevel=0.4, minDistance=3, blockSize=5)  # old jayst 
+			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
+			self.feature_params = dict(maxCorners=2000, qualityLevel=0.01, minDistance=2, blockSize=5)  # old jayst 
 			self.targetFPS = 10
 			self.embedding_projection_factor = 30
 			self.DPGMM_num_component_shirink_factor = 2

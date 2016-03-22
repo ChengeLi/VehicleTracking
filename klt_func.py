@@ -77,6 +77,7 @@ if __name__ == '__main__':
         print 'reading buffer...'
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
         status, frame = cap.read()
+        nrows,ncols = frame.shape[:2]
         frameL        = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
         if len(previousLastFiles)>0:
             frameLp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  #set the previous to be the last frame in last truncation
@@ -156,8 +157,9 @@ if __name__ == '__main__':
 
         frameL[:,:] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
         frame_hsv   = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # plt.imshow(frame_hsv[:,:,0])
-        # plt.draw()
+        # cv2.imshow('hue',frame_hsv[:,:,0])
+        # cv2.waitKey(0)
+
         ## histogram equalization, more contrast
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         frameL_he = clahe.apply(frameL)
@@ -196,7 +198,12 @@ if __name__ == '__main__':
                 if x != -100:
                     # if x>frameLp.shape[1] or y>frameLp.shape[0]:
                     #     print x, y
-                    hue = frame_hsv[y,x,0]
+                    # hue = frame_hsv[y,x,0]
+                    """use a median of the 3*3 window"""
+                    hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    """try median of the intensity"""
+                    # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
+
                     if useBlobCenter:
                         blobInd    = BlobIndMatrixCurFrm[y,x]
                         if blobInd!=0:
@@ -226,7 +233,10 @@ if __name__ == '__main__':
                     tracksdic[dicidx] = [] 
                     start[dicidx]     = frame_idx
                     end[dicidx]       = -1
-                    hue = frame_hsv[y,x,0]
+                    # hue = frame_hsv[y,x,0]
+                    hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
+
                     if useBlobCenter:
                         blobInd = BlobIndMatrixCurFrm[y,x]                    
                         if blobInd!=0:
@@ -268,7 +278,11 @@ if __name__ == '__main__':
                 BlobCenterX   = np.zeros([len(tracksdic),trunclen]) 
                 BlobCenterY   = np.zeros([len(tracksdic),trunclen]) 
             # set first frame in this chunk
-            offset  = subsample_frmIdx - trunclen
+            
+            if subsample_frmIdx%trunclen==0:
+                offset  = subsample_frmIdx - trunclen
+            else:  ## the last truncation is less than trunclen frames
+                offset  = subsample_frmIdx - subsample_frmIdx%trunclen
 
             # loop through the current trajectories list
             for ii, trjidx in enumerate(tracksdic.keys()):
@@ -310,8 +324,6 @@ if __name__ == '__main__':
                         BlobCenterX[ii,:][tstart:]   = ttrack[6,:]
 
                 else:
-                    if frame_idx==nframe:
-                        pdb.set_trace()
                     Xtracks[ii,:][tstart:tstop]   = ttrack[0,:]
                     Ytracks[ii,:][tstart:tstop]   = ttrack[1,:]
                     Ttracks[ii,:][tstart:tstop]   = ttrack[2,:]
@@ -350,7 +362,7 @@ if __name__ == '__main__':
                 # str(frame_idx/trunclen).zfill(3)
 
             # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
-            savename = os.path.join(savePath,'klt_'+str(np.int(subsample_frmIdx/trunclen)).zfill(3))
+            savename = os.path.join(savePath,'klt_'+str(np.int(np.ceil(subsample_frmIdx/float(trunclen)))).zfill(3))
             savemat(savename,trk)
 
 

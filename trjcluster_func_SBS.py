@@ -9,14 +9,27 @@ from scipy.sparse import csr_matrix
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+def standard_scaler_normalization(data_feature_mtx):
+    """normalize across all samples for each feature"""
+    scaler = StandardScaler().fit(data_feature_mtx)
+    # pickle.dump(scaler,open('./clf/scaler','wb'))
+    data_feature_mtx = scaler.transform(data_feature_mtx)
+
+    """normalize across all features for each sample"""
+    # scaler = StandardScaler().fit(data_feature_mtx.T)
+    # pickle.dump(scaler,open('./clf/scaler_across_all_fea','wb'))
+    # data_feature_mtx = scaler.transform(data_feature_mtx.T).T
+    return data_feature_mtx
 
 
-'test for PCA'
+"""test for PCA"""
 from sklearn.decomposition import PCA
 def PCAembedding(data,n_components):
     print 'PCA projecting...'
@@ -47,6 +60,13 @@ def TwoD_Emedding(FeatureMtx_norm):
     MDS_data = mds.fit_transform(FeatureAfterPCA50)
 
 
+    """locally linear embedding_"""
+    # model = sklearn.manifold.LocallyLinearEmbedding(n_neighbors=5, n_components=self.n_dimension, reg=0.001, eigen_solver='auto', tol=1e-06, max_iter=100, 
+    #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
+    # self.embedding_ = model.fit_transform(data_sampl_*feature_)
+
+
+
     sscfile = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/00115_ROI/ssc/001.mat')
     labels_DPGMM = csr_matrix(sscfile['labels_DPGMM'], shape=sscfile['labels_DPGMM'].shape).toarray()
     labels_spectral = csr_matrix(sscfile['labels_spectral'], shape=sscfile['labels_spectral'].shape).toarray()
@@ -63,6 +83,10 @@ def TwoD_Emedding(FeatureMtx_norm):
     plt.scatter(MDS_data[:,0],MDS_data[:,1])
     plt.draw()
     pdb.set_trace()
+
+
+
+
 
 
 def getRawDataFeatureMtx(dataForKernel):
@@ -97,10 +121,10 @@ def getMuSigma(dataForKernel):
     huedisAll    = []
     centerDisAll = []
 
-    for i in range(NumGoodsample):
+    for i in range(x.shape[0]):
         # print "i", i
-        # for j in range(i, min(NumGoodsample,i+1000)):
-        for j in range(i, NumGoodsample):
+        # for j in range(i, min(x.shape[0],i+1000)):
+        for j in range(i, x.shape[0]):
             tmp1 = x[i,:]!=0
             tmp2 = x[j,:]!=0
             idx  = num[tmp1&tmp2]
@@ -197,7 +221,7 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
 
     [min_sx,max_sx,min_sy,max_sy,min_mdis,max_mdis,min_hue,max_hue,min_center,max_center]=extremeValue
 
-    'normalize'
+    """normalize"""
     sxdiff_normalized    = (sxdiff-min_sx)/(max_sx-min_sx)
     sydiff_normalized    = (sydiff-min_sy)/(max_sy-min_sy)
     mdis_normalized      = (mdis-min_mdis)/(max_mdis-min_mdis)
@@ -296,18 +320,24 @@ def prepare_input_data():
     return matfiles,savePath, start_position_offset
 
 def get_spd_dis_diff(xspd_i,xspd_j,yspd_i,yspd_j,xi,xj,yi,yj):
-    'use mean of the spd diff'
+    """use mean of the spd diff"""
     # sxdiff = np.mean(np.abs(xspd[i,sidx]-xspd[j,sidx]))
     # sydiff = np.mean(np.abs(yspd[i,sidx]-yspd[j,sidx]))                    
-    'use MAX of the spd diff!'
+    """use MAX of the spd diff!"""
     sxdiff = np.max(np.abs(xspd[i,sidx]-xspd[j,sidx])[:])
     sydiff = np.max(np.abs(yspd[i,sidx]-yspd[j,sidx])[:])                    
 
-    'use MAX of the dist diff!'
+    """use MAX of the dist diff!"""
     # mdis   = np.mean(np.abs(x[i,idx]-x[j,idx])+np.abs(y[i,idx]-y[j,idx])) #mahhattan distance
     # mdis = np.mean(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
     mdis = np.max(np.sqrt((x[i,idx]-x[j,idx])**2+(y[i,idx]-y[j,idx])**2))  #euclidean distance
     return sxdiff,sydiff,mdis
+
+def get_hue_diff(hue_i,hue_j):
+    huedis = np.abs(np.mean(hue_i)-np.mean(hue_j))
+    return huedis
+
+
 
 
 if __name__ == '__main__':
@@ -333,6 +363,8 @@ if __name__ == '__main__':
         if len(ptstrj['trjID'])==0:
             continue
         c = ptstrj['trjID'][0]
+        hue = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
+
         if not Parameterobj.useWarpped:            
             x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
             y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
@@ -341,7 +373,6 @@ if __name__ == '__main__':
             yspd = csr_matrix(ptstrj['yspd'], shape=ptstrj['yspd'].shape).toarray()
             Xdir = csr_matrix(ptstrj['Xdir'], shape=ptstrj['Xdir'].shape).toarray()
             Ydir = csr_matrix(ptstrj['Ydir'], shape=ptstrj['Ydir'].shape).toarray()
-
         else:
             x    = csr_matrix(ptstrj['xtracks_warpped'],shape=ptstrj['xtracks'].shape).toarray()
             y    = csr_matrix(ptstrj['ytracks_warpped'],shape=ptstrj['ytracks'].shape).toarray()
@@ -352,7 +383,6 @@ if __name__ == '__main__':
             Ydir = csr_matrix(ptstrj['Ydir_warpped'], shape=ptstrj['Ydir_warpped'].shape).toarray()
 
         if Parameterobj.useSBS:
-            hue = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
             FgBlobIndex = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             fg_blob_center_X = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
             fg_blob_center_Y = csr_matrix(ptstrj['fg_blob_center_Y'], shape=ptstrj['fg_blob_center_Y'].shape).toarray()
@@ -361,10 +391,9 @@ if __name__ == '__main__':
             fg_blob_center_X[FgBlobIndex==0]=np.nan
             fg_blob_center_Y[FgBlobIndex==0]=np.nan
         else:
-            hue = []
-            fg_blob_center_X =[]
-            fg_blob_center_Y = []
-            FgBlobIndex      = []
+            fg_blob_center_X = np.ones(x.shape)*np.nan
+            fg_blob_center_Y = np.ones(x.shape)*np.nan
+            FgBlobIndex      = np.ones(x.shape)*np.nan
 
 
         Numsample = ptstrj['xtracks'].shape[0]
@@ -372,53 +401,57 @@ if __name__ == '__main__':
         
 
         """First cluster using just direction Information"""
-        upup = ((Xdir>0)*(Ydir>0))[0]
+        upup = ((Xdir>=0)*(Ydir>=0))[0]
         upupind = np.array(range(Numsample))[upup]
 
-        updown = ((Xdir>0)*(Ydir<0))[0]
+        updown = ((Xdir>=0)*(Ydir<=0))[0]
         updownind = np.array(range(Numsample))[updown]
         
-        downup = ((Xdir<0)*(Ydir>0))[0]
+        downup = ((Xdir<=0)*(Ydir>=0))[0]
         downupind = np.array(range(Numsample))[downup]
         
-        downdown = ((Xdir<0)*(Ydir<0))[0]
+        downdown = ((Xdir<=0)*(Ydir<=0))[0]
         downdownind = np.array(range(Numsample))[downdown]
 
         DirInd = [upupind,updownind,downupind,downdownind]
         DirName = ['upup','updown','downup','downdown']
+        cumNumSample =  0 
         for dirii in range(4):
+            if cumNumSample==Numsample: ## already done on all samples, no need to try other directions
+                break
             sameDirInd = DirInd[dirii]
-            NumGoodsample = len(sameDirInd)
-            if NumGoodsample==0:
+            NumGoodsampleSameDir = len(sameDirInd)
+            cumNumSample += NumGoodsampleSameDir
+            if NumGoodsampleSameDir==0:
                 continue
-            print'building adj mtx ....', NumGoodsample,'*',NumGoodsample
-            dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
 
+            print'building adj mtx ....', NumGoodsampleSameDir,'*',NumGoodsampleSameDir
+            # pdb.set_trace()
+            dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
             FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
             # TwoD_Emedding(FeatureMtx_norm)
-            color = np.array([np.random.randint(0,255) for _ in range(3*int(Numsample))]).reshape(Numsample,3)
-            adj = np.zeros([NumGoodsample,NumGoodsample])
-            # SBS = np.zeros([NumGoodsample,NumGoodsample])
+            color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
+            adj = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
+            # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
             num = np.arange(fnum)
 
             if adj_methods =="Gaussian":
                 mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
-
             # build adjacent mtx
-            for i in range(NumGoodsample):
+            for i in range(NumGoodsampleSameDir):
                 print "i", i
                 # plt.cla()
-                for j in range(i+1, NumGoodsample):
+                for j in range(i+1, NumGoodsampleSameDir):
                     tmp1 = x[i,:]!=0
                     tmp2 = x[j,:]!=0
                     idx  = num[tmp1&tmp2]
                     if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
                         sidx   = idx[0:-1] # for speed
                         sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
-
+                        # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                        huedis = get_hue_diff(hue[i,sidx],hue[j,sidx])
 
                         if Parameterobj.useSBS:
-                            huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
                             cxi = np.nanmedian(fg_blob_center_X[i,idx])
                             cyi = np.nanmedian(fg_blob_center_Y[i,idx])
                             cxj = np.nanmedian(fg_blob_center_X[j,idx])
@@ -437,7 +470,6 @@ if __name__ == '__main__':
                                 # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
                                 pdb.set_trace()
                         else:
-                            huedis=0
                             centerDis=0
                         # print 'centerDis',centerDis
                         trj1 = [x[i,idx],y[i,idx]]

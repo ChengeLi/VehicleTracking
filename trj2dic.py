@@ -398,7 +398,8 @@ def prepare_data_to_vis(isVideo):
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'.mat')))
     else:
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'.mat')))
 
 
@@ -420,7 +421,7 @@ if __name__ == '__main__':
     isVideo    = True
     smooth = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = True
+    isClustered      = False
     isVisualize      = True
     useVirtualCenter = False
     isSave           = False

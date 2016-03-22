@@ -77,19 +77,16 @@ class sparse_subspace_clustering:
     def manifold(self):
         random_state = check_random_state(self.random_state)
 
-        'if provide adj'
+        """if provide adj"""
         self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
                                              random_state=random_state) * 1000   ##old version???
 
-        'if provide the raw data'
-        model = sklearn.manifold.SpectralEmbedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
-                                             random_state=random_state,affinity='rbf')
-        model = sklearn.manifold.SpectralEmbedding(n_components=50, affinity='nearest_neighbors', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
-
-
+        """if provide the raw data"""
+        # model = sklearn.manifold.SpectralEmbedding(n_components=2, affinity='rbf', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
+        # model = sklearn.manifold.SpectralEmbedding(n_components=50, affinity='nearest_neighbors', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
         # self.embedding_ = model.fit_transform(data_sampl_*feature_)
 
-        'locally linear embedding_'
+        """locally linear embedding_"""
         # model = sklearn.manifold.LocallyLinearEmbedding(n_neighbors=5, n_components=self.n_dimension, reg=0.001, eigen_solver='auto', tol=1e-06, max_iter=100, 
         #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
         # self.embedding_ = model.fit_transform(data_sampl_*feature_)
@@ -166,21 +163,16 @@ def uniqulizeLabel(labels):
 
 
 
-def ssc_with_Adj_CC(file, useBinaryAdj = False):
+def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     small_connected_comp = []
     one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
 
-    if useBinaryAdj:
-        trjAdj = (file['adj'] > 0).astype('float')  
-    else:
-        trjAdj = (file['adj']).astype('float')  
-    CClabel = file['c']  # labels from connected Component
-    trjID = file['trjID']
+
     labels_DPGMM = np.ones(CClabel.size)*(-222)
     labels_spectral = np.ones(CClabel.size)*(-222)
 
     color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
-    print 'np.unique(CClabel):',np.unique(CClabel)
+    print 'connected component number:',len(np.unique(CClabel))
 
     # FeatureMtx = pickle.load(open('./NGSIM_FeatureMtx', 'rb'))
     FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
@@ -190,7 +182,6 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
     for aa in one_car_trjID:
         FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
 
-    pdb.set_trace()
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)
         # print "connected component No. " ,str(i)
@@ -203,47 +194,57 @@ def ssc_with_Adj_CC(file, useBinaryAdj = False):
             ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=project_dimension)
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
-            'DPGMM'
+            """DPGMM"""
             print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
             sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
-           
             sub_adjMtx_rearrange = np.zeros(sub_adjMtx.shape)
-            arrange_index = []
-            lastLen = 0
-            for ii in np.unique(sub_labels_DPGMM):
-                arrange_index = arrange_index+ list(np.where(sub_labels_DPGMM==ii)[0])
-                thisLen = np.sum(sub_labels_DPGMM==ii)
-                sub_adjMtx_rearrange[lastLen:lastLen+thisLen,:][:,lastLen:lastLen+thisLen] = sub_adjMtx[sub_labels_DPGMM==ii,:][:,sub_labels_DPGMM==ii]
-                lastLen = lastLen+thisLen
-            plt.figure();
-            plt.title('after rearrangement');
-            plt.imshow(sub_adjMtx_rearrange)
-            plt.draw()
+            # arrange_index = []
+            # lastLen = 0
+            # for ii in np.unique(sub_labels_DPGMM):
+            #     arrange_index = arrange_index+ list(np.where(sub_labels_DPGMM==ii)[0])
+                # thisLen = np.sum(sub_labels_DPGMM==ii)
+                # sub_adjMtx_rearrange[lastLen:lastLen+thisLen,:][:,lastLen:lastLen+thisLen] = sub_adjMtx[sub_labels_DPGMM==ii,:][:,sub_labels_DPGMM==ii]
+                # lastLen = lastLen+thisLen
 
-            plt.figure()
-            plt.title('after rearrangement');
-            plt.imshow(sub_adjMtx[arrange_index, :][:,arrange_index])
-            plt.draw()
+            # if sub_adjMtx.shape[0]>10:
+            #     plt.figure();
+            #     plt.title('after rearrangement');
+            #     plt.imshow(sub_adjMtx[arrange_index,:][:,arrange_index])
+            #     plt.draw()
 
-            plt.figure()
-            plt.title('original sub_adjMtx')
-            plt.imshow(sub_adjMtx)
-            plt.draw()
+            #     plt.figure()
+            #     plt.title('original sub_adjMtx')
+            #     plt.imshow(sub_adjMtx)
+            #     plt.draw()
+            #     pdb.set_trace()
 
 
             num_cluster_prior = len(np.unique(sub_labels_DPGMM))
             # visulize(ssc.embedding_,sub_labels,model,color)
-            'k-means'
+            """k-means"""
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
-            'N cut spectral'
+            """N cut spectral"""
             # pdb.set_trace()
             print 'spectral clustering num_cluster is', num_cluster_prior
             sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
 
+            # arrange_index = []
+            # for ii in np.unique(sub_labels_spectral):
+            #     arrange_index = arrange_index+ list(np.where(sub_labels_spectral==ii)[0])
+            # if sub_adjMtx.shape[0]>10:
+            #     plt.figure();
+            #     plt.title('after rearrangement');
+            #     plt.imshow(sub_adjMtx[arrange_index,:][:,arrange_index])
+            #     plt.draw()
+
+            #     plt.figure()
+            #     plt.title('original sub_adjMtx')
+            #     plt.imshow(sub_adjMtx)
+            #     plt.draw()
+
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
-            pdb.set_trace()
             # print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
             #         sub_labels).size
         else:  ## if size small, treat as one group
@@ -360,17 +361,37 @@ if __name__ == '__main__':
     isSave      = True
     isVisualize = False
 
-
     for matidx, matfile in enumerate(adjmatfiles):
+        labelsave = {} #for the save in the end
         adjfile = loadmat(matfile)
-        pdb.set_trace()
-        """ andy's method, not real sparse sc, just spectral clustering"""
-        trjID, labels_DPGMM,labels_spectral,small_connected_comp = ssc_with_Adj_CC(adjfile)
-        """ construct adj use ssc"""
-        # trjID,labels, adj = sscConstructedAdj_CC(adjfile)
+        DirName = ['upup','updown','downup','downdown']
+        for dirii in range(4):
+            try:
+                trjAdj  = adjfile['adj_'+DirName[dirii]]
+                CClabel = adjfile['c_'+DirName[dirii]]  # labels from connected Component
+                trjID   = adjfile['trjID_'+DirName[dirii]]
+            except:
+                continue
+            """ andy's method, not real sparse sc, just spectral clustering"""
+            trjID, labels_DPGMM,labels_spectral,small_connected_comp = ssc_with_Adj_CC(trjAdj,CClabel,trjID)
+            """ construct adj use ssc"""
+            # trjID,labels, adj = sscConstructedAdj_CC(adjfile)
 
-        """ construct adj use ssc, with Neighbour adj as constraint"""
-        # trjID,labels = sscAdj_inNeighbour(adjfile)
+            """ construct adj use ssc, with Neighbour adj as constraint"""
+            # trjID,labels = sscAdj_inNeighbour(adjfile)
+
+            labelsave['labels_DPGMM'+DirName[dirii]] = labels_DPGMM
+            labelsave['labels_spectral'+DirName[dirii]] = labels_spectral
+            labelsave['trjID'+DirName[dirii]] = trjID
+
+        if isSave:
+            print "saving the labels..."
+            if Parameterobj.useWarpped:
+                savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
+            else:
+                savename = os.path.join(savePath,str(matidx+1).zfill(3))
+            savemat(savename, labelsave)
+
 
         if isVisualize:
             labels = labels_DPGMM
@@ -425,16 +446,5 @@ if __name__ == '__main__':
             pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
 
         
-        if isSave:
-            print "saving the labels..."
-            labelsave = {}
-            labelsave['labels_DPGMM'] = labels_DPGMM
-            labelsave['labels_spectral'] = labels_spectral
-            labelsave['trjID'] = trjID
 
-            if Parameterobj.useWarpped:
-                savename = os.path.join(savePath,'usewarpped_'+str(matidx+1).zfill(3))
-            else:
-                savename = os.path.join(savePath,str(matidx+1).zfill(3))
-            savemat(savename, labelsave)
 

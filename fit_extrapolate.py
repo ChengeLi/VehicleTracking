@@ -101,6 +101,7 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 	what abnormal trjs are you filtering out??? plot those bad outlier trjs"""
 
 	"""Maybe we should skip this??? draw me!"""
+	"""you will keep some very ziggy/jumy trjs"""
 
 	# for ii in range(p3.shape[1]):
 	# 	data = p3[:,ii]
@@ -304,8 +305,9 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	ptstrjNew['ytracks'] = csr_matrix(y_smooth_mtx[goodTrj,:])
 	ptstrjNew['Ttracks'] = ptstrj['Ttracks'][goodTrj,:]
 	ptstrjNew['trjID']     = ptstrj['trjID'][:,goodTrj]
+	ptstrjNew['Huetracks'] = ptstrj['Huetracks'][goodTrj,:]
+	
 	if Parameterobj.useSBS:
-		ptstrjNew['Huetracks'] = ptstrj['Huetracks'][goodTrj,:]
 		ptstrjNew['fg_blob_index']    = ptstrj['fg_blob_index'][goodTrj,:] 
 		ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
 		ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
@@ -319,7 +321,6 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 
 	if Parameterobj.useWarpped:
 		warpped_x_mtx,warpped_y_mtx = warpTrj_using_Mtx(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
-
 		ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
 		ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
 		warpped_xspd_mtx = getSpdMtx(warpped_x_mtx)
