@@ -48,7 +48,6 @@ if __name__ == '__main__':
 	matfiles,offset = readData()
 	frame_idx = 0 
 	for matidx, matfile in enumerate(matfiles):
-		pdb.set_trace()
 	# for	matidx in range(1,len(matfiles)):
 		# matfile = matfiles[matidx]
 		try:  #for matfile <-v7.3
@@ -74,15 +73,15 @@ if __name__ == '__main__':
 			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
 			ImgSlice = (mask_tensor[frame_idx*subSampRate,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
 			maskgray = ImgSlice
-			plt.imshow(np.uint8(ImgSlice))
+			plt.imshow(np.uint8(ImgSlice),cmap = 'gray')
 			plt.draw()
-			
+			plt.pause(0.0001)
+			pdb.set_trace()
 			"""use ndimage.measurements"""
 			blobLabelMatrix, BlobCenters = blobImg2blobmatrix(maskgray)
 			sparse_slice = csr_matrix(blobLabelMatrix)
 			blobLabelMtxList.append(sparse_slice)
 			blobCenterList.append(BlobCenters)
-			pdb.set_trace()
 			frame_idx = frame_idx+1
 			#end of while loop
 			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate==mask_tensor.shape[0]):

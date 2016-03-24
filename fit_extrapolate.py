@@ -78,9 +78,8 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 		# xaccelerate = np.diff(xspd)
 		# yaccelerate = np.diff(yspd)
 
-		xspd = xspd_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]
-		yspd = yspd_mtx[kk,:][np.where(x[kk,:]!=0)[0][1:]]
-
+		xspd = xspd_mtx[kk,:][x[kk,:]!=0][1:]
+		yspd = yspd_mtx[kk,:][y[kk,:]!=0][1:]
 		# print sum(xspd)
 		# print sum(accelerate)
 		satisfyCriterion = filteringCriterion(xk,yk,xspd,yspd)
@@ -208,19 +207,25 @@ def lowessSmooth(xk,yk):
 
 
 	#fit x(t) and y(t) seperately
-	lowessX = sm.nonparametric.lowess(xk,range(len(xk)), frac=0.1)
+	lowessX = sm.nonparametric.lowess(xk,range(len(xk)), frac=max(2.0/len(xk),0.1))
 	# plt.figure('smooth X(t)')
 	# plt.plot(range(len(xk)), xk, '+')
 	# plt.plot(lowessX[:, 0], lowessX[:, 1])
 	# plt.show()
 	xk_smooth = lowessX[:, 1]
-
-	lowessY = sm.nonparametric.lowess(yk,range(len(yk)), frac=0.1)
+	lowessY = sm.nonparametric.lowess(yk,range(len(yk)), frac=max(2.0/len(xk),0.1))
 	# plt.figure('smooth Y(t)')
 	# plt.plot(range(len(yk)), yk, '+')
 	# plt.plot(lowessY[:, 0], lowessY[:, 1])
 	# plt.show()
 	yk_smooth = lowessY[:, 1]
+	# if np.sum(np.isnan(xk_smooth))>0:
+	# 	print 'X nan!!'
+	# if np.sum(np.isnan(yk_smooth))>0:
+	# 	print 'Y nan!!'
+	"""lowess returns nan and does not warn if there are too few neighbors!"""
+	xk_smooth[np.isnan(xk_smooth)] = xk[np.isnan(xk_smooth)]
+	yk_smooth[np.isnan(yk_smooth)] = yk[np.isnan(yk_smooth)]
 	return xk_smooth, yk_smooth
 
 def getSpdMtx(dataMtx_withnan):
@@ -242,14 +247,12 @@ def getSmoothMtx(x,y):
 			x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
 			x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
 
-
 			x_spatial_smooth_mtx[kk,:][x[kk,:]!=0]=x_spatial_smooth
 			y_spatial_smooth_mtx[kk,:][y[kk,:]!=0]=y_spatial_smooth
 
 			x_time_smooth_mtx[kk,:][x[kk,:]!=0]=x_time_smooth
 			y_time_smooth_mtx[kk,:][y[kk,:]!=0]=y_time_smooth
 
-	'dont use loop, use mtx diff'
 	xspd_smooth_mtx = getSpdMtx(x_time_smooth_mtx)
 	yspd_smooth_mtx = getSpdMtx(y_time_smooth_mtx)
 	x_time_smooth_mtx[np.isnan(x_time_smooth_mtx)]=0  # change nan back to zero for sparsity
@@ -292,9 +295,6 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			plt.draw()
 	plt.show()
 	pdb.set_trace()
-
-
-
 
 
 def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile):

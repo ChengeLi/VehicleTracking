@@ -165,8 +165,7 @@ def uniqulizeLabel(labels):
 
 def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     small_connected_comp = []
-    one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
-
+    # one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
 
     labels_DPGMM = np.ones(CClabel.size)*(-222)
     labels_spectral = np.ones(CClabel.size)*(-222)
@@ -178,9 +177,9 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
     FeatureMtx[np.isnan(FeatureMtx)] = 0
     
-    FeatureMtxLoc = []
-    for aa in one_car_trjID:
-        FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
+    # FeatureMtxLoc = []
+    # for aa in one_car_trjID:
+    #     FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
 
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)

@@ -23,9 +23,6 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
-import Figtodat
-from images2gif import writeGif
-
 
 
 def Virctr(x,y):
@@ -372,8 +369,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.draw()
     plt.pause(0.00001) 
     # plt.title('frame '+str(frame_idx))
-    # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
-    # plt.savefig(name) ##save figure
+    name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
+    plt.savefig(name) ##save figure
     'sort the annotation list base dn x location. from left to right'
     # annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
     
@@ -383,8 +380,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()
     plt.show()
 
-    image2gif = Figtodat.fig2img(fig)
-    images2gif.append(image2gif)
+    # image2gif = Figtodat.fig2img(fig)
+    # images2gif.append(image2gif)
 
     while line_exist:
         try:
@@ -444,9 +441,7 @@ if __name__ == '__main__':
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
     # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
-    images2gif = get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
-
-    writeGif("./visualization.gif",images2gif,duration=0.3,dither=0)
+    get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
 
 
 

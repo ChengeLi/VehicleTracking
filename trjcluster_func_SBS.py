@@ -337,12 +337,20 @@ def get_hue_diff(hue_i,hue_j):
     huedis = np.abs(np.mean(hue_i)-np.mean(hue_j))
     return huedis
 
+def diff_feature_on_one_car(dataForKernel,trjID):
+    one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
+    FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
+    FeatureMtx[np.isnan(FeatureMtx)] = 0
+
+    FeatureMtxLoc = []
+    for aa in one_car_trjID:
+        FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
+    pdb.set_trace()
 
 
 
 if __name__ == '__main__':
     isVisualize = False
-
     matfiles,savePath,start_position_offset = prepare_input_data()
     # adj_methods = np.nan
     # adj_methods = "Thresholding"
@@ -436,7 +444,6 @@ if __name__ == '__main__':
                 continue
 
             print'building adj mtx ....', NumGoodsampleSameDir,'*',NumGoodsampleSameDir
-            # pdb.set_trace()
             dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
             FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
             # TwoD_Emedding(FeatureMtx_norm)
@@ -447,6 +454,13 @@ if __name__ == '__main__':
 
             if adj_methods =="Gaussian":
                 mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
+
+            """test only for one car, see different features' role in the adj"""
+            # diff_feature_on_one_car(dataForKernel,trjID)
+
+
+
+
             # build adjacent mtx
             for i in range(NumGoodsampleSameDir):
                 print "i", i

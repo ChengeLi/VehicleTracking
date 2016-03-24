@@ -26,7 +26,7 @@ if __name__ == '__main__':
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
     useBlobCenter = Parameterobj.useSBS
-    isVisualize   = True
+    isVisualize   = False
 
     # -- utilities
     if isVisualize: plt.figure(num=None, figsize=(8, 11))
