@@ -362,7 +362,7 @@ if __name__ == '__main__':
         ptstrj = loadmat(matfile)
         if len(ptstrj['trjID'])==0:
             continue
-        c = ptstrj['trjID'][0]
+        trjID = ptstrj['trjID'][0]
         hue = csr_matrix(ptstrj['Huetracks'], shape=ptstrj['Huetracks'].shape).toarray()
 
         if not Parameterobj.useWarpped:            
@@ -401,25 +401,35 @@ if __name__ == '__main__':
         
 
         """First cluster using just direction Information"""
+        """get rid of the overlapping index!!!!"""
         upup = ((Xdir>=0)*(Ydir>=0))[0]
         upupind = np.array(range(Numsample))[upup]
+        upupTrjID = trjID[upup]
 
         updown = ((Xdir>=0)*(Ydir<=0))[0]
-        updownind = np.array(range(Numsample))[updown]
-        
-        downup = ((Xdir<=0)*(Ydir>=0))[0]
-        downupind = np.array(range(Numsample))[downup]
-        
-        downdown = ((Xdir<=0)*(Ydir<=0))[0]
-        downdownind = np.array(range(Numsample))[downdown]
+        updownind = np.array(range(Numsample))[~upup*updown]
+        updownTrjID = trjID[~upup*updown]
 
+        downup = ((Xdir<=0)*(Ydir>=0))[0]
+        downupind = np.array(range(Numsample))[~upup*(~updown)*downup]
+        downupTrjID = trjID[~upup*(~updown)*downup]
+
+        downdown = ((Xdir<=0)*(Ydir<=0))[0]
+        downdownind = np.array(range(Numsample))[~upup*(~updown)*(~downup)*downdown]
+        downdownTrjID = trjID[~upup*(~updown)*(~downup)*downdown]
+        """ind is the location in this truncation, trjID is the real absolute ID"""
         DirInd = [upupind,updownind,downupind,downdownind]
+        DirTrjID = [upupTrjID,updownTrjID,downupTrjID,downdownTrjID]
+        if len(upupind)+len(updownind)+len(downupind)+len(downdownind)!=Numsample:
+            pdb.set_trace()
+
         DirName = ['upup','updown','downup','downdown']
         cumNumSample =  0 
         for dirii in range(4):
             if cumNumSample==Numsample: ## already done on all samples, no need to try other directions
                 break
             sameDirInd = DirInd[dirii]
+            sameDirTrjID = DirTrjID[dirii]
             NumGoodsampleSameDir = len(sameDirInd)
             cumNumSample += NumGoodsampleSameDir
             if NumGoodsampleSameDir==0:
@@ -499,7 +509,7 @@ if __name__ == '__main__':
             s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
             result['adj_'+DirName[dirii]]   = sparsemtx
             result['c_'+DirName[dirii]]     = c
-            result['trjID_'+DirName[dirii]] = sameDirInd
+            result['trjID_'+DirName[dirii]] = sameDirTrjID
 
 
 

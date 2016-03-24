@@ -69,8 +69,11 @@ class DataPath(object):
 		self.unifiedLabelpath = os.path.join(self.DataPath,"unifiedLabel/")
 		self.pairpath = os.path.join(self.DataPath,"pair/")
 		self.blobPath = os.path.join(self.DataPath,"incPCPmask/")
+		self.visResultPath = os.path.join(self.DataPath,"visualization/")
+
 		"""create folders"""
-		pathList = [self.kltpath,self.smoothpath,self.filteredKltPath, self.adjpath,self.sscpath,self.unifiedLabelpath,self.dicpath,self.pairpath,self.blobPath]
+		pathList = [self.kltpath,self.smoothpath,self.filteredKltPath, self.adjpath,self.sscpath,\
+		self.unifiedLabelpath,self.dicpath,self.pairpath,self.blobPath,self.visResultPath]
 		for path in pathList:
 			try:
 				os.mkdir(path)

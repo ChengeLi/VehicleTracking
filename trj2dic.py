@@ -22,6 +22,12 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+
+import Figtodat
+from images2gif import writeGif
+
+
+
 def Virctr(x,y):
     '''
     calculate virtual center, and remove outlier
@@ -84,11 +90,6 @@ def VC_filter(vcxtrj,vcytrj):
 
 
 
-
-
-
-
-
 def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
 
     if isVisualize:
@@ -128,6 +129,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     if isClustered:
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
         mlabels = np.int32(np.ones(max(trjID)+1)*-1)  #initial to be -1
+        # mlabels = {}
         labels  = loadmat(clustered_result)['label'][0]
         for idx,ID in enumerate(trjID):  # ID=trjID[idx], the content, trj ID
             mlabels[int(ID)] = np.int(labels[int(idx)])
@@ -230,7 +232,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         #     subsample_frmIdx   += 1
         #     frame_idx = subsample_frmIdx*subSampRate
         #     continue
-
         PtsInCurFrm = xtrj[:,subsample_frmIdx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf      = mlabels[IDinCurFrm] # label in current frame
@@ -255,14 +256,16 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     vy = list(y)
                 # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative???? 
-
-                vcxtrj[k].extend(list(vx)) 
-                vcytrj[k].extend(list(vy))
+                # vcxtrj[k].extend(list(vx)) 
+                # vcytrj[k].extend(list(vy))
+                vcxtrj[k].extend([vx]) 
+                vcytrj[k].extend([vy])
                 if len(x)!=len(y):
                     pdb.set_trace()
                 if isClustered:clusterSize[k].extend([len(x)])
 
         if isVisualize:
+            image2gif=[]
             if isVideo:
                 trueLoc = start_frame_idx+(trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
@@ -336,6 +339,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             # pickle.dump( save_clusterSize, open(savenameclusterSize,"wb"))
             # pdb.set_trace()
 
+    return images2gif
+
+
+
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.ion()
     dots = []
@@ -352,18 +359,20 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             yy = np.array(vcytrj[k])
         # pdb.set_trace()
         # if VC_filter(vcxtrj[k],vcytrj[k]):
-        if True:
-            # lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
-            # line_exist = 1
-            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+        """there exsits nan's!!!,see why in the future"""
+        if len(xx)>=1:
+            lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
+            line_exist = 1
+            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+
 
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
     # plt.draw()
     plt.pause(0.00001) 
     # plt.title('frame '+str(frame_idx))
-    # name = os.path.join(DataPathobj.DataPath,str(frame_idx).zfill(6)+'.jpg')
+    # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
     # plt.savefig(name) ##save figure
     'sort the annotation list base dn x location. from left to right'
     # annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
@@ -371,11 +380,11 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # for jj in range(len(annolist)):
     #     print np.int(annolist[jj].get_text())
 
-
-
     plt.draw()
     plt.show()
-    # pdb.set_trace()
+
+    image2gif = Figtodat.fig2img(fig)
+    images2gif.append(image2gif)
 
     while line_exist:
         try:
@@ -391,16 +400,21 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     
 
 
+
+
+
+
+
 def prepare_data_to_vis(isVideo):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     if Parameterobj.useWarpped:
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'.mat')))
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
 
 
     savePath = DataPathobj.dicpath
@@ -418,12 +432,11 @@ def prepare_data_to_vis(isVideo):
 
 
 if __name__ == '__main__':
-    isVideo    = True
-    smooth = True
+    isVideo = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = False
+    isClustered      = True
     isVisualize      = True
-    useVirtualCenter = False
+    useVirtualCenter = True
     isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
@@ -431,7 +444,9 @@ if __name__ == '__main__':
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
     # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
-    get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
+    images2gif = get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
+
+    writeGif("./visualization.gif",images2gif,duration=0.3,dither=0)
 
 
 
