@@ -91,9 +91,6 @@ class sparse_subspace_clustering:
         #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
         # self.embedding_ = model.fit_transform(data_sampl_*feature_)
 
-
-
-
     def clustering_DPGMM(self, n_components, alpha):
         model = mixture.DPGMM(n_components=n_components, alpha=alpha, n_iter=1000)
         model.fit(self.embedding_)

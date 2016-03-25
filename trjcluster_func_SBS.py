@@ -238,8 +238,7 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
 
     else:
         # adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
-        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized
-        )
+        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized)
 
     if math.isnan(adj_element):
         pdb.set_trace()
@@ -334,7 +333,7 @@ def get_spd_dis_diff(xspd_i,xspd_j,yspd_i,yspd_j,xi,xj,yi,yj):
     return sxdiff,sydiff,mdis
 
 def get_hue_diff(hue_i,hue_j):
-    huedis = np.abs(np.mean(hue_i)-np.mean(hue_j))
+    huedis = np.abs(np.nanmean(hue_i)-np.nanmean(hue_j))
     return huedis
 
 def diff_feature_on_one_car(dataForKernel,trjID):
@@ -363,8 +362,8 @@ if __name__ == '__main__':
     	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
-    # for matidx in range(2,4):
-        # matfile = matfiles[matidx]
+    # for matidx in range(5,6):
+    #     matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -409,7 +408,6 @@ if __name__ == '__main__':
         
 
         """First cluster using just direction Information"""
-        """get rid of the overlapping index!!!!"""
         upup = ((Xdir>=0)*(Ydir>=0))[0]
         upupind = np.array(range(Numsample))[upup]
         upupTrjID = trjID[upup]
@@ -459,8 +457,6 @@ if __name__ == '__main__':
             # diff_feature_on_one_car(dataForKernel,trjID)
 
 
-
-
             # build adjacent mtx
             for i in range(NumGoodsampleSameDir):
                 print "i", i
@@ -474,7 +470,6 @@ if __name__ == '__main__':
                         sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
                         # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
                         huedis = get_hue_diff(hue[i,sidx],hue[j,sidx])
-
                         if Parameterobj.useSBS:
                             cxi = np.nanmedian(fg_blob_center_X[i,idx])
                             cyi = np.nanmedian(fg_blob_center_Y[i,idx])
@@ -500,7 +495,6 @@ if __name__ == '__main__':
                         trj2 = [x[j,idx],y[j,idx]]
         
                         dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
-        
                         """counting the sharing blob numbers of two trjs"""
                         # if useSBS:
                         #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
@@ -515,12 +509,14 @@ if __name__ == '__main__':
             # np.fill_diagonal(SBS, np.diagonal(SBS)/2)
 
             adj = adj + adj.transpose() 
-            np.fill_diagonal(adj, 1)
+            # np.fill_diagonal(adj, 1)
+            """diagonal=0???"""
+            np.fill_diagonal(adj, 0)
 
             print "saving adj..."
             """save each same direction adj"""
             sparsemtx = csr_matrix(adj)
-            s,c       = connected_components(sparsemtx) #s is the total CComponent, c is the label
+            s,c = connected_components(sparsemtx) #s is the total CComponent, c is the label
             result['adj_'+DirName[dirii]]   = sparsemtx
             result['c_'+DirName[dirii]]     = c
             result['trjID_'+DirName[dirii]] = sameDirTrjID

@@ -9,6 +9,8 @@ from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from DataPathclass import *
 DataPathobj = DataPath(VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 
 def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minspdth = 15): # DoT fps 23 Johnson 30
@@ -47,11 +49,11 @@ def trj_filter(x, y, t, xspeed, yspeed, blob_index, mask, Numsample , fps, minsp
                 pass
     # spdfile.close()
     # stoptimefile.close()
-    x_re          = np.array(x_re)
-    y_re          = np.array(y_re)
-    t_re          = np.array(t_re)
-    xspd          = np.array(xspd)
-    yspd          = np.array(yspd)
+    x_re = np.array(x_re)
+    y_re = np.array(y_re)
+    t_re = np.array(t_re)
+    xspd = np.array(xspd)
+    yspd = np.array(yspd)
     return mask_re, x_re, y_re, t_re, xspd, yspd
 
 def FindAllNanRow(aa):
@@ -64,14 +66,11 @@ def prepare_input_data(dataSource,smooth = False):
     ## Jay & Johnson is 30
     subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
     if dataSource == 'DoT':
-        if smooth:
-            matfilepath = DataPathobj.smoothpath
-        else:
-            matfilepath = DataPathobj.kltpath
+        matfilepath = DataPathobj.kltpath
         savePath = DataPathobj.filteredKltPath
         useBlobCenter = False
-        fps = 30/subSampRate
-    matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+        fps = ParameterObj.fps
+    matfiles       = sorted(glob.glob(ParameterObj.kltpath + 'klt_*.mat'))
     start_position = 0 #already processed 10 files
     matfiles       = matfiles[start_position:]
     return matfiles,savePath,useBlobCenter,fps

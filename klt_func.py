@@ -201,6 +201,8 @@ if __name__ == '__main__':
                     # hue = frame_hsv[y,x,0]
                     """use a median of the 3*3 window"""
                     hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    if np.isnan(hue):
+                        pdb.set_trace()
                     """try median of the intensity"""
                     # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
 
@@ -235,6 +237,8 @@ if __name__ == '__main__':
                     end[dicidx]       = -1
                     # hue = frame_hsv[y,x,0]
                     hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    if np.isnan(hue):
+                        pdb.set_trace()
                     # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
 
                     if useBlobCenter:

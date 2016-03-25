@@ -126,7 +126,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     if isClustered:
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
         mlabels = np.int32(np.ones(max(trjID)+1)*-1)  #initial to be -1
-        # mlabels = {}
         labels  = loadmat(clustered_result)['label'][0]
         for idx,ID in enumerate(trjID):  # ID=trjID[idx], the content, trj ID
             mlabels[int(ID)] = np.int(labels[int(idx)])
@@ -253,8 +252,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     vy = list(y)
                 # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative???? 
-                # vcxtrj[k].extend(list(vx)) 
-                # vcytrj[k].extend(list(vy))
                 vcxtrj[k].extend([vx]) 
                 vcytrj[k].extend([vy])
                 if len(x)!=len(y):
@@ -371,7 +368,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.title('frame '+str(frame_idx))
     name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
     plt.savefig(name) ##save figure
-    'sort the annotation list base dn x location. from left to right'
+    """sort the annotation list base dn x location. from left to right"""
     # annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
     
     # for jj in range(len(annolist)):
@@ -396,12 +393,6 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.show()
     
 
-
-
-
-
-
-
 def prepare_data_to_vis(isVideo):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
@@ -409,9 +400,10 @@ def prepare_data_to_vis(isVideo):
         matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
+        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+        matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
 
 
     savePath = DataPathobj.dicpath
