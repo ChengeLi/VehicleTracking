@@ -360,7 +360,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
             # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
 
     im.set_data(frame[:,:,::-1])
@@ -402,8 +402,9 @@ def prepare_data_to_vis(isVideo):
     if Parameterobj.useWarpped:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+        """to visulize the connected component"""
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
 
 
     savePath = DataPathobj.dicpath

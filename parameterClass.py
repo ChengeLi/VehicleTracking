@@ -23,6 +23,7 @@ class parameter(object):
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
 			#a car len: ~=100 to 200
+			self.useMask = False #already masked out!
 
 		""" canal st """
 		if dataSource == 'DoT':
@@ -34,6 +35,7 @@ class parameter(object):
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 4
 
+			self.useMask = False
 			
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
@@ -55,6 +57,9 @@ class parameter(object):
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
 			#a car len: ~=100 to 200
 
+			self.useMask = True
+
+
 
 		if dataSource == 'NGSIM':
 			# self.useSBS = False
@@ -68,6 +73,10 @@ class parameter(object):
 			self.embedding_projection_factor = 30
 			self.DPGMM_num_component_shirink_factor = 2
 			
+			self.useMask = True
+
+
+
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 40#if dis>= this value, adj[i,j] will be set to 0 
@@ -86,7 +95,6 @@ class parameter(object):
 		"""for PCA, DPGMM in subspace_clutering_merge.py"""
 		self.embedding_projection_factor = 10
 		self.DPGMM_num_component_shirink_factor = 4
-
 
 		self.clustering_choice = 'labels_DPGMM'
 		# self.clustering_choice = 'labels_spectral'

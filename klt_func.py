@@ -118,10 +118,29 @@ if __name__ == '__main__':
         blob_ind_sparse_matrices = sorted(glob.glob(DataPathobj.blobPath + 'blobLabel*.p'))
         blob_center_sparse_lists = sorted(glob.glob(DataPathobj.blobPath + 'blobCenter*.p'))
 
-
-
     # -- set mask, all ones = no mask
-    mask = 255*np.ones_like(frameL)
+    if Parameterobj.useMask:
+        # if not Parameterobj.mask is None:
+        #     pass
+        # else:
+        plt.imshow(frame[:,:,::-1])
+        pdb.set_trace()
+        mask = np.zeros(frameL.shape, dtype=np.uint8)
+        # roi_corners = np.array([[(191,0),(343,626),(344,0),(190,629)]], dtype=np.int32)
+        # roi_corners = np.array([[(0,191), (629,190), (0,344),(626,343)]], dtype=np.int32)
+        # roi_corners = np.array([[(0,191), (629,190), (0,344)]])
+        roi_corners = np.array([[(191,0),(190,629),(344,0),(343,626)]]).reshape(-1, 2)
+        # ignore_mask_color = (255,)*frame.shape[2]
+        cv2.fillPoly(mask, roi_corners, (255,255))
+
+        # apply the mask
+        masked_image = cv2.bitwise_and(frameL, mask)
+        # save the result
+        cv2.imwrite(Parameterobj.dataSource+'_mask.jpg', mask)
+        pdb.set_trace()
+
+    else:
+        mask = 255*np.ones_like(frameL)
 
     # -- set low number of frames for testing
     # nframe = 1801
