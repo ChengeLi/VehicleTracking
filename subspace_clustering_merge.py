@@ -183,7 +183,8 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         # print "connected component No. " ,str(i)
         sub_index = np.where(CClabel == i)[1]  # noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
         sub_adjMtx = trjAdj[sub_index][:, sub_index]
-        sub_FeatureMtx = FeatureMtx[sub_index,:]
+        # sub_FeatureMtx = FeatureMtx[sub_index,:]
+        sub_FeatureMtx = []
         if sub_index.size > 3:
             project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             print "project dimension is: ", str(project_dimension)  ## embeded lower dimension

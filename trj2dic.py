@@ -154,8 +154,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         if subsample_frmIdx%trunclen == 0:
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
             trunkTrjFile = loadmat(matfiles[matidx])
-            xtrj         = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
-            ytrj         = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
+            # xtrj = csr_matrix(trunkTrjFile['xtracks_warpped'], shape=trunkTrjFile['xtracks'].shape).toarray()
+            # ytrj = csr_matrix(trunkTrjFile['ytracks_warpped'], shape=trunkTrjFile['ytracks'].shape).toarray()
             if len(trunkTrjFile['trjID'])==0: ##encounter empty file, move on
                 subsample_frmIdx = subsample_frmIdx+trunclen
                 continue
@@ -358,7 +360,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
             # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
 
     im.set_data(frame[:,:,::-1])
@@ -396,12 +398,10 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_data_to_vis(isVideo):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
+    matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
     if Parameterobj.useWarpped:
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
-        matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
 

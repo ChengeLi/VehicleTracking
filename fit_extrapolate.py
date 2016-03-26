@@ -26,15 +26,14 @@ def warpTrj_using_Mtx(x_mtx,y_mtx,warpingMtx):
 	xyTupleMtx[:,:,0] = np.array(x_mtx,dtype='float32')  #first dim is X!
 	xyTupleMtx[:,:,1] = np.array(y_mtx,dtype='float32')
 
-	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,trunclen,2))
+	warpped_xyTupleMtx = cv2.perspectiveTransform(np.array([xyTupleMtx.reshape((-1,2))],dtype='float32'), np.array(warpingMtx,dtype='float32'))[0,:,:].reshape((-1,Parameterobj.trunclen,2))
 
 	# warpped_x_mtx = np.int16(warpped_xyTupleMtx[:,:,0])
 	# warpped_y_mtx = np.int16(warpped_xyTupleMtx[:,:,1])
 	warpped_x_mtx = warpped_xyTupleMtx[:,:,0]
 	warpped_y_mtx = warpped_xyTupleMtx[:,:,1]
 
-	'how to deal with out of range?????'
-	pdb.set_trace()
+	"""how to deal with out of range?????"""
 	warpped_x_mtx[warpped_x_mtx<0] = 0 
 	warpped_y_mtx[warpped_y_mtx<0] = 0 
 	warpped_x_mtx[warpped_x_mtx>=limitX] = limitX
@@ -380,7 +379,7 @@ if __name__ == '__main__':
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-	start_position = 0 
+	start_position =  2
 	matfiles       = matfiles[start_position:]
 
 	for matidx,matfile in enumerate(matfiles):
