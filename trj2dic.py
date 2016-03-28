@@ -360,8 +360,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         if len(xx)>=1:
             lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
-            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
 
     im.set_data(frame[:,:,::-1])
