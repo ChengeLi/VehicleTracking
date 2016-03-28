@@ -252,7 +252,7 @@ def get_thresholding_adj(adj,feature_diff_tensor):
 
 def get_gaussian_adj(adj,feature_diff_tensor):
     """assign different weights to different features"""
-    weight = [2,2,2,0.5,0.8]
+    weight = Parameterobj.adj_weight
     sxdiff_normalized    = feature_diff_tensor[:,:,0]
     sydiff_normalized    = feature_diff_tensor[:,:,1]
     mdis_normalized      = feature_diff_tensor[:,:,2]
@@ -427,8 +427,8 @@ if __name__ == '__main__':
             if adj_methods =="Gaussian":
                 if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
                     print "mean_std_ForKernel and extremeValue already stored, load..."
-                    mean_std_ForKernel = pickle.dump(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-                    extremeValue = pickle.dump(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                    mean_std_ForKernel = pickle.load(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                    extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
                 else:              
                     mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
                     pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))

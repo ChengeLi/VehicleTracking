@@ -199,13 +199,14 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         sub_FeatureMtx = []
         if sub_index.size > 3:
             project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
+            print "CC size:", sub_index.size
             print "project dimension is: ", str(project_dimension)  ## embeded lower dimension
             ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=project_dimension)
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
-            print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
-            sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
+            print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
+            sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)), alpha=Parameterobj.DPGMM_alpha)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
             sub_adjMtx_rearrange = np.zeros(sub_adjMtx.shape)
             # arrange_index = []
@@ -229,7 +230,8 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             #     pdb.set_trace()
 
 
-            num_cluster_prior = len(np.unique(sub_labels_DPGMM))
+            # num_cluster_prior = len(np.unique(sub_labels_DPGMM))
+            num_cluster_prior = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
             # visulize(ssc.embedding_,sub_labels,model,color)
             """k-means"""
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)

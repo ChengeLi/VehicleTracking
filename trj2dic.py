@@ -56,8 +56,9 @@ def Virctr(x,y):
         sx = np.std(x)
         sy = np.std(y)
 
-        if sx>10 or sy>10:
-            return np.nan,np.nan
+        if sx>20 or sy>20:
+            vcx = mx
+            vcy = my
         else:
             # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
             idx = ((x-mx)<=sx)&((y-my)<=sy)
@@ -118,13 +119,12 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                        .reshape(int(max(IDintrunklast)),3)
 
     # initialization
-    vcxtrj = {} ##dictionary
+    vcxtrj = {} 
     vcytrj = {}
     vctime = {}
     clusterSize = {}
 
     if isClustered:
-        pdb.set_trace()
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
         mlabels = np.int32(np.ones(max(trjID)+1)*-1)  #initial to be -1
         labels  = loadmat(clustered_result)['label'][0]
@@ -241,25 +241,34 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 y = ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 if useVirtualCenter:
                     vx,vy = Virctr(x,y) # find virtual center
-                    if len(vcxtrj[k])>1:
-                        if np.isnan(vx) or np.isnan(vy):
+                    if np.isnan(vx) or np.isnan(vy):
+                        if len(vcxtrj[k])>1:
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
                             vy = vcytrj[k][-1]
+                            if np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
+                                vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
+                                vy = vcytrj[k][-1]
+
                         # else: append nan's
-                        if np.abs(vx-vcxtrj[k][-1])+np.abs(vy-vcytrj[k][-1])>100:
-                            vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
-                            vy = vcytrj[k][-1]
-                            
+                        else:
+                            pdb.set_trace()
+                            # vx= [np.nan]
+                            # vy= [np.nan] 
+                    vcxtrj[k].extend([vx]) 
+                    vcytrj[k].extend([vy])
                 else:
                     vx = list(x)
                     vy = list(y)
+                    vcxtrj[k].extend(vx) 
+                    vcytrj[k].extend(vy)
+
                 # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative???? 
-                vcxtrj[k].extend([vx]) 
-                vcytrj[k].extend([vy])
+
                 if len(x)!=len(y):
                     pdb.set_trace()
-                if isClustered:clusterSize[k].extend([len(x)])
+                if isClustered:
+                    clusterSize[k].extend([len(x)])
 
         if isVisualize:
             image2gif=[]
@@ -345,22 +354,27 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     dots = []
     annos = []
     line_exist = 0
-    # print labinf
     for k in labinf:
-        # print "x,y",vcxtrj[k],vcytrj[k]
+       # print "x,y",vcxtrj[k],vcytrj[k]
         if useVirtualCenter:
             xx = np.array(vcxtrj[k])[~np.isnan(vcxtrj[k])]
             yy = np.array(vcytrj[k])[~np.isnan(vcytrj[k])]
         else:
-            xx = np.array(vcxtrj[k])
-            yy = np.array(vcytrj[k])
-        # pdb.set_trace()
+            # xx = np.array(vcxtrj[k]).reshape((1,-1))
+            # yy = np.array(vcytrj[k]).reshape((1,-1))
+            xx = vcxtrj[k]
+            yy = vcytrj[k]
         # if VC_filter(vcxtrj[k],vcytrj[k]):
         """there exsits nan's!!!,see why in the future"""
-        if len(xx)>=1:
-            lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
-            line_exist = 1
-            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+        # print "xx",xx
+        # print "yy", yy
+        # print "label now = ", k 
+        if len(xx)>0:
+            if useVirtualCenter:
+                lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
+                line_exist = 1
+            else:
+                dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
             # annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
 
@@ -403,7 +417,6 @@ def prepare_data_to_vis(isVideo):
     """to visulize raw klt"""
     # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     if Parameterobj.useWarpped:
-    
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
