@@ -78,8 +78,15 @@ class sparse_subspace_clustering:
         random_state = check_random_state(self.random_state)
 
         """if provide adj"""
-        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
-                                             random_state=random_state) * 1000   ##old version???
+        # self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+        #                                      random_state=random_state) * 1000   ##old version???
+        
+        """use the graph laplacian to calculate embedding"""
+        from numpy import linalg as LA
+        graph_lap = csgraph.laplacian(self.adjacency, normed=False)
+        eigVl, eigVc = LA.eigh(csr_matrix(graph_lap).toarray())
+        # np.allclose(self.embedding_,eigVc[:,:2])
+        self.embedding_  = eigVc[:,:self.n_dimension]
 
         """if provide the raw data"""
         # model = sklearn.manifold.SpectralEmbedding(n_components=2, affinity='rbf', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
@@ -96,7 +103,7 @@ class sparse_subspace_clustering:
         model.fit(self.embedding_)
         self.label = model.predict(self.embedding_)
         # pdb.set_trace()
-        return self.label, model
+        return self.label
 
     def get_adjacency(self, adjacency):
         self.adjacency = adjacency
@@ -107,14 +114,19 @@ class sparse_subspace_clustering:
     def clustering_kmeans(self, num_cluster):
         model = KMeans(num_cluster)
         model.fit(self.embedding_)
-        self.label = model.predict(self.embedding_)
-        return self.label
-    
+        # self.label = model.predict(self.embedding_)
+        label = model.predict(self.embedding_)
+        return label
+
+
     def clustering_spectral(self, num_cluster):  #Ncut chenge
         model = sklearn.cluster.SpectralClustering(n_clusters=num_cluster,affinity='precomputed')
-        self.label = model.fit_predict(self.adjacency)  # no embedding
-        return self.label
+        # self.label = model.fit_predict(self.adjacency)  # no embedding
+        label = model.fit_predict(self.adjacency)  # no embedding
 
+        # knnmodel = KMeans(num_cluster)
+        # label2 = knnmodel.fit_predict(self.embedding_)
+        return label
 
 def visulize(data, labels, clf, colors):
     
@@ -193,7 +205,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             ssc.manifold()
             """DPGMM"""
             print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1)
-            sub_labels_DPGMM, model = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
+            sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor) + 1), alpha=0.001)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
             sub_adjMtx_rearrange = np.zeros(sub_adjMtx.shape)
             # arrange_index = []
@@ -224,7 +236,8 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             """N cut spectral"""
             # pdb.set_trace()
             print 'spectral clustering num_cluster is', num_cluster_prior
-            sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
+            # sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
+            sub_labels_spectral = ssc.clustering_spectral(int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)))
 
             # arrange_index = []
             # for ii in np.unique(sub_labels_spectral):
@@ -239,7 +252,6 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             #     plt.title('original sub_adjMtx')
             #     plt.imshow(sub_adjMtx)
             #     plt.draw()
-
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
             # print 'number of trajectory in this connected components %s' % sub_labels.size + '  unique labels %s' % np.unique(
@@ -352,6 +364,12 @@ def prepare_input_data():
     return adjmatfiles, trjmatfiles, savePath
 
 
+def eigen_decomp(adj):
+    from numpy import linalg as LA
+    w, v = LA.eigvalsh(adj)
+
+
+
 if __name__ == '__main__':
     """With constructed adjacency matrix """
     adjmatfiles, trjmatfiles, savePath = prepare_input_data()
@@ -434,7 +452,7 @@ if __name__ == '__main__':
                     lines = ax.plot(xtrj[trjind[jj],startlimit:endlimit], ytrj[trjind[jj],startlimit:endlimit],color = (color[i-1].T)/255.,linewidth=2)
                     # plt.annotate(str(trjind[jj]),(xtrj[trjind[jj],endlimit], ytrj[trjind[jj],endlimit] ))
                     plt.draw()
-                one_class_adj = csr_matrix(adjfile['adj'], shape=adjfile['adj'].shape).toarray()[trjind,:][:,trjind]
+                one_class_adj = csr_matrix(adjfile['adj'], shape=adjfile['adj_upup'].shape).toarray()[trjind,:][:,trjind]
                 # one_class_adj_color = cv2.applyColorMap(np.hstack((one_class_adj,one_class_adj,one_class_adj)).reshape((one_class_adj.shape[0],-1,3)), cv2.COLORMAP_JET)
 
                 # plt.imshow(one_class_adj,cmap = 'jet')

@@ -61,15 +61,14 @@ def FindAllNanRow(aa):
     allNanRowInd = np.array(index)[np.isnan(aa).all(axis = 1)]
     return allNanRowInd
 
-def prepare_input_data(dataSource,smooth = False):
+def prepare_input_data():
     ## fps for DoT Canal is 23
     ## Jay & Johnson is 30
-    subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
-    if dataSource == 'DoT':
-        matfilepath = DataPathobj.kltpath
-        savePath = DataPathobj.filteredKltPath
-        useBlobCenter = False
-        fps = ParameterObj.fps
+    # subSampRate = 6 # since 30 fps may be too large, subsample the images back to 5 FPS
+    matfilepath = DataPathobj.kltpath
+    savePath = DataPathobj.filteredKltPath
+    useBlobCenter = False
+    fps = Parameterobj.fps
     matfiles       = sorted(glob.glob(ParameterObj.kltpath + 'klt_*.mat'))
     start_position = 0 #already processed 10 files
     matfiles       = matfiles[start_position:]
@@ -78,9 +77,8 @@ def prepare_input_data(dataSource,smooth = False):
 
 
 if __name__ == '__main__':
-    dataSource = 'DoT'
 # def filtering_main_function(fps,dataSource = 'DoT'):
-    matfiles,savePath,useBlobCenter,fps = prepare_input_data(dataSource, smooth)
+    matfiles,savePath,useBlobCenter,fps = prepare_input_data()
     for matidx,matfile in enumerate(matfiles):
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)

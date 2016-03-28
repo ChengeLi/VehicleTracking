@@ -26,7 +26,7 @@ if __name__ == '__main__':
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
     useBlobCenter = Parameterobj.useSBS
-    isVisualize   = True
+    isVisualize   = False
 
     # -- utilities
     if isVisualize: plt.figure(num=None, figsize=(8, 11))
@@ -208,7 +208,8 @@ if __name__ == '__main__':
             for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
                 x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
                 y = min(y,frameLp.shape[0]-1)
-
+                x = max(x,0)  ## why?? klt will find points outside the bdry???
+                y = max(y,0)
                 if not good_flag:
                     end[idx] = (frame_idx-1)
                     tracksdic[idx].append((-100,-100,frame_idx))
@@ -219,9 +220,9 @@ if __name__ == '__main__':
                     #     print x, y
                     # hue = frame_hsv[y,x,0]
                     """use a median of the 3*3 window"""
-                    hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
                     if np.isnan(hue):
-                        pdb.set_trace()
+                        hue = frame_hsv[y,x,0]
                     """try median of the intensity"""
                     # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
 
@@ -254,11 +255,9 @@ if __name__ == '__main__':
                     tracksdic[dicidx] = [] 
                     start[dicidx]     = frame_idx
                     end[dicidx]       = -1
-                    # hue = frame_hsv[y,x,0]
-                    hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
                     if np.isnan(hue):
-                        pdb.set_trace()
-                    # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
+                        hue = frame_hsv[y,x,0]
 
                     if useBlobCenter:
                         blobInd = BlobIndMatrixCurFrm[y,x]                    

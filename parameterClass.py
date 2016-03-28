@@ -19,6 +19,8 @@ class parameter(object):
 			self.embedding_projection_factor = 20
 			self.DPGMM_num_component_shirink_factor = 10
 			
+			"""for fit_extrapolate filtering"""
+			self.loc_change = 5
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
@@ -36,7 +38,9 @@ class parameter(object):
 			self.DPGMM_num_component_shirink_factor = 4
 
 			self.useMask = False
-			
+			"""for fit_extrapolate filtering"""
+			self.loc_change = 3
+
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
@@ -51,7 +55,8 @@ class parameter(object):
 			self.targetFPS = 30
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 10
-
+			"""for fit_extrapolate filtering"""
+			self.loc_change = 5
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
@@ -73,9 +78,10 @@ class parameter(object):
 			self.embedding_projection_factor = 30
 			self.DPGMM_num_component_shirink_factor = 2
 			
-			self.useMask = True
+			self.useMask = False
 
-
+			"""for fit_extrapolate filtering"""
+			self.loc_change = 0.5
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
@@ -86,10 +92,12 @@ class parameter(object):
 		"""for fit_extrapolate filtering"""
 		self.minspdth = 5
 		self.transth = 100*self.targetFPS  #100s
-		if dataSource == 'NGSIM':
-			self.transth = 2*self.targetFPS #don't allow stopping
-
 		self.livelong_thresh = 0.5*self.targetFPS   # chk if trj is long enough, 1s
+
+		if dataSource == 'NGSIM':
+			self.minspdth = 3
+			self.transth = 3*self.targetFPS #don't allow stopping
+			self.livelong_thresh = 0
 
 
 		"""for PCA, DPGMM in subspace_clutering_merge.py"""

@@ -124,6 +124,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     clusterSize = {}
 
     if isClustered:
+        pdb.set_trace()
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
         mlabels = np.int32(np.ones(max(trjID)+1)*-1)  #initial to be -1
         labels  = loadmat(clustered_result)['label'][0]
@@ -359,7 +360,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         if len(xx)>=1:
             lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
             line_exist = 1
-            # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+            dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
             annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
 
 
@@ -368,10 +369,10 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.draw()
     plt.pause(0.00001) 
     # plt.title('frame '+str(frame_idx))
-    name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
-    plt.savefig(name) ##save figure
+    # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
+    # plt.savefig(name) ##save figure
     """sort the annotation list base dn x location. from left to right"""
-    # annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
+    annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
     
     # for jj in range(len(annolist)):
     #     print np.int(annolist[jj].get_text())
@@ -399,13 +400,15 @@ def prepare_data_to_vis(isVideo):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+    """to visulize raw klt"""
+    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     if Parameterobj.useWarpped:
+    
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         """to visulize the connected component"""
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
-
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
 
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)

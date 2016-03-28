@@ -50,6 +50,7 @@ def filteringCriterion(xk,yk,xspd,yspd):
 	transth = Parameterobj.transth
 	speed = np.abs(xspd)+np.abs(yspd)
 	livelong =  len(xk)>Parameterobj.livelong_thresh   # chk if trj is long enough
+	loc_change_th = Parameterobj.loc_change
 
 	if not livelong:
 		return False
@@ -57,7 +58,7 @@ def filteringCriterion(xk,yk,xspd,yspd):
 		notStationary = sum(speed<3) < transth
 		moving1       = max(speed)>minspdth # check if it is a moving point
 		moving2       = (np.abs(np.sum(xspd))>=1e-2) and (np.abs(np.sum(yspd))>=1e-2)
-		loc_change    = (np.max(xk)-np.min(xk)>=5) or (np.max(yk)-np.min(yk)>=5)
+		loc_change    = (np.max(xk)-np.min(xk)>=loc_change_th) or (np.max(yk)-np.min(yk)>=loc_change_th)
 		
 		# if (np.sum(xspd)<=1e-2 and np.sum(xaccelerate)<=1e-1) or (np.sum(yspd)<=1e-2 and np.sum(yaccelerate)<=1e-1):
 		# if len(xspd)<=3 and (np.sum(xspd)<=1e-2) and (np.sum(xaccelerate)<=1e-1):
@@ -242,7 +243,7 @@ def getSmoothMtx(x,y):
 	for kk in range(0,x.shape[0],1):
 		xk = x[kk,:][x[kk,:]!=0]
 		yk = y[kk,:][y[kk,:]!=0]
-		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels  # loger than 5, otherwise all zero out
+		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>Parameterobj.loc_change): # range span >=2 pixels  # loger than 5, otherwise all zero out
 			x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
 			x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
 
@@ -379,7 +380,7 @@ if __name__ == '__main__':
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-	start_position =  2
+	start_position =  0
 	matfiles       = matfiles[start_position:]
 
 	for matidx,matfile in enumerate(matfiles):

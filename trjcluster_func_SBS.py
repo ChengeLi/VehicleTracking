@@ -211,13 +211,9 @@ def getMuSigma(dataForKernel):
 
 
 
-def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS):
-    # sigma_xspd_diff = 0.7
-    # sigma_yspd_diff = 0.7
-    # sigma_spatial_distance = 200
+def normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS):
 
     [sxdiff,sydiff,mdis,huedis,centerDis] = dataForKernel_ele
-    # [mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance, mu_center_distance,sigma_center_distance] =     mean_std_ForKernel 
 
     [min_sx,max_sx,min_sy,max_sy,min_mdis,max_mdis,min_hue,max_hue,min_center,max_center]=extremeValue
 
@@ -226,79 +222,58 @@ def adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,useSB
     sydiff_normalized    = (sydiff-min_sy)/(max_sy-min_sy)
     mdis_normalized      = (mdis-min_mdis)/(max_mdis-min_mdis)
     huedis_normalized    = (huedis-min_hue)/(max_hue-min_hue)
-    centerDis_normalized = (centerDis-min_center)/(max_center-min_center)
-
 
     if useSBS:
-        # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis**2/(2*sigma_hue_distance**2)) +(-centerDis**2/(2*sigma_center_distance**2)) ))
-    
-        # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis/100) +(-centerDis/100)))
-
-        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
-
+        centerDis_normalized = (centerDis-min_center)/(max_center-min_center)
     else:
-        # adj_element = np.exp((-sxdiff**2/2*stdx**2)+(-sydiff**2/2*stdy**2)+(-mdis**2/2*stdd**2))
-        adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized)
-
-    if math.isnan(adj_element):
-        pdb.set_trace()
-    return adj_element
+        centerDis_normalized = 0
+    return sxdiff_normalized,sydiff_normalized,mdis_normalized,huedis_normalized,centerDis_normalized
 
 
-def adj_cosine_element(i_trj,j_trj):
-    # cosine similarity
-    cos_element = np.dot(i_trj,j_trj)/np.sqrt(sum(abs(i_trj)**2))/np.sqrt(sum(abs(j_trj)**2))
-    cos_element = (cos_element+1)/2 # make them all positive  
-    # print "cos_element: ", str(cos_element)
-    if math.isnan(cos_element):
-        pdb.set_trace()
-    return cos_element
+def get_thresholding_adj(adj,feature_diff_tensor):
+    """fix me....?"""
+    [sxdiff_normalized,sydiff_normalized,mdis_normalized,huedis_normalized,centerDis_normalized]=feature_diff_tensor
+    """before normalization"""
+    # try:
+    #     yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
+    #     xspdth = mean_std_ForKernel[0]+mean_std_ForKernel[1]
+    # except:
+    #     yspdth = 0.4*extremeValue[3] #if mean is empty
+    #     xspdth = 0.4*extremeValue[1]
 
+    """after normalization"""
+    xspdth = 0.5;
+    yspdth = 0.5;
+    adj = np.ones((Nsample,Nsample))
+    adj = adj*(sxdiff_normalized <xspdth )*(sydiff_normalized<yspdth)
+    adj[np.isnan(adj)] = 0
+    adj = adj + adj.transpose() 
+    return adj
 
-def get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,useSBS):
-    # dth     = 300 #30*1.5
-    # yspdth  = 0.7 #0.9 for warpped #5 #y speed threshold
-    # xspdth  = 0.7 #0.9 for warpped #5 #x speed threshold
+def get_gaussian_adj(adj,feature_diff_tensor):
+    """assign different weights to different features"""
+    weight = [2,2,2,0.5,0.8]
+    sxdiff_normalized    = feature_diff_tensor[:,:,0]
+    sydiff_normalized    = feature_diff_tensor[:,:,1]
+    mdis_normalized      = feature_diff_tensor[:,:,2]
+    huedis_normalized    = feature_diff_tensor[:,:,3]
+    centerDis_normalized = feature_diff_tensor[:,:,4]
 
-    [sxdiff,sydiff,mdis,huedis,centerDis] = dataForKernel_ele
-    # if dataSource =='Johnson':
-    #     # dth    = 80
-    #     # yspdth = 0.2 #filtered out 2/3 pairs
-    #     # xspdth = 0.35 
-    #     dth    = 500
-    #     yspdth = 5
-    #     xspdth = 1
-        
-    try:
-        yspdth = mean_std_ForKernel[2]+mean_std_ForKernel[3] #mean+sigma
-        xspdth = mean_std_ForKernel[0]+mean_std_ForKernel[1]
-    except:
-        yspdth = 0.4*extremeValue[3] #if mean is empty
-        xspdth = 0.4*extremeValue[1]
+    # sigma_xspd_diff = 0.7
+    # sigma_yspd_diff = 0.7
+    # sigma_spatial_distance = 200
+    # [mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance, mu_center_distance,sigma_center_distance] =     mean_std_ForKernel 
 
-    if mdis < Parameterobj.nullDist_for_adj:
-        if adj_methods =="Thresholding":
-            if (sxdiff <xspdth ) & (sydiff<yspdth):
-                adj_element = 1
-            else:
-                adj_element = 0
+    # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis**2/(2*sigma_hue_distance**2)) +(-centerDis**2/(2*sigma_center_distance**2)) ))
+    # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis/100) +(-centerDis/100)))
+    # adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
 
-        if adj_methods =="Gaussian":
-            adj_element=adj_gaussian_element(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
-
-        if adj_methods == "Cosine":
-            i_trj    = np.concatenate((x[i,idx], xspd[i,sidx],y[i,idx],yspd[i,sidx]), axis=1)
-            j_trj    = np.concatenate((x[j,idx], xspd[j,sidx],y[j,idx],yspd[j,sidx]), axis=1)
-            adj[i,j] = adj_cosine_element(i_trj,j_trj)
-        """visualize the neighbours"""
-        # lines = ax.plot(x[i,idx], y[i,idx],color = (color[i-1].T)/255.,linewidth=2)
-        # lines = ax.plot(x[j,idx], y[j,idx],color = (color[j-1].T)/255.,linewidth=2)
-        # fig888.canvas.draw()
-        # plt.pause(0.0001)
-    else:
-        adj_element = 0
-    return adj_element
-
+    adj = np.exp(- (weight[0]*sxdiff_normalized+weight[1]*sydiff_normalized+weight[2]*mdis_normalized+weight[3]*huedis_normalized+weight[4]*centerDis_normalized))
+    adj[np.isnan(adj)] = 0
+    """Hard thresholding adj based on spatial distance"""
+    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    adj = adj + adj.transpose() 
+    return adj
 
 # same blob score (SBS) for two trajectories
 def sameBlobScore(fgBlobInd1,fgBlobInd2):
@@ -362,7 +337,8 @@ if __name__ == '__main__':
     	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
-    # for matidx in range(5,6):
+    # for matidx in range(5,len(matfiles)):
+    # for matidx in range(0,5):
     #     matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
@@ -446,71 +422,100 @@ if __name__ == '__main__':
             FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
             # TwoD_Emedding(FeatureMtx_norm)
             color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
-            adj = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
-            # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
             num = np.arange(fnum)
 
             if adj_methods =="Gaussian":
-                mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
+                if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                    print "mean_std_ForKernel and extremeValue already stored, load..."
+                    mean_std_ForKernel = pickle.dump(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                    extremeValue = pickle.dump(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                else:              
+                    mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
+                    pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                    pickle.dump(extremeValue,open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+
+
 
             """test only for one car, see different features' role in the adj"""
             # diff_feature_on_one_car(dataForKernel,trjID)
 
+            # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
+            """store all pair feature distances"""
+            """Nsample*Nsample* 5 distance features"""
+            if len(sorted(glob.glob(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                print "distance diff already stored, load..."
+                feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+            else:
+                feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
+                for i in range(NumGoodsampleSameDir):
+                    print "i", i
+                    # plt.cla()
+                    for j in range(i+1, NumGoodsampleSameDir):
+                        tmp1 = x[i,:]!=0
+                        tmp2 = x[j,:]!=0
+                        idx  = num[tmp1&tmp2]
+                        if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
+                            sidx   = idx[0:-1] # for speed
+                            sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
+                            # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
+                            huedis = get_hue_diff(hue[i,sidx],hue[j,sidx])
+                            if Parameterobj.useSBS:
+                                cxi = np.nanmedian(fg_blob_center_X[i,idx])
+                                cyi = np.nanmedian(fg_blob_center_Y[i,idx])
+                                cxj = np.nanmedian(fg_blob_center_X[j,idx])
+                                cyj = np.nanmedian(fg_blob_center_Y[j,idx])
 
-            # build adjacent mtx
-            for i in range(NumGoodsampleSameDir):
-                print "i", i
-                # plt.cla()
-                for j in range(i+1, NumGoodsampleSameDir):
-                    tmp1 = x[i,:]!=0
-                    tmp2 = x[j,:]!=0
-                    idx  = num[tmp1&tmp2]
-                    if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
-                        sidx   = idx[0:-1] # for speed
-                        sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
-                        # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
-                        huedis = get_hue_diff(hue[i,sidx],hue[j,sidx])
-                        if Parameterobj.useSBS:
-                            cxi = np.nanmedian(fg_blob_center_X[i,idx])
-                            cyi = np.nanmedian(fg_blob_center_Y[i,idx])
-                            cxj = np.nanmedian(fg_blob_center_X[j,idx])
-                            cyj = np.nanmedian(fg_blob_center_Y[j,idx])
+                                if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
+                                    cxi = np.nanmedian(x[i,idx])
+                                    cyi = np.nanmedian(y[i,idx])
+                                if np.isnan(cxj) or np.isnan(cyj):
+                                    cxj = np.nanmedian(x[j,idx])
+                                    cyj = np.nanmedian(y[j,idx])
 
-                            if np.isnan(cxi) or np.isnan(cyi): # if not inside a blob, use trj's own center
-                                cxi = np.nanmedian(x[i,idx])
-                                cyi = np.nanmedian(y[i,idx])
-                            if np.isnan(cxj) or np.isnan(cyj):
-                                cxj = np.nanmedian(x[j,idx])
-                                cyj = np.nanmedian(y[j,idx])
+                                centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
 
-                            centerDis = np.sqrt((cxi-cxj)**2+(cyi-cyj)**2)
+                                if np.isnan(centerDis):
+                                    # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
+                                    pdb.set_trace()
+                            else:
+                                centerDis=0
+                            # print 'centerDis',centerDis
+                            trj1 = [x[i,idx],y[i,idx]]
+                            trj2 = [x[j,idx],y[j,idx]]
+            
+                            dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
+                            """counting the sharing blob numbers of two trjs"""
+                            # if useSBS:
+                            #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
+                                                    
+                            feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
 
-                            if np.isnan(centerDis):
-                                # centerDis = mean_std_ForKernel[-2]+mean_std_ForKernel[-1] # treat as very far away, mu+sigma away
-                                pdb.set_trace()
-                        else:
-                            centerDis=0
-                        # print 'centerDis',centerDis
-                        trj1 = [x[i,idx],y[i,idx]]
-                        trj2 = [x[j,idx],y[j,idx]]
-        
-                        dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
-                        """counting the sharing blob numbers of two trjs"""
-                        # if useSBS:
-                        #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
-                        
-                        adj[i,j] = get_adj_element(adj_methods,dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
+                        # else: # overlapping too short
+                        #     # SBS[i,j] = 0
+                        #     # adj[i,j] = 0
+                        #     feature_diff_tensor[i,j,:] = np.nan
 
-                    else: # overlapping too short
-                        # SBS[i,j] = 0
-                        adj[i,j] = 0
+
+                pickle.dump(feature_diff_tensor,open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+
+
+
+            """build adj mtx"""
+            adj = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
+            if adj_methods =="Thresholding":
+                adj=get_thresholding_adj(adj,feature_diff_tensor)
+
+            if adj_methods =="Gaussian":
+                adj=get_gaussian_adj(adj,feature_diff_tensor)
+
+
 
             # SBS = SBS + SBS.transpose()  #add diag twice
             # np.fill_diagonal(SBS, np.diagonal(SBS)/2)
 
-            adj = adj + adj.transpose() 
+            
             # np.fill_diagonal(adj, 1)
-            """diagonal=0???"""
+            """diagonal actually doesn't matter in Spectral Clustering"""
             np.fill_diagonal(adj, 0)
 
             print "saving adj..."
