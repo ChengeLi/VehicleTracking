@@ -49,25 +49,13 @@ def prepare_data(isAfterWarpping,dataSource,isLeft=True):
 
 
 	if dataSource == 'Johnson':
-		# """complete"""
-		test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vctime.p", "rb" ) )
-		test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vcxtrj.p", "rb" ) )
-		test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/dic/complete_500-5-1/final_vcytrj.p", "rb" ) )
+		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
+		image_list = DataPathobj.imagePath
+		savePath = DataPathobj.pairpath
 
-		"""partial"""
-		# test_vctime  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vctime.p", "rb" ) )
-		# test_vcxtrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcxtrj.p", "rb" ) )
-		# test_vcytrj  = pickle.load( open( "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/dic/0-290367/final_vcytrj.p", "rb" ) )
-		image_list   = sorted(glob.glob('/media/My Book/CUSP/AIG/Jay&Johnson/roi2/imgs/*.jpg'))
-		savePath     = "/media/My Book/CUSP/AIG/Jay&Johnson/roi2/subSamp/pair_relationship/"
 
-        # for mac
-		# test_vctime  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vctime.p", "rb" ) )
-		# test_vcxtrj  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vcxtrj.p", "rb" ) )
-		# test_vcytrj  = pickle.load( open( "../Jay&Johnson/roi2/dic/final_vcytrj.p", "rb" ) )
-
-		# image_list   = sorted(glob.glob('../Jay&Johnson/roi2/imgs/*.jpg'))
-		# savePath     = "../Jay&Johnson/roi2/pair_relationship/"
 	return test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath
 
 
@@ -162,8 +150,6 @@ def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite):
 			writer2.writerow([ID111,ID222]) # just the pair ids
 				
 	return co1X, co2X, co1Y, co2Y
-
-
 
 
 

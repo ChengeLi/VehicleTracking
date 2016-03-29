@@ -56,14 +56,20 @@ def Virctr(x,y):
         sx = np.std(x)
         sy = np.std(y)
 
-        if sx>20 or sy>20:
-            vcx = mx
-            vcy = my
-        else:
-            # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
-            idx = ((x-mx)<=sx)&((y-my)<=sy)
-            vcx = np.median(x[idx])
-            vcy = np.median(y[idx])
+        idx = ((x-mx)<=sx)&((y-my)<=sy)
+        vcx = np.median(x[idx])
+        vcy = np.median(y[idx])
+
+        """discard very big group???"""
+        # if sx>20 or sy>20:
+        # if sx>0.8*Parameterobj.nullDist_for_adj or sy>0.8*nullDist_for_adj:
+        #     vcx = np.nan
+        #     vcy = np.nan
+        # else:
+        #     # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+        #     idx = ((x-mx)<=sx)&((y-my)<=sy)
+        #     vcx = np.median(x[idx])
+        #     vcy = np.median(y[idx])
     return vcx,vcy
 
 

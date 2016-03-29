@@ -3,46 +3,61 @@ import csv
 import pickle as pickle
 import numpy as np
 import pdb
+# from DataPathclass import *
+# DataPathobj = DataPath(dataSource,VideoIndex)
+# from parameterClass import *
+# Parameterobj = parameter(dataSource,VideoIndex)
 
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
+def GTFromCSV(file, line_limit):
+	reader = csv.reader(file)
+	# subsampleRate = 4
+	GTupperL_list = []
+	GTLowerR_list = []
+	GTcenterXY_list = []
+	frame_idx_list = []
+
+	frame_idx=0
+	vehicleInd = 0
+	GTtrjdic = {}
+	lines = 0
+	while lines<line_limit:
+		temp = reader.next()
+		if np.double(temp[0])<frame_idx: # new car	
+			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list)
+			frame_idx_list  = []
+			GTupperL_list   = []
+			GTLowerR_list   = []
+			GTcenterXY_list = []
+			vehicleInd += 1
+		frame_idx = np.double(temp[0])
+		GTupperL = np.double(temp[1:3])  #upper left
+		GTLowerR = np.double(temp[3:5])  #lower right
+		GTcenterXY = np.double(temp[-2:])
+
+		frame_idx_list.append(frame_idx)
+		GTupperL_list.append(GTupperL)
+		GTLowerR_list.append(GTLowerR)
+		GTcenterXY_list.append(GTcenterXY)
+		lines+=1
+	return GTtrjdic
 
 def readGTdata():
 
 	if dataSource == 'DoT':
-		f =  open('/Users/Chenge/Desktop/GroundTruth.csv', 'rb')
-		reader = csv.reader(f)
-		# subsampleRate = 4
+		f =  open('/Users/Chenge/Desktop/FirstCanalGroundTruth.csv', 'rb')
+		line_limit = 2062 ## number of lines in this csv file
+		GTtrjdic = GTFromCSV(f,line_limit)
 
-		# frame_idx = 10280
-		GTupperL_list = []
-		GTLowerR_list = []
-		GTcenterXY_list = []
-		frame_idx_list = []
+	elif dataSource == 'DoT':
+		f =  open(DataPathobj.DataPath+'Johnson_00115_ROI_gt.csv', 'rb')
+		line_limit = 1128
+		GTtrjdic = GTFromCSV(f,line_limit)
 
-		frame_idx=0
-		vehicleInd = 0
-		GTtrjdic = {}
-		while frame_idx<4000:
-			temp = reader.next()
-			if np.double(temp[0])<frame_idx: # new car	
-				GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list)
-				frame_idx_list  = []
-				GTupperL_list   = []
-				GTLowerR_list   = []
-				GTcenterXY_list = []
-				vehicleInd += 1
-			frame_idx = np.double(temp[0])
-			GTupperL = np.double(temp[1:3])  #upper left
-			GTLowerR = np.double(temp[3:5])  #lower right
-			GTcenterXY = np.double(temp[-2:])
 
-			frame_idx_list.append(frame_idx)
-			GTupperL_list.append(GTupperL)
-			GTLowerR_list.append(GTLowerR)
-			GTcenterXY_list.append(GTcenterXY)
-	if dataSource == 'NGSIM':
+
+	elif dataSource == 'NGSIM':
 		f =  open('/Volumes/Transcend/US-101/US-101-MainData/vehicle-trajectory-data/0750am-0805am/trajectories-0750am-0805am.txt', 'rb')
+		line_limit = 40000 #only read partial of it
 		reader = csv.reader(f)
 		GTupperL_list = []
 		GTLowerR_list = []
@@ -52,32 +67,46 @@ def readGTdata():
 		frame_idx=0
 		GTtrjdic = {}
 		vehicleInd = np.NaN
-		while frame_idx<4000:
+		lines = 0
+		while lines<line_limit:
 			temp = reader.next()
 			temp = temp[0].split()
 			if np.double(temp[0])!=vehicleInd: # new car
 				if not np.isnan(vehicleInd): ##save the last car info
-					plt.plot(np.array(GTcenterXY_list)[:,0],np.array(GTcenterXY_list)[:,1])
+					# plt.plot(np.array(GTcenterXY_list)[:,0],np.array(GTcenterXY_list)[:,1])
+					# if laneID==8:
+					plt.plot(np.array(GTcenterXY_list)[:,1],np.array(GTcenterXY_list)[:,0])
 					plt.draw()
 					plt.show()
 					GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list)
+
 				vehicleInd = np.double(temp[0])	
 				frame_idx_list  = []
 				GTcenterXY_list = []
 
 
+
 			frame_idx = np.double(temp[1])
-			GTcenterXY = np.double(temp[4:6])
+			"""(X,Y)"""
+			# GTcenterXY = np.double(temp[4:6])#local XY
+			GTcenterXY = np.double(temp[6:8]) #global XY
+
 			""""in feet!"""
 			GT_vehicle_len  = np.double(temp[8])
 			GT_vehicle_wid  = np.double(temp[9])
 
 			frame_idx_list.append(frame_idx)
-			"""(X,Y)"""
+			"""bounding box"""
 			GTupperL_list.append((np.double(temp[4])-GT_vehicle_len/2, np.double(temp[5])-GT_vehicle_wid/2))
 			GTLowerR_list.append((np.double(temp[4])+GT_vehicle_len/2, np.double(temp[5])+GT_vehicle_wid/2))
 			GTcenterXY_list.append(GTcenterXY) 
 
+
+			"""lane ID"""
+			laneID = np.double(temp[13])
+
+			lines+=1
+	
 	return GTtrjdic
 
 
@@ -92,10 +121,9 @@ class GTtrj(object):
 
 
 def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
-	'assgin trj to the nearest GroundTruth bounding box'
+	"""assgin trj to the nearest GroundTruth bounding box"""
 
-	'find the overlapping time'
-	# trj.frame_idx & 
+	"""find the overlapping time"""
 
 
 	pass
@@ -109,17 +137,22 @@ def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
 
 
 if __name__ == '__main__':
+	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
-	pdb.set_trace()
-	GTtrjobj = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd_list)
-	pickle.dump(GTtrjobj,open('./GTtrjobj'+	Parameterobj.dataSource,'wb'))
+	# pickle.dump(GTtrjdic,open(DataPathobj.DataPath+'/GTtrjdictionary_'+	dataSource,'wb'))
+
+	"""load GT trj dictionary:"""
+	# GTtrjdic = pickle.load(open(DataPathobj.DataPath+'/GTtrjdictionary_'+	dataSource,'rb'))
+
+
+	"""load our system result trj dictionary:"""
+	# vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+	# vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+	# vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )	
 
 
 
-
-
-
-
+# plt.plot(np.array(GTtrjdic[4].GTcenterXY_list)[:,0],np.array(GTtrjdic[4].GTcenterXY_list)[:,1])
 
 
 
