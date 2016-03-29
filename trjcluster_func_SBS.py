@@ -336,10 +336,10 @@ if __name__ == '__main__':
     	fig888 = plt.figure()
     	ax     = plt.subplot(1,1,1)
 
-    for matidx,matfile in enumerate(matfiles):
+    # for matidx,matfile in enumerate(matfiles):
     # for matidx in range(5,len(matfiles)):
-    # for matidx in range(0,5):
-    #     matfile = matfiles[matidx]
+    for matidx in range(3,4,1):
+        matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)

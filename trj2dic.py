@@ -410,12 +410,12 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.show()
     
 
-def prepare_data_to_vis(isVideo):
+def prepare_data_to_vis(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
-    matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
     """to visulize raw klt"""
-    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
+    matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     if Parameterobj.useWarpped:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
@@ -425,8 +425,10 @@ def prepare_data_to_vis(isVideo):
 
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
-    clustered_result = clustered_result_files[result_file_Ind]
-    
+    if isClustered:
+        clustered_result = clustered_result_files[result_file_Ind]
+    else:
+        clustered_result =[]
     if isVideo:
         # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
         dataPath = DataPathobj.video
@@ -440,11 +442,11 @@ def prepare_data_to_vis(isVideo):
 if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = True
+    isClustered      = False
     isVisualize      = True
     useVirtualCenter = True
     isSave           = False
-    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo)
+    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo,isClustered)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     start_frame_idx = 0
     # start_frame_idx = trunclen*subSampRate*6

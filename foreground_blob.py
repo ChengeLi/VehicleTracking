@@ -97,8 +97,8 @@ if __name__ == '__main__':
 
 				print "Save the blob centers..."
 				# savename = os.path.join(DataPathobj.blobPath,'blobCenterList'+str(matidx+1+offset).zfill(3)+'.p')
-				savename = os.path.join(DataPathobj.blobPath,'blobCenterList'+str(index).zfill(3)+'.p')
-				pickle.dump(blobCenterList, open( savename, "wb" ))
+				# savename = os.path.join(DataPathobj.blobPath,'blobCenterList'+str(index).zfill(3)+'.p')
+				# pickle.dump(blobCenterList, open( savename, "wb" ))
 				blobCenterList = []
 
 
