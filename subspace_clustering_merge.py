@@ -78,15 +78,16 @@ class sparse_subspace_clustering:
         random_state = check_random_state(self.random_state)
 
         """if provide adj"""
-        # self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
-        #                                      random_state=random_state) * 1000   ##old version???
+        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+                                             random_state=random_state) * 1000  
         
         """use the graph laplacian to calculate embedding"""
-        from numpy import linalg as LA
-        graph_lap = csgraph.laplacian(self.adjacency, normed=False)
-        eigVl, eigVc = LA.eigh(csr_matrix(graph_lap).toarray())
-        # np.allclose(self.embedding_,eigVc[:,:2])
-        self.embedding_  = eigVc[:,:self.n_dimension]
+        """this is really too slow!!!"""
+        # from numpy import linalg as LA
+        # graph_lap = csgraph.laplacian(self.adjacency, normed=False)
+        # eigVl, eigVc = LA.eigh(csr_matrix(graph_lap).toarray())
+        # # np.allclose(self.embedding_,eigVc[:,:2])
+        # self.embedding_  = eigVc[:,:self.n_dimension]
 
         """if provide the raw data"""
         # model = sklearn.manifold.SpectralEmbedding(n_components=2, affinity='rbf', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
