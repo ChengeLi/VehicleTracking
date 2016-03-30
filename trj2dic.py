@@ -419,9 +419,9 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_data_to_vis(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
-    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+    matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
     """to visulize raw klt"""
-    matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
+    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     if Parameterobj.useWarpped:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
@@ -448,9 +448,9 @@ def prepare_data_to_vis(isVideo,isClustered):
 if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = False
+    isClustered      = True
     isVisualize      = True
-    useVirtualCenter = True
+    useVirtualCenter = False
     isSave           = False
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo,isClustered)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx

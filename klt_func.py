@@ -16,6 +16,15 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
+"""thre's bug in cap.set, try loopy reading instead"""
+def readVideo(cap,subSampRate):
+    """when read video in a loop, every subSampRate frames"""
+    status, frame = cap.read()  
+    for ii in range(subSampRate-1):
+        status, frameskip = cap.read()
+    return frame
+
+
 if __name__ == '__main__':
     frame_idx_bias = 0
     start_position = frame_idx_bias
@@ -29,7 +38,7 @@ if __name__ == '__main__':
     isVisualize   = False
 
     # -- utilities
-    if isVisualize: plt.figure(num=None, figsize=(8, 11))
+    if isVisualize: plt.figure(num=None)
     lk_params = Parameterobj.lk_params
     feature_params = Parameterobj.feature_params
 
@@ -144,6 +153,7 @@ if __name__ == '__main__':
 
     # -- set low number of frames for testing
     # nframe = 1801
+    cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
     while (frame_idx < nframe):
         if useBlobCenter and ((subsample_frmIdx % trunclen) == 0):
             print "load foreground blob index matrix file...."
@@ -155,13 +165,15 @@ if __name__ == '__main__':
             blobCenterListfile = blob_center_sparse_lists[subsample_frmIdx % trunclen]
             blobCenterLists    = pickle.load( open( blobCenterListfile, "rb" ) )
 
-            
         if not isVideo:
             frame[:,:,:] = cv2.imread(imlist[subsample_frmIdx*subSampRate])
         if isVideo:
             try:
-                cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
-                status, frame[:,:,:] = cap.read()
+                """set has bug"""
+                # cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
+                # status, frame[:,:,:] = cap.read()
+               
+                frame[:,:,:] = readVideo(cap,subSampRate)
 
             except:
                 print "exception!!"
@@ -188,7 +200,6 @@ if __name__ == '__main__':
         vis = frame.copy()
 
         """Tracking"""
-        # bad_idx =[]
         if len(tracksdic) > 0:
             try:
                 pnts_old = np.float32([tracksdic[i][-1][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
@@ -212,8 +223,10 @@ if __name__ == '__main__':
                 y = max(y,0)
                 if not good_flag:
                     end[idx] = (frame_idx-1)
-                    tracksdic[idx].append((-100,-100,frame_idx))
-                    # bad_idx.append(idx)
+                    if useBlobCenter:
+                        tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
+                    else:
+                        tracksdic[idx].append((-100,-100,frame_idx,np.nan))
                     continue
                 if x != -100:
                     # if x>frameLp.shape[1] or y>frameLp.shape[0]:
@@ -230,9 +243,10 @@ if __name__ == '__main__':
                         blobInd    = BlobIndMatrixCurFrm[y,x]
                         if blobInd!=0:
                             blobCenter = BlobCenterCurFrm[blobInd-1]
-                            tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[0],blobCenter[1]))
+                            tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
                         else:
-                            tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                            # tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                            tracksdic[idx].append((x,y,frame_idx,hue,0,x,y))
 
                     else:
                         tracksdic[idx].append((x,y,frame_idx,hue))
@@ -263,9 +277,10 @@ if __name__ == '__main__':
                         blobInd = BlobIndMatrixCurFrm[y,x]                    
                         if blobInd!=0:
                             blobCenter = BlobCenterCurFrm[blobInd-1]
-                            tracksdic[dicidx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[0],blobCenter[1]))
+                            tracksdic[dicidx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
                         else:
-                            tracksdic[dicidx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                            # tracksdic[dicidx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                            tracksdic[dicidx].append((x,y,frame_idx,hue,0,x,y))
                     else:
                         tracksdic[dicidx].append((x,y,frame_idx,hue))
                     dicidx += 1
@@ -342,8 +357,8 @@ if __name__ == '__main__':
                     Huetracks[ii,:][tstart:tstart+len(ttrack[3,:])] = ttrack[3,:]
                     if useBlobCenter:
                         BlobIndtracks[ii,:][tstart:] = ttrack[4,:]
-                        BlobCenterY[ii,:][tstart:]   = ttrack[5,:] #first dim is Y (vertical)
-                        BlobCenterX[ii,:][tstart:]   = ttrack[6,:]
+                        BlobCenterX[ii,:][tstart:]   = ttrack[5,:]
+                        BlobCenterY[ii,:][tstart:]   = ttrack[6,:] 
 
                 else:
                     Xtracks[ii,:][tstart:tstop]   = ttrack[0,:]
@@ -352,8 +367,8 @@ if __name__ == '__main__':
                     Huetracks[ii,:][tstart:tstop] = ttrack[3,:]
                     if useBlobCenter:
                         BlobIndtracks[ii,:][tstart:tstop] = ttrack[4,:]
-                        BlobCenterY[ii,:][tstart:tstop]   = ttrack[5,:]
-                        BlobCenterX[ii,:][tstart:tstop]   = ttrack[6,:]
+                        BlobCenterX[ii,:][tstart:tstop]   = ttrack[5,:]
+                        BlobCenterY[ii,:][tstart:tstop]   = ttrack[6,:]
 
             # put tracks into sparse matrix
             trk ={}
