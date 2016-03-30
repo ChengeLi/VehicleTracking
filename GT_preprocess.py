@@ -48,7 +48,7 @@ def readGTdata():
 		line_limit = 2062 ## number of lines in this csv file
 		GTtrjdic = GTFromCSV(f,line_limit)
 
-	elif dataSource == 'DoT':
+	elif dataSource == 'Johnson':
 		f =  open(DataPathobj.DataPath+'Johnson_00115_ROI_gt.csv', 'rb')
 		line_limit = 1128
 		GTtrjdic = GTFromCSV(f,line_limit)
@@ -88,8 +88,8 @@ def readGTdata():
 
 			frame_idx = np.double(temp[1])
 			"""(X,Y)"""
-			# GTcenterXY = np.double(temp[4:6])#local XY
-			GTcenterXY = np.double(temp[6:8]) #global XY
+			GTcenterXY = np.double(temp[4:6])#local XY
+			# GTcenterXY = np.double(temp[6:8]) #global XY
 
 			""""in feet!"""
 			GT_vehicle_len  = np.double(temp[8])
@@ -128,10 +128,29 @@ def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
 
 	pass
 
-	'interpolate trj'
-	xtrj = GTupperL[:,0]
-	ytrj = GTupperL[:,1]
-	ytrjFull = np.interp(np.range(len(max(xtrj))), xtrj, ytrj)
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
+    
+def plotGTonVideo(GTtrjdic):
+	if dataSource == 'DoT':
+		cap = cv2.VideoCapture(DataPathobj.video)
+	elif dataSource == 'Johnson':
+		cap = cv2.VideoCapture(DataPathobj.video)
+	elif dataSource == 'NGSIM':
+		cap = cv2.VideoCapture('/Volumes/Transcend/US-101/US-101-ProcessedVideo-0750am-0805am-Cam1234/sb-camera4-0750am-0805am-processed.avi')
+
+	cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
+	status, frame = cap.read()
+	plt.imshow(frame[:,:,::-1])
+	for ii in GTtrjdic.keys():
+		np.array(GTtrjdic[ii].GTcenterXY_list)[:,1]
+		np.array(GTtrjdic[ii].GTcenterXY_list)[:,0]
+		plt.plot()
+		plt.draw()
+		plt.show()
+
+
 
 
 
@@ -139,6 +158,7 @@ def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
 if __name__ == '__main__':
 	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
+	pdb.set_trace()
 	# pickle.dump(GTtrjdic,open(DataPathobj.DataPath+'/GTtrjdictionary_'+	dataSource,'wb'))
 
 	"""load GT trj dictionary:"""
