@@ -129,27 +129,29 @@ if __name__ == '__main__':
 
     # -- set mask, all ones = no mask
     if Parameterobj.useMask:
-        # if not Parameterobj.mask is None:
-        #     pass
-        # else:
-        plt.imshow(frame[:,:,::-1])
-        pdb.set_trace()
-        mask = np.zeros(frameL.shape, dtype=np.uint8)
-        # roi_corners = np.array([[(191,0),(343,626),(344,0),(190,629)]], dtype=np.int32)
-        # roi_corners = np.array([[(0,191), (629,190), (0,344),(626,343)]], dtype=np.int32)
-        # roi_corners = np.array([[(0,191), (629,190), (0,344)]])
-        roi_corners = np.array([[(191,0),(190,629),(344,0),(343,626)]]).reshape(-1, 2)
-        # ignore_mask_color = (255,)*frame.shape[2]
-        cv2.fillPoly(mask, roi_corners, (255,255))
+        # # if not Parameterobj.mask is None:
+        # #     pass
+        # # else:
+        # plt.imshow(frame[:,:,::-1])
+        # pdb.set_trace()
+        # mask = np.zeros(frameL.shape, dtype=np.uint8)
+        # # roi_corners = np.array([[(191,0),(343,626),(344,0),(190,629)]], dtype=np.int32)
+        # # roi_corners = np.array([[(0,191), (629,190), (0,344),(626,343)]], dtype=np.int32)
+        # # roi_corners = np.array([[(0,191), (629,190), (0,344)]])
+        # roi_corners = np.array([[(191,0),(190,629),(344,0),(343,626)]]).reshape(-1, 2)
+        # # ignore_mask_color = (255,)*frame.shape[2]
+        # cv2.fillPoly(mask, roi_corners, (255,255))
 
-        # apply the mask
-        masked_image = cv2.bitwise_and(frameL, mask)
-        # save the result
-        cv2.imwrite(Parameterobj.dataSource+'_mask.jpg', mask)
-        pdb.set_trace()
+        # # apply the mask
+        # masked_image = cv2.bitwise_and(frameL, mask)
+        # # save the result
+        # cv2.imwrite(Parameterobj.dataSource+'_mask.jpg', mask)
+        masktouse = 255*np.ones_like(frameL)
+        mask1 = cv2.imread(glob.glob(DataPathobj.DataPath+'/*Mask.jpg')[0])
+        masktouse[mask1[:,:,0]==0]=0
 
     else:
-        mask = 255*np.ones_like(frameL)
+        masktouse = 255*np.ones_like(frameL)
 
     # -- set low number of frames for testing
     # nframe = 1801
@@ -223,6 +225,8 @@ if __name__ == '__main__':
                 y = max(y,0)
                 if not good_flag:
                     end[idx] = (frame_idx-1)
+                    if idx==0:
+                        pdb.set_trace()
                     if useBlobCenter:
                         tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
                     else:
@@ -250,14 +254,15 @@ if __name__ == '__main__':
 
                     else:
                         tracksdic[idx].append((x,y,frame_idx,hue))
-                cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+                if isVisualize:
+                    cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
 
 
         """Detecting new points"""
         if subsample_frmIdx % detect_interval == 0: 
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
-            mask[:,:] = 255
+            mask = masktouse
             for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic.keys()]:
                 cv2.circle(mask, (x, y), 5, 0, -1)    
 
@@ -348,7 +353,7 @@ if __name__ == '__main__':
                     ttrack = ttrack[:,1:] #because the first point is the last point from pre trunc, already saved
 
                 # put trajectory into matrix
-                tstart, tstop = st_ind/subSampRate-offset, en_ind/subSampRate-offset+1
+                tstart, tstop = (st_ind-start_position)/subSampRate-offset, (en_ind-start_position)/subSampRate-offset+1
 
                 if en_ind==-1:
                     Xtracks[ii,:][tstart:tstart+len(ttrack[0,:])]   = ttrack[0,:]
