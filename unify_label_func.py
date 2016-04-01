@@ -17,7 +17,11 @@ def unify_label(matfiles,savename,label_choice):
         flab     = [] #final labels
         ftrjID   = [] #final trjID
         LabelName = label_choice+DirName[dirii]
-        IDName = 'trjID'+DirName[dirii]
+        IDName = 'trjID_'+DirName[dirii]
+        if useCC:
+            LabelName = 'c_'+DirName[dirii]
+            IDName = 'trjID_'+DirName[dirii]
+        
         try:
             M1 = loadmat(matfiles[0])[IDName][0]
         except: ## if no this direction, key error, continue
@@ -105,8 +109,14 @@ def unify_label(matfiles,savename,label_choice):
 
 
 if __name__ == '__main__':
-    smooth = True
-    matfilePath   = DataPathobj.sscpath
+    # matfilePath = DataPathobj.sscpath
+    """to visulize the connected component"""
+    global useCC
+    useCC = True
+    if useCC:
+        matfilePath = DataPathobj.adjpath
+
+
     savePath      = DataPathobj.unifiedLabelpath
     label_choice = Parameterobj.clustering_choice
 
@@ -121,6 +131,8 @@ if __name__ == '__main__':
             savename = os.path.join(savePath,'usewarpped_Complete_result')
         else:
             savename = os.path.join(savePath,'Complete_result')
+            if useCC:
+                savename = os.path.join(savePath,'concomp')
         unify_label(matfilesAll,savename,label_choice)
     else:
         for kk in range(0,numTrunc,25):
