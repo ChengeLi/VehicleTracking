@@ -317,10 +317,13 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     if isSave and isClustered:
         print "notconnectedLabel:",notconnectedLabel
         print "CrossingClassLbel:",CrossingClassLbel
-        savenameT = os.path.join(savePath,'final_vctime.p')
-        savenameX = os.path.join(savePath,'final_vcxtrj.p')
-        savenameY = os.path.join(savePath,'final_vcytrj.p')
-        savenameclusterSize = os.path.join(savePath,'final_clusterSize.p')
+
+        """ save CC_ connected component"""
+        savenameT = os.path.join(savePath,'CC_final_vctime.p')
+        savenameX = os.path.join(savePath,'CC_final_vcxtrj.p')
+        savenameY = os.path.join(savePath,'CC_final_vcytrj.p')
+        savenameclusterSize = os.path.join(savePath,'CC_final_clusterSize.p')
+        pdb.set_trace()
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
@@ -330,7 +333,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel}
             clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
             clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel}
-
+            pdb.set_trace()
             pickle.dump( clean_vctime, open(savenameT,"wb"))
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
@@ -415,7 +418,6 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()
     plt.show()
     
-
 def prepare_data_to_vis(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
@@ -449,9 +451,9 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = True
-    useVirtualCenter = False
-    isSave           = False
+    isVisualize      = False
+    useVirtualCenter = True
+    isSave           = True
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo,isClustered)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
     start_frame_idx = 0
