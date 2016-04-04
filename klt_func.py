@@ -44,123 +44,123 @@ def subSample_onFrame(subsample_frmIdx,frame_idx):
             frame_idx = nframe
             continue
 
-if useBlobCenter:
-    BlobIndMatrixCurFrm = (blobIndLists[np.mod(subsample_frmIdx,trunclen)]).todense()
-    BlobCenterCurFrm    = blobCenterLists[np.mod(subsample_frmIdx,trunclen)]
-    if len(BlobCenterCurFrm)<1: #is empty
-        BlobCenterCurFrm=[(0,0)]
+    if useBlobCenter:
+        BlobIndMatrixCurFrm = (blobIndLists[np.mod(subsample_frmIdx,trunclen)]).todense()
+        BlobCenterCurFrm    = blobCenterLists[np.mod(subsample_frmIdx,trunclen)]
+        if len(BlobCenterCurFrm)<1: #is empty
+            BlobCenterCurFrm=[(0,0)]
 
-frameL[:,:] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
-frame_hsv   = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-# cv2.imshow('hue',frame_hsv[:,:,0])
-# cv2.waitKey(0)
+    frameL[:,:] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+    frame_hsv   = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    # cv2.imshow('hue',frame_hsv[:,:,0])
+    # cv2.waitKey(0)
 
-## histogram equalization, more contrast
-clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-frameL_he = clahe.apply(frameL)
-frameL = frameL_he
+    ## histogram equalization, more contrast
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    frameL_he = clahe.apply(frameL)
+    frameL = frameL_he
 
-# for visulization
-vis = frame.copy()
+    # for visulization
+    vis = frame.copy()
 
-"""Tracking"""
-if len(tracksdic) > 0:
-    try:
-        pnts_old = np.float32([tracksdic[i][-1][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
-    except: 
-        pnts_old = np.float32([tracksdic[i][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
+    """Tracking"""
+    if len(tracksdic) > 0:
+        try:
+            pnts_old = np.float32([tracksdic[i][-1][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
+        except: 
+            pnts_old = np.float32([tracksdic[i][:2] for i in sorted(tracksdic.keys())]).reshape(-1, 1, 2)
 
-    pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
-                                                  pnts_old, None, 
-                                                  **lk_params)
-    pnts_oldr, st, err = cv2.calcOpticalFlowPyrLK(frameL, frameLp, 
-                                                  pnts_new, None, 
-                                                  **lk_params)
-    dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
-    good = dist < 1
+        pnts_new, st, err  = cv2.calcOpticalFlowPyrLK(frameLp, frameL, 
+                                                      pnts_old, None, 
+                                                      **lk_params)
+        pnts_oldr, st, err = cv2.calcOpticalFlowPyrLK(frameL, frameLp, 
+                                                      pnts_new, None, 
+                                                      **lk_params)
+        dist = abs(pnts_old-pnts_oldr).reshape(-1, 2).max(-1)
+        good = dist < 1
 
 
-    for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
-        x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
-        y = min(y,frameLp.shape[0]-1)
-        x = max(x,0)  ## why?? klt will find points outside the bdry???
-        y = max(y,0)
-        if not good_flag:
-            end[idx] = (frame_idx-1)
-            if useBlobCenter:
-                tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
-            else:
-                tracksdic[idx].append((-100,-100,frame_idx,np.nan))
-            continue
-        if x != -100:
-            # if x>frameLp.shape[1] or y>frameLp.shape[0]:
-            #     print x, y
-            # hue = frame_hsv[y,x,0]
-            """use a median of the 3*3 window"""
-            hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
-            if np.isnan(hue):
-                hue = frame_hsv[y,x,0]
-            """try median of the intensity"""
-            # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
-
-            if useBlobCenter:
-                blobInd    = BlobIndMatrixCurFrm[y,x]
-                if blobInd!=0:
-                    blobCenter = BlobCenterCurFrm[blobInd-1]
-                    tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
+        for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
+            x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
+            y = min(y,frameLp.shape[0]-1)
+            x = max(x,0)  ## why?? klt will find points outside the bdry???
+            y = max(y,0)
+            if not good_flag:
+                end[idx] = (frame_idx-1)
+                if useBlobCenter:
+                    tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
                 else:
-                    # tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
-                    tracksdic[idx].append((x,y,frame_idx,hue,0,x,y))
+                    tracksdic[idx].append((-100,-100,frame_idx,np.nan))
+                continue
+            if x != -100:
+                # if x>frameLp.shape[1] or y>frameLp.shape[0]:
+                #     print x, y
+                # hue = frame_hsv[y,x,0]
+                """use a median of the 3*3 window"""
+                hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                if np.isnan(hue):
+                    hue = frame_hsv[y,x,0]
+                """try median of the intensity"""
+                # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
 
-            else:
-                tracksdic[idx].append((x,y,frame_idx,hue))
-        cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+                if useBlobCenter:
+                    blobInd    = BlobIndMatrixCurFrm[y,x]
+                    if blobInd!=0:
+                        blobCenter = BlobCenterCurFrm[blobInd-1]
+                        tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
+                    else:
+                        # tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                        tracksdic[idx].append((x,y,frame_idx,hue,0,x,y))
 
-
-"""Detecting new points"""
-if subsample_frmIdx % detect_interval == 0: 
-
-    # GGD: this is (I *think*) eliminating redundant non-moving points
-    mask[:,:] = 255
-    for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic.keys()]:
-        cv2.circle(mask, (x, y), 5, 0, -1)    
-
-    corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
-
-    if corners is not None:
-        for x, y in np.float32(corners).reshape(-1, 2):
-            # create new dic item using new dicidx since these are new points:
-            tracksdic[dicidx] = [] 
-            start[dicidx]     = frame_idx
-            end[dicidx]       = -1
-            hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
-            if np.isnan(hue):
-                hue = frame_hsv[y,x,0]
-
-            if useBlobCenter:
-                blobInd = BlobIndMatrixCurFrm[y,x]                    
-                if blobInd!=0:
-                    blobCenter = BlobCenterCurFrm[blobInd-1]
-                    tracksdic[dicidx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
                 else:
-                    # tracksdic[dicidx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
-                    tracksdic[dicidx].append((x,y,frame_idx,hue,0,x,y))
-            else:
-                tracksdic[dicidx].append((x,y,frame_idx,hue))
-            dicidx += 1
+                    tracksdic[idx].append((x,y,frame_idx,hue))
+            cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
 
-print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
 
-if isVisualize:
-    # cv2.imshow('klt', vis)
-    # cv2.waitKey(5)    
-    plt.imshow(vis[:,:,::-1])
-    plt.pause(0.00001)
+    """Detecting new points"""
+    if subsample_frmIdx % detect_interval == 0: 
 
-# switch previous frame
-frameLp[:,:] = frameL[:,:]
-subsample_frmIdx   += 1
-frame_idx = subsample_frmIdx*subSampRate
+        # GGD: this is (I *think*) eliminating redundant non-moving points
+        mask[:,:] = 255
+        for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic.keys()]:
+            cv2.circle(mask, (x, y), 5, 0, -1)    
+
+        corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
+
+        if corners is not None:
+            for x, y in np.float32(corners).reshape(-1, 2):
+                # create new dic item using new dicidx since these are new points:
+                tracksdic[dicidx] = [] 
+                start[dicidx]     = frame_idx
+                end[dicidx]       = -1
+                hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                if np.isnan(hue):
+                    hue = frame_hsv[y,x,0]
+
+                if useBlobCenter:
+                    blobInd = BlobIndMatrixCurFrm[y,x]                    
+                    if blobInd!=0:
+                        blobCenter = BlobCenterCurFrm[blobInd-1]
+                        tracksdic[dicidx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
+                    else:
+                        # tracksdic[dicidx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                        tracksdic[dicidx].append((x,y,frame_idx,hue,0,x,y))
+                else:
+                    tracksdic[dicidx].append((x,y,frame_idx,hue))
+                dicidx += 1
+
+    print('{0} - {1}'.format(subsample_frmIdx*subSampRate,len(tracksdic)))
+
+    if isVisualize:
+        # cv2.imshow('klt', vis)
+        # cv2.waitKey(5)    
+        plt.imshow(vis[:,:,::-1])
+        plt.pause(0.00001)
+
+    # switch previous frame
+    frameLp[:,:] = frameL[:,:]
+    subsample_frmIdx   += 1
+    frame_idx = subsample_frmIdx*subSampRate
 
 
 
@@ -305,7 +305,6 @@ if __name__ == '__main__':
     while (frame_idx < nframe):
     """can choose subsample methods!"""
     subSample_onFrame(subsample_frmIdx,frame_idx)
-
 
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 

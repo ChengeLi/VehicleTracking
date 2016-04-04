@@ -270,8 +270,9 @@ def get_gaussian_adj(adj,feature_diff_tensor):
 
     adj = np.exp(- (weight[0]*sxdiff_normalized+weight[1]*sydiff_normalized+weight[2]*mdis_normalized+weight[3]*huedis_normalized+weight[4]*centerDis_normalized))
     adj[np.isnan(adj)] = 0
+
     """Hard thresholding adj based on spatial distance"""
-    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
     adj = adj + adj.transpose() 
     return adj
 
@@ -336,10 +337,10 @@ if __name__ == '__main__':
     	fig888 = plt.figure()
     	ax     = plt.subplot(1,1,1)
 
-    # for matidx,matfile in enumerate(matfiles):
+    for matidx,matfile in enumerate(matfiles):
     # for matidx in range(5,len(matfiles)):
-    for matidx in range(3,4,1):
-        matfile = matfiles[matidx]
+    # for matidx in range(3,4,1):
+        # matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -438,7 +439,6 @@ if __name__ == '__main__':
 
             """test only for one car, see different features' role in the adj"""
             # diff_feature_on_one_car(dataForKernel,trjID)
-
             # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
             """store all pair feature distances"""
             """Nsample*Nsample* 5 distance features"""
@@ -449,13 +449,13 @@ if __name__ == '__main__':
                 feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
                 for i in range(NumGoodsampleSameDir):
                     print "i", i
-                    # plt.cla()
                     for j in range(i+1, NumGoodsampleSameDir):
                         tmp1 = x[i,:]!=0
                         tmp2 = x[j,:]!=0
                         idx  = num[tmp1&tmp2]
-                        if len(idx)> Parameterobj.trjoverlap_len_thresh: # has overlapping
-                            sidx   = idx[0:-1] # for speed
+                      
+                        if len(idx)>= Parameterobj.trjoverlap_len_thresh: # has overlapping
+                            sidx   = idx[0:-1] # for speeds
                             sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
                             # huedis = np.mean(np.abs(hue[i,sidx]-hue[j,sidx]))
                             huedis = get_hue_diff(hue[i,sidx],hue[j,sidx])
@@ -484,6 +484,8 @@ if __name__ == '__main__':
                             trj2 = [x[j,idx],y[j,idx]]
             
                             dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
+                            # if i==842:
+                            #     pdb.set_trace()
                             """counting the sharing blob numbers of two trjs"""
                             # if useSBS:
                             #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))

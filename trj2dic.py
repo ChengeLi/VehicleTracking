@@ -136,7 +136,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         labels  = loadmat(clustered_result)['label'][0]
         for idx,ID in enumerate(trjID):  # ID=trjID[idx], the content, trj ID
             mlabels[int(ID)] = np.int(labels[int(idx)])
-
         for i in np.unique(mlabels):  
             vcxtrj[i]=[] 
             vcytrj[i]=[]
@@ -280,14 +279,18 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             image2gif=[]
             if isVideo:
                 trueLoc = start_frame_idx+(trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
+                """trueLoc!=frame_idx if not starting from 0??? why"""
+                """change set to loopy read!!"""
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+
                 if trueLoc!=frame_idx:
                     pdb.set_trace()
 
                 status, frame = cap.read()
             else:
                 frame = cv2.imread(image_list[frame_idx])
-            visualize_trj(fig,axL,im,np.unique(labinf)[1:],vcxtrj,vcytrj,frame,color,frame_idx)
+            # visualize_trj(fig,axL,im,np.unique(labinf)[1:],vcxtrj,vcytrj,frame,color,frame_idx)
+            visualize_trj(fig,axL,im,np.unique(labinf)[:],vcxtrj,vcytrj,frame,color,frame_idx)
             
 
         if isSave: #not clustered yet
@@ -392,8 +395,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     # plt.draw()
     plt.pause(0.00001) 
     # plt.title('frame '+str(frame_idx))
-    name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
-    plt.savefig(name) ##save figure
+    # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
+    # plt.savefig(name) ##save figure
     """sort the annotation list base dn x location. from left to right"""
     annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
     
@@ -418,7 +421,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()
     plt.show()
     
-def prepare_data_to_vis(isVideo,isClustered):
+def prepare_input_data(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
     matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
@@ -427,7 +430,7 @@ def prepare_data_to_vis(isVideo,isClustered):
     if Parameterobj.useWarpped:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         """to visulize the connected component"""
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
 
@@ -451,12 +454,12 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = False
-    useVirtualCenter = True
-    isSave           = True
-    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_data_to_vis(isVideo,isClustered)
+    isVisualize      = True
+    useVirtualCenter = False
+    isSave           = False
+    matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
-    start_frame_idx = 0
+    start_frame_idx = 600
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
     # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]

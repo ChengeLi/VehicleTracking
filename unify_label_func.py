@@ -11,6 +11,7 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 def unify_label(matfiles,savename,label_choice):
+    pdb.set_trace()
     DirName = ['upup','updown','downup','downdown']
     for dirii in range(4):
         atmp     = []

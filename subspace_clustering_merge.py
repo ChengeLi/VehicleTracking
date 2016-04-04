@@ -379,7 +379,9 @@ if __name__ == '__main__':
     isSave      = True
     isVisualize = False
 
-    for matidx, matfile in enumerate(adjmatfiles):
+    # for matidx, matfile in enumerate(adjmatfiles):
+    for matidx in range(4,5,1):
+        matfile = adjmatfiles[matidx]
         labelsave = {} #for the save in the end
         adjfile = loadmat(matfile)
         DirName = ['upup','updown','downup','downdown']

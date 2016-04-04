@@ -36,9 +36,9 @@ def readData():
 	matfilepath = DataPathobj.blobPath
 	matfiles = sorted(glob.glob(matfilepath + '*.mat'))
 	# matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
-	'==============================================================================='
-	'change the offset!!'
-	'==============================================================================='
+	"""==============================================================================="""
+	"""change the offset!!"""
+	"""==============================================================================="""
 	offset = 0
 	matfiles = matfiles[offset:]
 	return matfiles,offset

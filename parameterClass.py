@@ -106,12 +106,14 @@ class parameter(object):
 			self.loc_change = 0.5
 			self.minspdth = 3
 			self.transth = 3*self.targetFPS #don't allow stopping
-			self.livelong_thresh = 0
+			self.livelong_thresh = 0  ##at least 2, for speed
 
 
 			"""for adj SBS"""
-			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
-			self.nullDist_for_adj = 35#if dis>= this value, adj[i,j] will be set to 0 
+			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
+			self.trjoverlap_len_thresh = 2
+			# self.nullDist_for_adj = 35#if dis>= this value, adj[i,j] will be set to 0 
+			self.nullDist_for_adj = 200
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 10
