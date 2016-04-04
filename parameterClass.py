@@ -12,7 +12,7 @@ class parameter(object):
 		"""for KLT tracker"""
 		self.klt_detect_interval = 5
 		if dataSource == 'Johnson':
-			self.useSBS = True
+			self.useSBS = False
 			self.useWarpped = False
 			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
@@ -39,12 +39,14 @@ class parameter(object):
 
 		""" canal st """
 		if dataSource == 'DoT':
-			self.useSBS = True
+			self.useSBS = False
 			self.useWarpped = True
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
-			self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=3, blockSize=5)  # old jayst 
-			
+			self.feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=2, blockSize=3)
+			self.targetFPS = 30
+
+
 			"""for fit_extrapolate filtering"""
 			self.loc_change = 3
 			self.minspdth = 5
@@ -60,8 +62,7 @@ class parameter(object):
 			self.DPGMM_num_component_shirink_factor = 4
 			self.DPGMM_alpha = 10
 
-
-			self.useMask = False
+			self.useMask = True
 			self.adj_weight = [2,2,2,0.5,0.8]
 
 		if dataSource == 'laurier':
