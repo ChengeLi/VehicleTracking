@@ -85,10 +85,6 @@ def TwoD_Emedding(FeatureMtx_norm):
     pdb.set_trace()
 
 
-
-
-
-
 def getRawDataFeatureMtx(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
@@ -272,7 +268,7 @@ def get_gaussian_adj(adj,feature_diff_tensor):
     adj[np.isnan(adj)] = 0
 
     """Hard thresholding adj based on spatial distance"""
-    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
     adj = adj + adj.transpose() 
     return adj
 
@@ -542,7 +538,9 @@ if __name__ == '__main__':
         if Parameterobj.useWarpped:
             savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
         else:
-            savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'spa_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+
         savename = os.path.join(savePath,savename)
         savemat(savename,result)
 
