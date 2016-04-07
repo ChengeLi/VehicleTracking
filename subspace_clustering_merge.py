@@ -201,13 +201,15 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         if sub_index.size > 3:
             project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             print "CC size:", sub_index.size
-            print "project dimension is: ", str(project_dimension)  ## embeded lower dimension
-            ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=project_dimension)
+            """restrict the prj dim <=200, otherwise too slow"""
+            print "project dimension is: ", min(200, project_dimension)  ## embeded lower dimension
+            ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=min(200, project_dimension))
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
-            print 'DPGMM n_components =', int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
-            sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)), alpha=Parameterobj.DPGMM_alpha)
+            n_components_DPGMM = max(1,int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)))
+            print 'DPGMM n_components =', n_components_DPGMM
+            sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=n_components_DPGMM, alpha=Parameterobj.DPGMM_alpha)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
             sub_adjMtx_rearrange = np.zeros(sub_adjMtx.shape)
             # arrange_index = []
@@ -232,7 +234,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
 
 
             # num_cluster_prior = len(np.unique(sub_labels_DPGMM))
-            num_cluster_prior = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
+            num_cluster_prior = n_components_DPGMM
             # visulize(ssc.embedding_,sub_labels,model,color)
             """k-means"""
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
@@ -240,7 +242,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             # pdb.set_trace()
             print 'spectral clustering num_cluster is', num_cluster_prior
             # sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
-            sub_labels_spectral = ssc.clustering_spectral(int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)))
+            sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
 
             # arrange_index = []
             # for ii in np.unique(sub_labels_spectral):
@@ -358,7 +360,8 @@ def prepare_input_data():
     if Parameterobj.useWarpped:      
         adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*.mat')))
     else:
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
+        # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))
     savePath = DataPathobj.sscpath
     trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
 
@@ -400,9 +403,9 @@ if __name__ == '__main__':
             """ construct adj use ssc, with Neighbour adj as constraint"""
             # trjID,labels = sscAdj_inNeighbour(adjfile)
 
-            labelsave['labels_DPGMM'+DirName[dirii]] = labels_DPGMM
-            labelsave['labels_spectral'+DirName[dirii]] = labels_spectral
-            labelsave['trjID'+DirName[dirii]] = trjID
+            labelsave['labels_DPGMM_'+DirName[dirii]] = labels_DPGMM
+            labelsave['labels_spectral_'+DirName[dirii]] = labels_spectral
+            labelsave['trjID_'+DirName[dirii]] = trjID
 
         if isSave:
             print "saving the labels..."

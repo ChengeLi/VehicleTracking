@@ -11,7 +11,6 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 def unify_label(matfiles,savename,label_choice):
-    pdb.set_trace()
     DirName = ['upup','updown','downup','downdown']
     for dirii in range(4):
         atmp     = []
@@ -27,7 +26,6 @@ def unify_label(matfiles,savename,label_choice):
             M1 = loadmat(matfiles[0])[IDName][0]
         except: ## if no this direction, key error, continue
             continue
-
         for matidx in range(len(matfiles)-1): 
             if matidx == 0:
                 # L1 = loadmat(matfiles[matidx])[label_choice][0]
@@ -110,13 +108,14 @@ def unify_label(matfiles,savename,label_choice):
 
 
 if __name__ == '__main__':
-    # matfilePath = DataPathobj.sscpath
+    # 
     """to visulize the connected component"""
     global useCC
-    useCC = True
-    if useCC:
+    useCC = False
+    if not useCC:
+        matfilePath = DataPathobj.sscpath
+    else:
         matfilePath = DataPathobj.adjpath
-
 
     savePath      = DataPathobj.unifiedLabelpath
     label_choice = Parameterobj.clustering_choice
@@ -124,8 +123,13 @@ if __name__ == '__main__':
     if Parameterobj.useWarpped:
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
     else:
-        matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
-    numTrunc    = len(matfilesAll)
+        if useCC:
+            matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
+        else:
+            matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
+
+
+    numTrunc = len(matfilesAll)
 
     if numTrunc<=200:
         if Parameterobj.useWarpped:

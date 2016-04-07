@@ -95,7 +95,10 @@ def VC_filter(vcxtrj,vcytrj):
 
 
 def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=False):  # get the time dictionary, such as vctime
-
+    if createGT:
+        global annotation_file
+        global global_annolist
+        global_annolist = []
     if isVisualize:
         if isVideo:    
             video_src   = dataPath
@@ -158,7 +161,14 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         print("frame {0}\r".format(frame_idx)),
         sys.stdout.flush()
         if subsample_frmIdx%trunclen == 0:
+            if subsample_frmIdx!=0:
+                if createGT:
+                    annotation_file.close()
+                    pickle.dump(global_annolist,open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'global_annolist.p','wb'))
+                    pdb.set_trace()
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
+            if createGT:
+                annotation_file = open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'annotation_file.txt','wb')
             trunkTrjFile = loadmat(matfiles[matidx])
             xtrj = csr_matrix(trunkTrjFile['xtracks'], shape=trunkTrjFile['xtracks'].shape).toarray()
             ytrj = csr_matrix(trunkTrjFile['ytracks'], shape=trunkTrjFile['ytracks'].shape).toarray()
@@ -357,11 +367,15 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             # pickle.dump( save_clusterSize, open(savenameclusterSize,"wb"))
             # pdb.set_trace()
 
-    return images2gif
 
 
 
 def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
+    if createGT:
+        annotation_file.write('frame:')
+        annotation_file.write(str(frame_idx))
+        annotation_file.write('\n')
+
     plt.ion()
     dots = []
     annos = []
@@ -387,24 +401,30 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 line_exist = 1
             else:
                 dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1])))
+            annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=8))
 
 
     im.set_data(frame[:,:,::-1])
     fig.canvas.draw()
-    # plt.draw()
-    plt.pause(0.00001) 
+    # plt.pause(0.00001) 
+
     # plt.title('frame '+str(frame_idx))
     # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
     # plt.savefig(name) ##save figure
     """sort the annotation list base dn x location. from left to right"""
-    annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False) 
-    
-    # for jj in range(len(annolist)):
-    #     print np.int(annolist[jj].get_text())
-
+    if createGT:
+        # annolist = sorted(annos, key=lambda x: sqrt(x.xy[0]**2+x.xy[1]**2), reverse=False) 
+        annolist = sorted(annos, key=lambda x: x.xy[0], reverse=False)
+        
+        for jj in range(len(annolist)):
+            annotation_file.write(str(np.int(annolist[jj].get_text())))
+            global_annolist.append(np.int(annolist[jj].get_text())) 
+            # annotation_file.write(str(annolist[jj].xy))
+            annotation_file.write('\n')
     plt.draw()  
     plt.show()
+    plt.pause(0.0001)
+    # plt.waitforbuttonpress()
 
     # image2gif = Figtodat.fig2img(fig)
     # images2gif.append(image2gif)
@@ -418,8 +438,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
         i.remove()
     for anno in annos:
         anno.remove()    
-    plt.draw()
-    plt.show()
+
     
 def prepare_input_data(isVideo,isClustered):
     global subSampRate
@@ -430,9 +449,9 @@ def prepare_input_data(isVideo,isClustered):
     if Parameterobj.useWarpped:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
     else:
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         """to visulize the connected component"""
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
 
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
@@ -455,16 +474,22 @@ if __name__ == '__main__':
     trunclen         = Parameterobj.trunclen
     isClustered      = True
     isVisualize      = True
-    useVirtualCenter = False
+    useVirtualCenter = True
     isSave           = False
+    global createGT
+    createGT = False
+    if createGT:
+        isClustered = False
+        useVirtualCenter = False
+
+
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)
     # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
-    start_frame_idx = 600
+    start_frame_idx = 0
     # start_frame_idx = trunclen*subSampRate*6
     print "start_frame_idx: ",start_frame_idx
     # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
-
 
 
 

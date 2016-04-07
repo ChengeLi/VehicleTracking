@@ -16,6 +16,42 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+def adj_GTind(fully_adj,trjID):
+    rearrange_adj = np.zeros_like(fully_adj)
+    matidx = 0
+    global_annolist = pickle.load(open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'global_annolist.p','rb'))
+    _, idx = np.unique(global_annolist, return_index=True)
+    unique_anno = np.array(global_annolist)[np.sort(idx)]
+
+    arrange_index = []
+    for ii in range(fully_adj.shape[0]):
+        arrange_index = arrange_index+ list(np.where(trjID==unique_anno[ii])[0])
+
+    rearrange_adj =  fully_adj[arrange_index,:][:,arrange_index]
+    return rearrange_adj
+
+
+def knn_graph(fully_adj, knn = 8):
+    """construct KNN graph from the fully connected graph"""
+    # knn_adj = np.zeros_like(fully_adj)
+    knn_adj = []
+    if knn < fully_adj.shape[0]:
+        for i in range(0, len(fully_adj)):
+            knn_adj.append([])
+            row = fully_adj[i][:]
+            row = sorted(row,reverse=True)
+            row = row[:knn]
+            for j in range(0, len(fully_adj[i])):
+                if fully_adj[i][j] in row:
+                    knn_adj[i].append(fully_adj[i][j])
+                else:
+                    knn_adj[i].append(0)
+    else:
+        knn_adj = fully_adj
+    return np.array(knn_adj)
+
+
+
 def standard_scaler_normalization(data_feature_mtx):
     """normalize across all samples for each feature"""
     scaler = StandardScaler().fit(data_feature_mtx)
@@ -64,8 +100,6 @@ def TwoD_Emedding(FeatureMtx_norm):
     # model = sklearn.manifold.LocallyLinearEmbedding(n_neighbors=5, n_components=self.n_dimension, reg=0.001, eigen_solver='auto', tol=1e-06, max_iter=100, 
     #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
     # self.embedding_ = model.fit_transform(data_sampl_*feature_)
-
-
 
     sscfile = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/00115_ROI/ssc/001.mat')
     labels_DPGMM = csr_matrix(sscfile['labels_DPGMM'], shape=sscfile['labels_DPGMM'].shape).toarray()
@@ -187,7 +221,7 @@ def getMuSigma(dataForKernel):
         # plt.plot(cxi,cyi,'r')
         # plt.draw()
 
-    'fit Gaussian to find mu and sigma'
+    """fit Gaussian to find mu and sigma"""
     # mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
     # mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
     # mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
@@ -246,7 +280,7 @@ def get_thresholding_adj(adj,feature_diff_tensor):
     adj = adj + adj.transpose() 
     return adj
 
-def get_gaussian_adj(adj,feature_diff_tensor):
+def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     """assign different weights to different features"""
     weight = Parameterobj.adj_weight
     sxdiff_normalized    = feature_diff_tensor[:,:,0]
@@ -264,13 +298,32 @@ def get_gaussian_adj(adj,feature_diff_tensor):
     # adj_element = np.exp((-sxdiff**2/(2*sigma_xspd_diff**2)+(-sydiff**2/(2*sigma_yspd_diff**2))+(-mdis**2/(2*sigma_spatial_distance**2)) + (-huedis/100) +(-centerDis/100)))
     # adj_element = np.exp(-sxdiff_normalized-sydiff_normalized-mdis_normalized-huedis_normalized-centerDis_normalized)
 
-    adj = np.exp(- (weight[0]*sxdiff_normalized+weight[1]*sydiff_normalized+weight[2]*mdis_normalized+weight[3]*huedis_normalized+weight[4]*centerDis_normalized))
-    adj[np.isnan(adj)] = 0
-
+    fully_adj = np.exp(- (weight[0]*sxdiff_normalized+weight[1]*sydiff_normalized+weight[2]*mdis_normalized+weight[3]*huedis_normalized+weight[4]*centerDis_normalized))
+    fully_adj[np.isnan(fully_adj)] = 0
+    fully_adj = fully_adj+fully_adj.transpose()
+    """construct KNN graph from fully connected graph"""
+    # adj_knn = knn_graph((fully_adj),knn = 20)
+    adj = fully_adj
     """Hard thresholding adj based on spatial distance"""
-    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
-    adj = adj + adj.transpose() 
+    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
+    adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
+
+    """Hard thresholding adj based on velocities"""
+    # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
+    # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
+    adj = adj*(feature_diff_tensor[:,:,0]< 0.2)
+    adj = adj*(feature_diff_tensor[:,:,1]< 0.1)
+    # adj = adj*(feature_diff_tensor[:,:,0]< 0.1)
+    # adj = adj*(feature_diff_tensor[:,:,1]< 0.05)
+    # adj = adj + adj.transpose() 
+    # adj_GTind(fully_adj,sameDirTrjID)
+
     return adj
+
+
+
+
 
 # same blob score (SBS) for two trajectories
 def sameBlobScore(fgBlobInd1,fgBlobInd2):
@@ -504,7 +557,7 @@ if __name__ == '__main__':
                 adj=get_thresholding_adj(adj,feature_diff_tensor)
 
             if adj_methods =="Gaussian":
-                adj=get_gaussian_adj(adj,feature_diff_tensor)
+                adj=get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID)
 
 
 
@@ -539,7 +592,9 @@ if __name__ == '__main__':
             savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
         else:
             # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'spa_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = 'spa_velo_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = '20knn_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = '20knn&thresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
 
         savename = os.path.join(savePath,savename)
         savemat(savename,result)

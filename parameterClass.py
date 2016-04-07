@@ -37,6 +37,7 @@ class parameter(object):
 			self.useMask = False #already masked out!
 			self.adj_weight = [2,2,2,0.5,0.8]
 
+
 		""" canal st """
 		if dataSource == 'DoT':
 			self.useSBS = False
@@ -114,19 +115,26 @@ class parameter(object):
 			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.trjoverlap_len_thresh = 2
 			# self.nullDist_for_adj = 35#if dis>= this value, adj[i,j] will be set to 0 
-			self.nullDist_for_adj = 200
+			# self.nullDist_for_adj = 100
+			# self.nullXspd_for_adj = 5
+			# self.nullYspd_for_adj = 5
+
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
-			self.embedding_projection_factor = 10
-			self.DPGMM_num_component_shirink_factor = 1.5
-			self.DPGMM_alpha = 1
+			self.embedding_projection_factor = 15
+			self.DPGMM_num_component_shirink_factor = 1.1
+			self.DPGMM_alpha = 100000
 
 			self.useMask = False
 
-			self.adj_weight = [2,1,1,0.5,1]
+			# self.adj_weight = [2,1,1,0.5,1]
+			"""ignore the hue and blob!!"""
+			self.adj_weight = [1,1,1,0,0]
 
-		self.clustering_choice = 'labels_DPGMM'
-		# self.clustering_choice = 'labels_spectral'
+
+
+		self.clustering_choice = 'labels_DPGMM_'
+		# self.clustering_choice = 'labels_spectral_'
 
 
 
