@@ -64,7 +64,7 @@ if __name__ == '__main__':
 	cap       = cv2.VideoCapture(video_src)
 	"""this frame count is not the same with what Matlab detected! bug in opencv"""
 	# nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+	fps = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
 
 
 	matfiles,offset = readData()
@@ -88,11 +88,11 @@ if __name__ == '__main__':
 		"""in the incPCP code, mask file is saved as a mtx with width=fps/5*600"""
 		MaskMatfileShape=int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/5*trunclen))
 
-			
-
+		
 		frame_idx = 0
+		global_frame_idx = int(mask_tensor.shape[0]*(offset+matidx)+frame_idx*subSampRate)
 		while frame_idx*subSampRate <mask_tensor.shape[0]:
-			print "frame_idx: ", int(frame_idx*subSampRate +subSampRate*trunclen*matidx)
+			print "frame_idx: ", global_frame_idx
 			# ori_img = cv2.imread(ori_list[(fkltrame_idx*subSampRate)/choice_Interval])
 			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
 			ImgSlice = (mask_tensor[frame_idx*subSampRate,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
@@ -107,14 +107,14 @@ if __name__ == '__main__':
 			"""visualization"""
 			# frame = readVideo(cap,subSampRate)
 			# frame2 = frame
-			# # frame2[:,:,1] = frame[:,:,1]+(maskgray*100)
-			# # foreground = (np.array(frame2[:,:,1])*[np.array(maskgray==1)])[0,:,:]
+			# # # frame2[:,:,1] = frame[:,:,1]+(maskgray*100)
+			# # # foreground = (np.array(frame2[:,:,1])*[np.array(maskgray==1)])[0,:,:]
 
 			# maskedFrame = (frame[:,:,1]*maskgray)
 			# maskedFrame[maskedFrame!=0]=255
 			# maskedFrame_inv =frame[:,:,1]*(1-maskgray)
 			# frame2[:,:,1] = maskedFrame+maskedFrame_inv
-			# cv2.imwrite(DataPathobj.blobPath +str(frame_idx*subSampRate+subSampRate*trunclen*matidx).zfill(7)+'.jpg',frame2)
+			# # cv2.imwrite(DataPathobj.blobPath +str(frame_idx*subSampRate+subSampRate*trunclen*matidx).zfill(7)+'.jpg',frame2)
 			# cv2.imshow('frame2', frame2)
 			# cv2.waitKey(0)
 
@@ -130,12 +130,12 @@ if __name__ == '__main__':
 			blobLabelMtxList.append(sparse_slice)
 			blobCenterList.append(BlobCenters)
 			frame_idx = frame_idx+1
+			global_frame_idx = int(mask_tensor.shape[0]*(offset+matidx)+frame_idx*subSampRate)
 			#end of while loop
 			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate==mask_tensor.shape[0]):
 				print "Save the blob index tensor into a pickle file:"
 				# savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
-				# index = ((offset+matidx)*MaskMatfileShape+frame_idx*subSampRate)/trunclen
-				index = matidx+1
+				index = global_frame_idx/trunclen
 				print 'index',index
 				savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(index).zfill(3)+'.p')
 

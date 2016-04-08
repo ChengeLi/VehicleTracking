@@ -10,51 +10,16 @@ import cPickle as pickle
 import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
 from DataPathclass import *
-DataPathobj = DataPath(VideoIndex)
+DataPathobj = DataPath(dataSource, VideoIndex)
 import sys
 
 
 def prepare_data(isAfterWarpping,dataSource,isLeft=True):
-	if dataSource == 'DoT':
-		if isAfterWarpping:
-			if isLeft:
-				test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vctime.p", "rb" ) )
-				test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
-				test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
-
-				left_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/leftlane/img/*.jpg'))
-				image_list      = left_image_list
-				savePath        = "../DoT/CanalSt@BaxterSt-96.106/leftlane/pair/"
-
-			else:
-				test_vctime = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vctime.p", "rb" ) )
-				test_vcxtrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcxtrj.p", "rb" ) )
-				test_vcytrj = pickle.load( open( "../DoT/CanalSt@BaxterSt-96.106/leftlane/result/final_vcytrj.p", "rb" ) )
-				right_image_list = sorted(glob.glob('../DoT/CanalSt@BaxterSt-96.106/rightlane/img/*.jpg'))
-				image_list       = right_image_list
-				savePath         = "../DoT/CanalSt@BaxterSt-96.106/rightlane/pair/"   
-
-		else:
-			# test_vctime = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vctime.p'), "rb" ) )
-			# test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcxtrj.p'), "rb" ) )
-			# test_vcytrj = pickle.load( open(os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/dic/final_vcytrj.p'), "rb" ) )
-			# image_list = []
-			# savePath   = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/pair/')
-
-			test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
-			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
-			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
-			image_list = DataPathobj.imagePath
-			savePath = DataPathobj.pairpath
-
-
-	if dataSource == 'Johnson':
-		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
-		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
-		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
-		image_list = DataPathobj.imagePath
-		savePath = DataPathobj.pairpath
-
+	test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+	test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+	test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
+	image_list  = DataPathobj.imagePath
+	savePath    = DataPathobj.pairpath
 
 	return test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath
 
@@ -223,10 +188,6 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 
 
 if __name__ == '__main__':
-	isAfterWarpping = False
-	isLeft          = True
-	# dataSource      = 'Johnson'
-	dataSource      = 'DoT'
 
 	fps = 5
 	subSampRate = 6

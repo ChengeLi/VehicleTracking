@@ -132,6 +132,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     vcytrj = {}
     vctime = {}
     clusterSize = {}
+    vctime2 = {} #for test
 
     if isClustered:
         trjID   = np.uint32(loadmat(clustered_result)['trjID'][0]) # labeled trjs' indexes
@@ -144,6 +145,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vcytrj[i]=[]
             vctime[i]=[] 
             clusterSize[i] = []
+            vctime2[i] = []
     else:
         mlabels = np.int32(np.ones(max(IDintrunklast)+1)*-1)  #initial to be -1
         for i in range(max(IDintrunklast)+1): 
@@ -167,6 +169,17 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pickle.dump(global_annolist,open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'global_annolist.p','wb'))
                     pdb.set_trace()
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
+
+            """bc only generate several files instead of all of the them just for testing"""
+            if useCC:
+                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*knn&*.mat'))):
+                    print "already used up the adj files"
+                    break
+
+            else:
+                if matidx>=len(sorted(glob.glob(DataPathobj.sscpath +'0*.mat'))):
+                    print "already used up the ssc files"
+                    break
             if createGT:
                 annotation_file = open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'annotation_file.txt','wb')
             trunkTrjFile = loadmat(matfiles[matidx])
@@ -179,78 +192,68 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 continue
             IDintrunk = trunkTrjFile['trjID'][0]
             Nsample   = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
-            ttrj      = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
-            ttrj[ttrj==np.max(ttrj[:])]=np.nan
-            startT = np.int32(np.ones([Nsample,1])*-999)
-            endT   = np.int32(np.ones([Nsample,1])*-999)
-            for i in range(Nsample):  # for the ith sample## get the time T (where the pt appears and disappears)
-                # havePt  = np.array(np.where(xtrj[i,:]!=0))[0]
-                # if len(havePt)!=0:
-                #     startT[i] = np.int((min(havePt)+(subsample_frmIdx/trunclen*trunclen))*subSampRate)
-                #     endT[i]   = np.int((max(havePt)+(subsample_frmIdx/trunclen*trunclen))*subSampRate)
-                #     """only for check, can delete trj"""
-                #     if startT[i]!=np.nanmin(ttrj[i,:])or endT[i]!=np.nanmax(ttrj[i,:]):
-                #         pdb.set_trace()
-                #         print "wrong time===========!!!, want to delete this trj?"
-                #         # fix me..... delete the trj
-                startT[i] =np.nanmin(ttrj[i,:])
-                endT[i]   =np.nanmax(ttrj[i,:])
+            
 
             #  get the mlabels for unclustered trjs, just the original global ID
             if not isClustered:
                 for idx,ID in enumerate(IDintrunk):  
                     mlabels[int(ID)] = np.int(IDintrunk[int(idx)])
-
-            #  get the vctime
             labinT = mlabels[IDintrunk] # label in this trunk
-            for k in np.unique(labinT):
-                k = np.int(k)
-                if k !=-1:      
-                    t1list = startT[labinT==k]  # consider all IDs in the trunk, not only alive in curFrm
-                    t2list = endT[labinT==k]
-                    t1 = t1list[t1list!=-999]
-                    t2 = t2list[t2list!=-999]
-                    if len(t1)*len(t2)!=0:
-                        startfrm = np.int(np.min(t1))   # earliest appering time in this trj group
-                        endfrm   = np.int(np.max(t2))   # latest disappering time in this trj group
-                    else:
-                        print "!!!!error!!!!!!there are no trjs in class", str(k)
-                        print "It's Ok to skip these...Now only consider left lane"
-                        pdb.set_trace()
-                        startfrm =-888
-                        endfrm   =-888
-                        continue
 
-                    if not vctime[k]:
-                        vctime[k] =  [int(startfrm),int(endfrm)]
-                    else:
-                        print k
-                        lastendfrm = vctime[k][-1]
-                        laststartfrm = vctime[k][-2]
-                        if int(startfrm) == lastendfrm+1*subSampRate:
-                            vctime[k] = [laststartfrm, int(endfrm)]
-                            CrossingClassLbel.append(k)
-                        else:
-                            print k
-                            print "========same class trjs not overlapping, disconnected==============!"
-                            # pdb.set_trace()
-                            notconnectedLabel.append(k)
-                            vctime[k].append(int(startfrm))
-                            vctime[k].append(int(endfrm))
- 
+            """get vctime trunk-wise, one vctime per trunk"""
+            # ttrj      = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+            # ttrj[ttrj==np.max(ttrj[:])]=np.nan
+            # startT = np.int32(np.ones([Nsample,1])*-999)
+            # endT   = np.int32(np.ones([Nsample,1])*-999)
+            # for i in range(Nsample):  # for the ith sample## get the time T (where the pt appears and disappears)
+            #     startT[i] =np.nanmin(ttrj[i,:])
+            #     endT[i]   =np.nanmax(ttrj[i,:])
 
-        # try: # protect from individable start_frame_idx, continue adding from idx untill loading xtrj first
-        #     print xtrj.keys()[0]
-        # except:
-        #     pdb.set_trace()
-        #     subsample_frmIdx   += 1
-        #     frame_idx = subsample_frmIdx*subSampRate
-        #     continue
+
+            # for k in np.unique(labinT):
+            #     k = np.int(k)
+            #     if k !=-1:      
+            #         t1list = startT[labinT==k]  # consider all IDs in the trunk, not only alive in curFrm
+            #         t2list = endT[labinT==k]
+            #         t1 = t1list[t1list!=-999]
+            #         t2 = t2list[t2list!=-999]
+            #         if len(t1)*len(t2)!=0:
+            #             startfrm = np.int(np.min(t1))   # earliest appering time in this trj group
+            #             endfrm   = np.int(np.max(t2))   # latest disappering time in this trj group
+            #         else:
+            #             print "!!!!error!!!!!!there are no trjs in class", str(k)
+            #             print "It's Ok to skip these...Now only consider left lane"
+            #             pdb.set_trace()
+            #             startfrm =-888
+            #             endfrm   =-888
+            #             continue
+
+            #         if not vctime[k]:
+            #             vctime[k] =  [int(startfrm),int(endfrm)]
+            #         else:
+            #             print k," this class has already appeared."
+            #             lastendfrm = vctime[k][-1]
+            #             laststartfrm = vctime[k][-2]
+            #             if int(startfrm) == lastendfrm+1*subSampRate:
+            #                 print k,"========same class trjs connected==============!"
+            #                 vctime[k] = [laststartfrm, int(endfrm)]
+            #                 CrossingClassLbel.append(k)
+
+            #             else:
+            #                 print "========same class trjs not overlapping, disconnected==============!"
+            #                 notconnectedLabel.append(k)
+            #                 # vctime[k].append(int(startfrm))
+            #                 # vctime[k].append(int(endfrm))
+            #                 vctime[k].append(-2000)
+            #                 vctime[k].append(-2000)
+
+
         PtsInCurFrm = xtrj[:,subsample_frmIdx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf      = mlabels[IDinCurFrm] # label in current frame
         # print "labinf: ",labinf
         for k in np.unique(labinf):
+
             if k != -1:
                 x = xtrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 y = ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
@@ -277,13 +280,24 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     vcxtrj[k].extend(vx) 
                     vcytrj[k].extend(vy)
 
-                # pdb.set_trace()
                 # if vx<=0 or vy<=0:  # why exist negative???? 
+                    # pdb.set_trace()
+
+                """get vctime with the X and Y"""
+                vctime2[k].extend([frame_idx])
+                if len( vctime2[k])!=len( vcxtrj[k]):
+                    print "frame_idx=",frame_idx
+                    print "k=",k
+                    print "vctime2[k]", vctime2[k]
+                    print "vcxtrj[k]", vcxtrj[k]
+                    pdb.set_trace()
+
 
                 if len(x)!=len(y):
                     pdb.set_trace()
                 if isClustered:
                     clusterSize[k].extend([len(x)])
+
 
         if isVisualize:
             image2gif=[]
@@ -327,46 +341,47 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         frame_idx = subsample_frmIdx*subSampRate
         # end of while loop
 
-    if isSave and isClustered:
+    if isSave and isClustered and useVirtualCenter:
+        """must save the virtual center, otherwise since the class size is changing"""
         print "notconnectedLabel:",notconnectedLabel
         print "CrossingClassLbel:",CrossingClassLbel
 
-        """ save CC_ connected component"""
-        savenameT = os.path.join(savePath,'CC_final_vctime.p')
-        savenameX = os.path.join(savePath,'CC_final_vcxtrj.p')
-        savenameY = os.path.join(savePath,'CC_final_vcytrj.p')
-        savenameclusterSize = os.path.join(savePath,'CC_final_clusterSize.p')
-        pdb.set_trace()
+        if useCC:
+            """ save CC_ connected component"""
+            savenameT = os.path.join(savePath,'CC_final_vctime.p')
+            savenameX = os.path.join(savePath,'CC_final_vcxtrj.p')
+            savenameY = os.path.join(savePath,'CC_final_vcytrj.p')
+            savenameclusterSize = os.path.join(savePath,'CC_final_clusterSize.p')
+        else:
+            savenameT = os.path.join(savePath,'final_vctime.p')
+            savenameX = os.path.join(savePath,'final_vcxtrj.p')
+            savenameY = os.path.join(savePath,'final_vcytrj.p')
+            savenameclusterSize = os.path.join(savePath,'final_clusterSize.p')
+
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
             save_vcytrj = {}
             save_clusterSize = {}            
-            clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel}
-            clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel}
-            clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel}
-            clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel}
+            clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel and key!=-1}
+            clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel and key!=-1}
+            clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel and key!=-1}
+            clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel and key!=-1}
+            
+            clean_vctime2 = {}
+            """is the same with clean_vctime"""
+            # clean_vctime2 = {key: [min(value),max(value)] for key, value in vctime2.items() if key!=-1}
+            clean_vctime2 = {key: value for key, value in vctime2.items() if key not in notconnectedLabel and key!=-1}
+
+
             pdb.set_trace()
             pickle.dump( clean_vctime, open(savenameT,"wb"))
+            pickle.dump( clean_vctime2, open(os.path.join(savePath,'final_vctime_consecutive_frame.p'),'wb'))
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
             pickle.dump( clean_clusterSize, open(savenameclusterSize,"wb"))
-
-            """duplicate"""
-            # for i in np.int32(np.unique(list(set(vctime.keys())-set(notconnectedLabel)))): 
-            #     save_vctime[i] = np.array(clean_vctime[i])
-            #     save_vcxtrj[i] = np.array(clean_vcxtrj[i])
-            #     save_vcytrj[i] = np.array(clean_vcytrj[i])
-            #     save_clusterSize[i] = np.array(clean_clusterSize[i])
             
-
-
-            # pickle.dump( save_vctime, open(savenameT,"wb"))
-            # pickle.dump( save_vcxtrj, open(savenameX,"wb"))
-            # pickle.dump( save_vcytrj, open(savenameY,"wb"))
-            # pickle.dump( save_clusterSize, open(savenameclusterSize,"wb"))
-            # pdb.set_trace()
-
+            pickle.dump(CrossingClassLbel, open(os.path.join(savePath,'CrossingClassLbel.p'),'wb'))
 
 
 
@@ -451,7 +466,8 @@ def prepare_input_data(isVideo,isClustered):
     else:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         """to visulize the connected component"""
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
+        if useCC:
+            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
 
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
@@ -473,14 +489,17 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
-    isSave           = False
+    isSave           = True
     global createGT
     createGT = False
     if createGT:
         isClustered = False
         useVirtualCenter = False
+
+    global useCC
+    useCC = False
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

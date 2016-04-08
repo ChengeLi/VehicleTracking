@@ -129,8 +129,8 @@ class parameter(object):
 
 			# self.adj_weight = [2,1,1,0.5,1]
 			"""ignore the hue and blob!!"""
-			self.adj_weight = [1,1,1,0,0]
-
+			# self.adj_weight = [1,1,1,0,0]
+			self.adj_weight = [0,0,0,0,1]
 
 
 		self.clustering_choice = 'labels_DPGMM_'

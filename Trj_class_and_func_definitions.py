@@ -2,8 +2,6 @@ import numpy as np
 import pdb
 class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime,subSampRate):
-        self.trunkTrjFile    = {}
-        self.Trj             = [] #[x,y]
         self.Trj_with_ID     = [] # [ID,x,y]
         self.Trj_with_ID_frm = [] # [ID,frm,x,y]
         self.xTrj   = vcxtrj  #x
@@ -21,28 +19,44 @@ class TrjObj():
         self.bad_IDs4 = [] # X direction 
 
         fps = 5
+        """initialize with mintime and maxtime"""
+        # for key, val in vctime.iteritems():
+        #     if (len(val)==0) or (val[1]-val[0]+1 < fps*1):
+        #         self.bad_IDs1.append(key)
+
+        """initialize with time range"""
         for key, val in vctime.iteritems():
-            if (len(val)==0) or (val[1]-val[0]+1 < fps*1):
-                # pdb.set_trace()
+            if len(val) < fps*1:
                 self.bad_IDs1.append(key)
 
 
         for key, value in vcxtrj.iteritems():
             x_location = vcxtrj[key]
             y_location = vcytrj[key]
-            if len(vctime[key])==2:
-                curfrm = range(vctime[key][0],vctime[key][1]+subSampRate,subSampRate)
-                if np.size(curfrm)!= np.size(value):
-                    print "error!==============================="
-                    print('vctime size : {0}, vcxtrj size : {1}').format(np.size(curfrm),np.size(value))
-                    # pdb.set_trace()
-                    self.bad_IDs2.append(key)
-                                   
-                else:
-                    for ii in range(np.size(value)):                   
-                        self.Trj.append([x_location[ii],y_location[ii]]) 
-                        self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
-                        self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
+            """initialize with mintime and maxtime"""
+            # if len(vctime[key])==2:
+            #     curfrm = range(vctime[key][0],vctime[key][1]+subSampRate,subSampRate)
+            #     if np.size(curfrm)!= np.size(value):
+            #         print "error!==============================="
+            #         print('vctime size : {0}, vcxtrj size : {1}').format(np.size(curfrm),np.size(value))
+            #         pdb.set_trace()
+            #         self.bad_IDs2.append(key)
+            #     else:
+            #         for ii in range(np.size(value)):                   
+            #             self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
+            #             self.Trj_with_ID_frm.append([key,curfrm[ii],x_location[ii],y_location[ii]])
+            """initialize with time range"""
+            if len(vctime[key])!= len(x_location):
+                print "error!==============================="
+                print('vctime size : {0}, vcxtrj size : {1}').format(len(vctime[key]),len(x_location))
+                pdb.set_trace()
+                self.bad_IDs2.append(key)
+            else:
+                for ii in range(np.size(value)):                   
+                    self.Trj_with_ID.append([key,x_location[ii],y_location[ii]])
+                    self.Trj_with_ID_frm.append([key,vctime[key][ii],x_location[ii],y_location[ii]])
+
+
 
 
 
