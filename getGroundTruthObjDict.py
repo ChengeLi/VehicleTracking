@@ -3,10 +3,10 @@ import csv
 import pickle as pickle
 import numpy as np
 import pdb
-# from DataPathclass import *
-# DataPathobj = DataPath(dataSource,VideoIndex)
-# from parameterClass import *
-# Parameterobj = parameter(dataSource,VideoIndex)
+from DataPathclass import *
+DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 def GTFromCSV(file, line_limit):
 	reader = csv.reader(file)

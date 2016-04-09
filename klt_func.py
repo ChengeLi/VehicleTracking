@@ -38,7 +38,8 @@ if __name__ == '__main__':
     isVisualize   = False
 
     # -- utilities
-    if isVisualize: plt.figure(num=None)
+    if isVisualize: 
+        plt.figure(num=None)
     lk_params = Parameterobj.lk_params
     feature_params = Parameterobj.feature_params
 
@@ -58,16 +59,17 @@ if __name__ == '__main__':
         tracksdic   = {}
         start       = {}
         end         = {}
-        for kk in range((lastTrj['lastPtsKey'][0]).shape[0]):
-            key            = lastTrj['lastPtsKey'][0][kk]
-            start[key]     = np.nanmin(lastT[kk,:])
-            if math.isnan(start[key]): 
-                print "key:",key, "kk:",kk
-                start.pop(key)
-                continue
-            end[key]       = -1 #all alive trj
-            tracksdic[key] = []
-            tracksdic[key].append(tuple(lastTrj['lastPtsValue'][kk,:]))
+        if len(lastTrj['lastPtsKey'])>0:
+            for kk in range((lastTrj['lastPtsKey'][0]).shape[0]):
+                key        = lastTrj['lastPtsKey'][0][kk]
+                start[key] = np.nanmin(lastT[kk,:])
+                if math.isnan(start[key]): 
+                    print "key:",key, "kk:",kk
+                    start.pop(key)
+                    continue
+                end[key]       = -1 #all alive trj
+                tracksdic[key] = []
+                tracksdic[key].append(tuple(lastTrj['lastPtsValue'][kk,:]))
     else:
         dicidx    = 0 # start from 0
         tracksdic = {} 
@@ -219,43 +221,48 @@ if __name__ == '__main__':
 
      
             for (x, y), good_flag, idx in zip(pnts_new.reshape(-1, 2), good, sorted(tracksdic.keys())):
-                x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
-                y = min(y,frameLp.shape[0]-1)
-                x = max(x,0)  ## why?? klt will find points outside the bdry???
-                y = max(y,0)
                 if not good_flag:
-                    end[idx] = (frame_idx-1)
-                    if idx==0:
-                        pdb.set_trace()
-                    if useBlobCenter:
-                        tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
-                    else:
-                        tracksdic[idx].append((-100,-100,frame_idx,np.nan))
-                    continue
-                if x != -100:
-                    # if x>frameLp.shape[1] or y>frameLp.shape[0]:
-                    #     print x, y
-                    # hue = frame_hsv[y,x,0]
-                    """use a median of the 3*3 window"""
-                    hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
-                    if np.isnan(hue):
-                        hue = frame_hsv[y,x,0]
-                    """try median of the intensity"""
-                    # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
-
-                    if useBlobCenter:
-                        blobInd    = BlobIndMatrixCurFrm[y,x]
-                        if blobInd!=0:
-                            blobCenter = BlobCenterCurFrm[blobInd-1]
-                            tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
+                    if end[idx]==-1:
+                        end[idx] = (frame_idx-1)
+                        if useBlobCenter:
+                            # tracksdic[idx].append((-100,-100,frame_idx,np.nan,0,np.nan,np.nan))
+                            tracksdic[idx].append((np.nan,np.nan,frame_idx,np.nan,0,np.nan,np.nan))
                         else:
-                            # tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
-                            tracksdic[idx].append((x,y,frame_idx,hue,0,x,y))
+                            tracksdic[idx].append((np.nan,np.nan,frame_idx,np.nan))
+                else:
+                    """stop appending nans after this point is already lost."""
+                    if (not np.isnan(x)) and (not np.isnan(y)): 
+                        if end[idx]>0:
+                            pdb.set_trace()
+                        x = min(x,frameLp.shape[1]-1)  ## why?? klt will find points outside the bdry???
+                        y = min(y,frameLp.shape[0]-1)
+                        x = max(x,0)  ## why?? klt will find points outside the bdry???
+                        y = max(y,0)
 
-                    else:
-                        tracksdic[idx].append((x,y,frame_idx,hue))
-                if isVisualize:
-                    cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+                        # if x>frameLp.shape[1] or y>frameLp.shape[0]:
+                        #     print x, y
+                        # hue = frame_hsv[y,x,0]
+                        """use a median of the 3*3 window"""
+                        hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                        if np.isnan(hue):
+                            hue = frame_hsv[y,x,0]
+                        """try median of the intensity"""
+                        # hue = np.median(frameL[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols)])
+
+                        if useBlobCenter:
+                            blobInd    = BlobIndMatrixCurFrm[y,x]
+                            if blobInd!=0:
+                                blobCenter = BlobCenterCurFrm[blobInd-1]
+                                tracksdic[idx].append((x,y,frame_idx,hue,np.int8(blobInd),blobCenter[1],blobCenter[0]))
+                            else:
+                                # tracksdic[idx].append((x,y,frame_idx,hue,0,np.NaN,np.NaN))
+                                tracksdic[idx].append((x,y,frame_idx,hue,0,x,y))
+
+                        else:
+                            tracksdic[idx].append((x,y,frame_idx,hue))
+                        # if isVisualize:
+                        cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+
 
 
         """Detecting new points"""
@@ -263,8 +270,9 @@ if __name__ == '__main__':
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
             mask = masktouse
-            for x, y in [np.int32(tracksdic[tr][-1][:2]) for tr in tracksdic.keys()]:
-                cv2.circle(mask, (x, y), 5, 0, -1)    
+            for x, y in [tracksdic[tr][-1][:2] for tr in tracksdic.keys()]:
+                if not np.isnan(x):
+                    cv2.circle(mask, (np.int32(x), np.int32(y)), 5, 0, -1)    
 
             corners = cv2.goodFeaturesToTrack(frameL,mask=mask,**feature_params)
 
@@ -340,7 +348,7 @@ if __name__ == '__main__':
                 if en_ind==-1: #not yet finished, save whole row
                     ttrack = np.array(tracksdic[trjidx]).T
                 else: #already ended within this truncation
-                    ttrack = np.array(tracksdic[trjidx][:-1]).T # don't save -100s
+                    ttrack = np.array(tracksdic[trjidx][:-1]).T # don't save nans 
 
                 # if st_ind is -1, then the track existed in the previous
                 # truncation and all points except the last one of the
@@ -397,12 +405,25 @@ if __name__ == '__main__':
                 else:
                     tracksdic[i] = [tracksdic[i][-1]]#save the last one
 
-            trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
-            trk['lastPtsKey']   = np.array(tracksdic.keys())
-            # save as matlab file... :-/
-            # savename = './klt/20150222_Mat/HR_w_T______test_' + \
-                # str(frame_idx/trunclen).zfill(3)
+            if len(tracksdic)>0:
+                trk['lastPtsValue'] = np.array(tracksdic.values())[:,0,:]
+                trk['lastPtsKey']   = np.array(tracksdic.keys())
+            else: ##all points are dead in this trunk
+                trk['lastPtsValue'] = np.array([])
+                trk['lastPtsKey']   = np.array([])
 
-            # savename = '../DoT/5Ave@42St-96.81/klt/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/' + str(frame_idx/trunclen).zfill(3)
             savename = os.path.join(savePath,'klt_'+str(np.int(np.ceil(subsample_frmIdx/float(trunclen)))).zfill(3))
             savemat(savename,trk)
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -28,6 +28,11 @@ def adj_GTind(fully_adj,trjID):
         arrange_index = arrange_index+ list(np.where(trjID==unique_anno[ii])[0])
 
     rearrange_adj =  fully_adj[arrange_index,:][:,arrange_index]
+    plt.figure()
+    plt.imshow(rearrange_adj)
+    pdb.set_trace()
+    pickle.dump(arrange_index,open(DataPathobj.DataPath+'/arrange_index.p','wb'))
+
     return rearrange_adj
 
 
@@ -80,20 +85,27 @@ def TwoD_Emedding(FeatureMtx_norm):
     # pca3 = PCAembedding(FeatureMtx_norm,3)
     # FeatureAfterPCA3 = pca3.transform(FeatureMtx_norm)
 
-    pca50 = PCAembedding(FeatureMtx_norm,50)
-    FeatureAfterPCA50 = pca50.transform(FeatureMtx_norm)
+    # pca50 = PCAembedding(FeatureMtx_norm,50)
+    # FeatureAfterPCA50 = pca50.transform(FeatureMtx_norm)
+    # pickle.dump(FeatureAfterPCA50,open(DataPathobj.DataPath+'/FeatureAfterPCA50.p','wb'))
+    FeatureAfterPCA50 = pickle.load(open(DataPathobj.DataPath+'/FeatureAfterPCA50.p','rb'))
 
+    pdb.set_trace()
     from mpl_toolkits.mplot3d import Axes3D
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
 
     from sklearn.manifold import TSNE, MDS
-    tsne = TSNE(n_components=2, perplexity=30.0)
+    # tsne = TSNE(n_components=2, perplexity=30.0)
+    tsne3 = TSNE(n_components=3, perplexity=30.0)
 
-    tsne_data = tsne.fit_transform(FeatureAfterPCA50) 
+    # tsne_data = tsne.fit_transform(FeatureAfterPCA50) 
+    tsne3_data = tsne3.fit_transform(FeatureAfterPCA50) 
+    # pickle.dump(tsne_data,open(DataPathobj.DataPath+'/tsne_data.p','wb'))
+    # tsne_data = pickle.load(open(DataPathobj.DataPath+'/tsne_data.p','rb'))
 
-    mds = MDS(n_components=2, max_iter=100, n_init=1)
-    MDS_data = mds.fit_transform(FeatureAfterPCA50)
+    # mds = MDS(n_components=2, max_iter=100, n_init=1)
+    # MDS_data = mds.fit_transform(FeatureAfterPCA50)
 
 
     """locally linear embedding_"""
@@ -101,21 +113,42 @@ def TwoD_Emedding(FeatureMtx_norm):
     #     method='standard', hessian_tol=0.0001, modified_tol=1e-12, neighbors_algorithm='auto', random_state=None)
     # self.embedding_ = model.fit_transform(data_sampl_*feature_)
 
-    sscfile = loadmat('/media/My Book/CUSP/AIG/Jay&Johnson/00115_ROI/ssc/001.mat')
-    labels_DPGMM = csr_matrix(sscfile['labels_DPGMM'], shape=sscfile['labels_DPGMM'].shape).toarray()
-    labels_spectral = csr_matrix(sscfile['labels_spectral'], shape=sscfile['labels_spectral'].shape).toarray()
-    trjID = csr_matrix(sscfile['trjID'], shape=sscfile['trjID'].shape).toarray()
+    """use DPGMM or Spectral labels"""
+    sscfile = loadmat(DataPathobj.sscpath+'001.mat')
+    labels_DPGMM = csr_matrix(sscfile['labels_DPGMM_upup'], shape=sscfile['labels_DPGMM_upup'].shape).toarray()
+    labels_spectral = csr_matrix(sscfile['labels_spectral_upup'], shape=sscfile['labels_spectral_upup'].shape).toarray()
+    trjID = csr_matrix(sscfile['trjID_upup'], shape=sscfile['trjID_upup'].shape).toarray()
 
-    clustered_color = np.array([np.random.randint(0,255) for _ in range(3*int(len(np.unique(labels_DPGMM))))]).reshape(len(np.unique(labels_DPGMM)),3)
 
+    """use connected_components labels"""
+    adjfile = loadmat(DataPathobj.adjpath+'20knn&thresh_Gaussian_diff_dir_001.mat')
+    labels_CC = csr_matrix(adjfile['c_upup'], shape=adjfile['c_upup'].shape).toarray()
+
+
+    """use fake ground truth labels"""
+    arrange_index = pickle.load(open(DataPathobj.DataPath+'/arrange_index.p','rb'))
+
+    # labels_fakeGT = labels_CC[arrange_index]
+    labels_fakeGT = np.zeros_like(labels_CC)
+    for ii in range(0,int(labels_fakeGT.shape[1]/20),1):
+        labels_fakeGT[0,arrange_index[20*ii:min(20*(ii+1),labels_fakeGT.shape[1])]] = ii
+        # labels_fakeGT[0,5*ii:min(5*(ii+1),labels_fakeGT.shape[1])] = ii
+
+    pdb.set_trace()
+    # labels = labels_DPGMM
+    # labels = labels_spectral
+    # labels = labels_CC
+    labels = labels_fakeGT
+    # data = MDS_data
+    data = tsne_data
+
+    clustered_color = np.array([np.random.randint(0,255) for _ in range(3*int(len(np.unique(labels))))]).reshape(len(np.unique(labels)),3)
     plt.figure()
-    for ii in range(labels_DPGMM.shape[1]):
-        plt.scatter(tsne_data[ii,0],tsne_data[ii,1],color=(clustered_color/255)[labels_DPGMM[0,ii]])
+    for ii in range(labels.shape[1]):
+        plt.scatter(data[ii,0],data[ii,1],color=(clustered_color[int(labels[0,ii])].T/255.0))
     plt.draw()
 
-    plt.figure()
-    plt.scatter(MDS_data[:,0],MDS_data[:,1])
-    plt.draw()
+
     pdb.set_trace()
 
 
@@ -317,7 +350,7 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     # adj = adj*(feature_diff_tensor[:,:,0]< 0.1)
     # adj = adj*(feature_diff_tensor[:,:,1]< 0.05)
     # adj = adj + adj.transpose() 
-    # adj_GTind(fully_adj,sameDirTrjID)
+    adj_GTind(fully_adj,sameDirTrjID)
 
     return adj
 
@@ -393,6 +426,11 @@ if __name__ == '__main__':
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
+        """if no trj in this file, just continue"""
+        try:
+            print 'total number of trjs in this trunk', len(ptstrj['trjID'])
+        except:
+            continue
         if len(ptstrj['trjID'])==0:
             continue
         trjID = ptstrj['trjID'][0]
@@ -470,7 +508,8 @@ if __name__ == '__main__':
             print'building adj mtx ....', NumGoodsampleSameDir,'*',NumGoodsampleSameDir
             dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
             FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
-            # TwoD_Emedding(FeatureMtx_norm)
+            TwoD_Emedding(FeatureMtx_norm)
+            pdb.set_trace()
             color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
             num = np.arange(fnum)
 
@@ -533,8 +572,6 @@ if __name__ == '__main__':
                             trj2 = [x[j,idx],y[j,idx]]
             
                             dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
-                            # if i==842:
-                            #     pdb.set_trace()
                             """counting the sharing blob numbers of two trjs"""
                             # if useSBS:
                             #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))

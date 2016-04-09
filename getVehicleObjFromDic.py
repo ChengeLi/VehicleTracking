@@ -56,7 +56,6 @@ if __name__ == '__main__':
 	pickle.dump(VehicleObjDic,open(os.path.join(savePath,'VehicleObjDic.p'),'wb'))
 
 
-	"""compare with the GT obj dic"""
 
 
 

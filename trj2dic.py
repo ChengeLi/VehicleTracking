@@ -285,16 +285,17 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
                 """get vctime with the X and Y"""
                 vctime2[k].extend([frame_idx])
-                if len( vctime2[k])!=len( vcxtrj[k]):
-                    print "frame_idx=",frame_idx
-                    print "k=",k
-                    print "vctime2[k]", vctime2[k]
-                    print "vcxtrj[k]", vcxtrj[k]
-                    pdb.set_trace()
+                # if len( vctime2[k])!=len( vcxtrj[k]):
+                #     print "frame_idx=",frame_idx
+                #     print "k=",k
+                #     print "vctime2[k]", vctime2[k]
+                #     print "vcxtrj[k]", vcxtrj[k]
+                #     pdb.set_trace()
 
 
-                if len(x)!=len(y):
-                    pdb.set_trace()
+                if useVirtualCenter:
+                    if len(x)!=len(y):
+                        pdb.set_trace()
                 if isClustered:
                     clusterSize[k].extend([len(x)])
 
@@ -380,7 +381,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
             pickle.dump( clean_clusterSize, open(savenameclusterSize,"wb"))
-            
+
             pickle.dump(CrossingClassLbel, open(os.path.join(savePath,'CrossingClassLbel.p'),'wb'))
 
 
@@ -489,9 +490,9 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = False
-    useVirtualCenter = True
-    isSave           = True
+    isVisualize      = True
+    useVirtualCenter = False
+    isSave           = False
     global createGT
     createGT = False
     if createGT:
@@ -499,7 +500,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = False
+    useCC = True
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)
