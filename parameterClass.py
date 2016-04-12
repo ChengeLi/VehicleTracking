@@ -35,7 +35,7 @@ class parameter(object):
 
 
 			self.useMask = False #already masked out!
-			self.adj_weight = [2,2,2,0.5,0.8]
+			self.adj_weight = [2,2,2,0,0.8]
 
 
 		""" canal st """
@@ -64,7 +64,7 @@ class parameter(object):
 			self.DPGMM_alpha = 10
 
 			self.useMask = True
-			self.adj_weight = [2,2,2,0.5,0.8]
+			self.adj_weight = [2,2,2,0,0.8]
 
 		if dataSource == 'laurier':
 			self.useSBS = True
@@ -90,7 +90,7 @@ class parameter(object):
 			self.DPGMM_alpha = 10
 
 			self.useMask = True
-			self.adj_weight = [2,2,2,0.5,0.8]
+			self.adj_weight = [2,2,2,0,0.8]
 
 
 
@@ -123,14 +123,16 @@ class parameter(object):
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 15
 			self.DPGMM_num_component_shirink_factor = 1.1
-			self.DPGMM_alpha = 100000
+			self.DPGMM_alpha = 1000
 
 			self.useMask = False
 
-			# self.adj_weight = [2,1,1,0.5,1]
-			"""ignore the hue and blob!!"""
-			# self.adj_weight = [1,1,1,0,0]
-			self.adj_weight = [0,0,0,0,1]
+			# self.adj_weight = [2,1,1,0,1]
+			# self.adj_weight = [4,1,1,0,2]
+			self.adj_weight = [1,1,1,0,1]
+
+			# self.adj_weight = [4,1,1,0,0]
+			# self.adj_weight = [0,0,0,0,1]
 
 
 		self.clustering_choice = 'labels_DPGMM_'

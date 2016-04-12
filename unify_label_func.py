@@ -111,7 +111,7 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = True
+    useCC = False
     if not useCC:
         matfilePath = DataPathobj.sscpath
     else:
@@ -124,7 +124,11 @@ if __name__ == '__main__':
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
     else:
         if useCC:
-            matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
+            # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
+            # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlob*.mat'))
+            # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
+            matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
+
         else:
             matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
 

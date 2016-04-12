@@ -152,6 +152,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vcxtrj[i]=[]
             vcytrj[i]=[]
             vctime[i]=[]
+            vctime2[i] = []
 
     global notconnectedLabel
     notconnectedLabel =[]
@@ -491,7 +492,7 @@ if __name__ == '__main__':
     trunclen         = Parameterobj.trunclen
     isClustered      = True
     isVisualize      = True
-    useVirtualCenter = False
+    useVirtualCenter = True
     isSave           = False
     global createGT
     createGT = False
@@ -500,7 +501,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = True
+    useCC = False
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

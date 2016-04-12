@@ -412,7 +412,7 @@ if __name__ == '__main__':
                 trk['lastPtsValue'] = np.array([])
                 trk['lastPtsKey']   = np.array([])
 
-            savename = os.path.join(savePath,'klt_'+str(np.int(np.ceil(subsample_frmIdx/float(trunclen)))).zfill(3))
+            savename = os.path.join(savePath,'simp_blob_klt_'+str(np.int(np.ceil(subsample_frmIdx/float(trunclen)))).zfill(3))
             savemat(savename,trk)
 
 

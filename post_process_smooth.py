@@ -1,3 +1,6 @@
+'''
+post process the result
+'''
 import os
 import math
 import pdb,glob
@@ -366,24 +369,69 @@ def main(matfile):
 
 
 if __name__ == '__main__':		
-	# define start and end regions
-	#Canal video's dimensions:
-	"""(528, 704, 3)
-	start :<=100,
-	end: >=500,"""
+	"""load our system result trj dictionary:"""
+	VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'VehicleObjDic.p'),'rb'))
+	# x = np.zeros((len(VehicleObjDic),Parameterobj.trunclen))
+	# y = np.zeros((len(VehicleObjDic),Parameterobj.trunclen))
 
-	start_Y = 100;
-	end_Y   = 500;
+	p3 = [] #polynomial coefficients, order 3
+	for key in VehicleObjDic.keys():
+		VehicleObj = VehicleObjDic[key]
+		# x[key,np.array(VehicleObj.frame)] = np.array(VehicleObj.xTrj)
+		# y[key,np.array(VehicleObj.frame)] = np.array(VehicleObj.yTrj)
+
+		xk = np.array(VehicleObj.xTrj)
+		yk = np.array(VehicleObj.yTrj)
+		x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
+		x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
+
+
+		"""fit polynomial, find out those too zig-zagy ones"""
+		p3.append(np.polyfit(x_spatial_smooth, y_spatial_smooth, 2))
 	
-	_, _, warpingMtx, limitX, limitY = loadWarpMtx()
-	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
-	matfilepath = DataPathobj.kltpath
-	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-	start_position =  0
-	matfiles       = matfiles[start_position:]
+	p3 = np.array(p3)
+	"""too zig-zagy ones needs to be further segmented"""
+	outlierID =[]
+	for ii in range(p3.shape[1]):
+		data = p3[:,ii]
+		outlierID = outlierID+ list(np.where(np.isnan(data)==True)[0])
 
-	for matidx,matfile in enumerate(matfiles):
-		main(matfile)
+		mu,std = fitGaussian(data[np.ones(len(data), dtype=bool)-np.isnan(data)])
+		outlierID = outlierID + list(np.where(data>=mu+std)[0])+list(np.where(data<=mu-std)[0])
+		# print p3[outlierID,:]
+
+	outlierID = np.unique(outlierID)
+	# TFid = np.ones(len(goodTrj),'bool')
+	# TFid[outlierID] = False
+	# goodTrj = goodTrj[TFid]
+	# p3      = p3[TFid]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

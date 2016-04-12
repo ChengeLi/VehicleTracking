@@ -155,7 +155,6 @@ def TwoD_Emedding(FeatureMtx_norm):
 def getRawDataFeatureMtx(dataForKernel):
     if len(dataForKernel)==7:
         [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = dataForKernel
-
     FeatureMtx = np.hstack((x,y,xspd,yspd))
     for ii in range(4, dataForKernel.shape[0]):
         if len(dataForKernel[ii])>0:
@@ -321,7 +320,6 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     mdis_normalized      = feature_diff_tensor[:,:,2]
     huedis_normalized    = feature_diff_tensor[:,:,3]
     centerDis_normalized = feature_diff_tensor[:,:,4]
-
     # sigma_xspd_diff = 0.7
     # sigma_yspd_diff = 0.7
     # sigma_spatial_distance = 200
@@ -333,24 +331,30 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
 
     fully_adj = np.exp(- (weight[0]*sxdiff_normalized+weight[1]*sydiff_normalized+weight[2]*mdis_normalized+weight[3]*huedis_normalized+weight[4]*centerDis_normalized))
     fully_adj[np.isnan(fully_adj)] = 0
-    fully_adj = fully_adj+fully_adj.transpose()
     """construct KNN graph from fully connected graph"""
     # adj_knn = knn_graph((fully_adj),knn = 20)
     adj = fully_adj
     """Hard thresholding adj based on spatial distance"""
-    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
-    # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
+    # # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    # # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
     adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
 
     """Hard thresholding adj based on velocities"""
-    # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
-    # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
+    # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
+    # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
     adj = adj*(feature_diff_tensor[:,:,0]< 0.2)
     adj = adj*(feature_diff_tensor[:,:,1]< 0.1)
-    # adj = adj*(feature_diff_tensor[:,:,0]< 0.1)
-    # adj = adj*(feature_diff_tensor[:,:,1]< 0.05)
-    # adj = adj + adj.transpose() 
-    adj_GTind(fully_adj,sameDirTrjID)
+
+
+    """Hard thresholding adj based on blob center dist"""
+    adj = adj*(feature_diff_tensor[:,:,4]< 15/(extremeValue[9]-extremeValue[8])*1)
+
+    """Hard thresholding adj based on hue dist"""
+    """Hue info is very very weak, even with 0.001, still almost fully connected"""
+    # adj = adj*(feature_diff_tensor[:,:,3]< 0.001)
+
+    adj = adj + adj.transpose() 
+    # adj_GTind(fully_adj,sameDirTrjID)
 
     return adj
 
@@ -453,6 +457,8 @@ if __name__ == '__main__':
             Xdir = csr_matrix(ptstrj['Xdir_warpped'], shape=ptstrj['Xdir_warpped'].shape).toarray()
             Ydir = csr_matrix(ptstrj['Ydir_warpped'], shape=ptstrj['Ydir_warpped'].shape).toarray()
 
+
+
         if Parameterobj.useSBS:
             FgBlobIndex = csr_matrix(ptstrj['fg_blob_index'], shape=ptstrj['fg_blob_index'].shape).toarray()
             fg_blob_center_X = csr_matrix(ptstrj['fg_blob_center_X'], shape=ptstrj['fg_blob_center_X'].shape).toarray()
@@ -465,7 +471,6 @@ if __name__ == '__main__':
             fg_blob_center_X = np.ones(x.shape)*np.nan
             fg_blob_center_Y = np.ones(x.shape)*np.nan
             FgBlobIndex      = np.ones(x.shape)*np.nan
-
 
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
@@ -508,8 +513,8 @@ if __name__ == '__main__':
             print'building adj mtx ....', NumGoodsampleSameDir,'*',NumGoodsampleSameDir
             dataForKernel = np.array([x[sameDirInd,:],y[sameDirInd,:],xspd[sameDirInd,:],yspd[sameDirInd,:],hue[sameDirInd,:],fg_blob_center_X[sameDirInd,:],fg_blob_center_Y[sameDirInd,:]])
             FeatureMtx,FeatureMtx_norm = getRawDataFeatureMtx(dataForKernel)
-            TwoD_Emedding(FeatureMtx_norm)
-            pdb.set_trace()
+            # TwoD_Emedding(FeatureMtx_norm)
+            # pdb.set_trace()
             color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
             num = np.arange(fnum)
 
@@ -631,7 +636,11 @@ if __name__ == '__main__':
             # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'spa_velo_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = '20knn_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = '20knn&thresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = '20knn&thresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = 'onlyBlobThresh'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = 'SpaSpdBlobthresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'NoBlobThresh'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+
 
         savename = os.path.join(savePath,savename)
         savemat(savename,result)
