@@ -25,17 +25,21 @@ class parameter(object):
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
-			self.nullDist_for_adj = 500#if dis>= this value, adj[i,j] will be set to 0 
+			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
 			#a car len: ~=100 to 200
+			self.nullXspd_for_adj_norm = 0.1
+			self.nullYspd_for_adj_norm = 0.1
+			self.nullBlob_for_adj = 30
+
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 20
-			self.DPGMM_num_component_shirink_factor = 10
-			self.DPGMM_alpha = 10
+			self.DPGMM_num_component_shirink_factor = 1000
+			self.DPGMM_alpha = 0.1
 
 
 			self.useMask = False #already masked out!
-			self.adj_weight = [2,2,2,0,0.8]
+			self.adj_weight = [2,2,2,0,1]
 
 
 		""" canal st """
@@ -114,10 +118,10 @@ class parameter(object):
 			"""for adj SBS"""
 			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.trjoverlap_len_thresh = 2
-			# self.nullDist_for_adj = 35#if dis>= this value, adj[i,j] will be set to 0 
-			# self.nullDist_for_adj = 100
-			# self.nullXspd_for_adj = 5
-			# self.nullYspd_for_adj = 5
+			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
+			self.nullXspd_for_adj_norm = 0.2
+			self.nullYspd_for_adj_norm = 0.1
+			self.nullBlob_for_adj = 15
 
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""

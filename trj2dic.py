@@ -173,7 +173,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
-                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*knn&*.mat'))):
+                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'NoBlob*.mat'))):
                     print "already used up the adj files"
                     break
 
@@ -491,9 +491,9 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
-    isSave           = False
+    isSave           = True
     global createGT
     createGT = False
     if createGT:
@@ -501,7 +501,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = False
+    useCC = True
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

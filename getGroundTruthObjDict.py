@@ -3,10 +3,7 @@ import csv
 import pickle as pickle
 import numpy as np
 import pdb
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
+
 
 def GTFromCSV(file, line_limit):
 	reader = csv.reader(file)
@@ -23,7 +20,7 @@ def GTFromCSV(file, line_limit):
 	while lines<line_limit:
 		temp = reader.next()
 		if np.double(temp[0])<frame_idx: # new car	
-			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list)
+			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
 			frame_idx_list  = []
 			GTupperL_list   = []
 			GTLowerR_list   = []
@@ -49,7 +46,7 @@ def readGTdata():
 		GTtrjdic = GTFromCSV(f,line_limit)
 
 	elif dataSource == 'Johnson':
-		f =  open(DataPathobj.DataPath+'Johnson_00115_ROI_gt.csv', 'rb')
+		f =  open(os.path.join(DataPathobj.DataPath,'Johnson_00115_ROI_gt.csv'), 'rb')
 		line_limit = 1128
 		GTtrjdic = GTFromCSV(f,line_limit)
 
@@ -111,22 +108,25 @@ def readGTdata():
 
 
 
+"""use the same attribute name as class VehicleObj, easier to compare"""
 class GTtrj(object):
-	def __init__(self,GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list):
-		self.GTupperL_list = GTupperL_list
-		self.GTLowerR_list = GTLowerR_list
-		self.GTcenterXY_list = GTcenterXY_list
-		self.time = frame_idx_list
+	def __init__(self,GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,ID):
+		"""attributes are the same as the vehicle obj class, except that GT has bounding box info """
+		self.VehicleID = ID
+		self.xTrj      = np.array(GTcenterXY_list)[:,0]
+		self.yTrj      = np.array(GTcenterXY_list)[:,1]
+		self.frame     = np.int32(frame_idx_list)
+		self.vel       = [] 
+		self.pos       = [] 
+		self.status    = 1   # 1: alive  2: dead
+		self.Xdir      = []
+		self.Ydir      = []
+
+		self.GTupperL_list = np.array(GTupperL_list)
+		self.GTLowerR_list = np.array(GTLowerR_list)
+		# self.GTcenterXY_list = GTcenterXY_list
 
 
-
-def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
-	"""assgin trj to the nearest GroundTruth bounding box"""
-
-	"""find the overlapping time"""
-
-
-	pass
 
 def clamp(n, minn, maxn):
     # return max(min(maxn, n), minn)
@@ -173,36 +173,39 @@ def plotGTonVideo(GTtrjdic):
 		i.remove()
 
 
-
-
 if __name__ == '__main__':
+	from DataPathclass import *
+	DataPathobj = DataPath(dataSource,VideoIndex)
+	from parameterClass import *
+	Parameterobj = parameter(dataSource,VideoIndex)
+
+
 	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
-	pickle.dump(GTtrjdic,open(DataPathobj.DataPath+'/GTtrjdictionary_'+	dataSource+'.p','wb'))
-	pdb.set_trace
-	()
+	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_'+	dataSource+'.p','wb'))
 
-	"""gis_cam4_coor"""
-	gis_upperL  = (6451788.408,1872650.027)
-	gis_uppperR = (6451872.489,1872795.855)
-	gis_lowerL  = (6451995.983,1872476.609)
-	gis_lowerR  = (6452103.712,1872583.024)
+	if dataSource == 'NGSIM':
+		"""gis_cam4_coordinates"""
+		gis_upperL  = (6451788.408,1872650.027)
+		gis_uppperR = (6451872.489,1872795.855)
+		gis_lowerL  = (6451995.983,1872476.609)
+		gis_lowerR  = (6452103.712,1872583.024)
 
-	gis_cam4_coor = np.array([gis_upperL,gis_uppperR,gis_lowerL,gis_lowerR])
-	locationValidity = {}
-	GTtrjdic_cam4 = {}
+		gis_cam4_coor = np.array([gis_upperL,gis_uppperR,gis_lowerL,gis_lowerR])
+		locationValidity = {}
+		GTtrjdic_cam4 = {}
 
-	for key in GTtrjdic.keys():
-		locationValidity[key] = clamp(np.array(GTtrjdic[key].GTcenterXY_list)[:,2],min(gis_cam4_coor[:,0]),max(gis_cam4_coor[:,0])) *\
-		clamp(np.array(GTtrjdic[key].GTcenterXY_list)[:,3],min(gis_cam4_coor[:,1]),max(gis_cam4_coor[:,1]))
-		GTcenterXY_list_cam4 = (np.array(GTtrjdic[key].GTcenterXY_list)[:,0][locationValidity[key]],np.array(GTtrjdic[key].GTcenterXY_list)[:,1][locationValidity[key]])
-		GTupperL_list_cam4 =np.array(GTtrjdic[key].GTupperL_list)[locationValidity[key]]
-		GTLowerR_list_cam4 = np.array(GTtrjdic[key].GTLowerR_list)[locationValidity[key]]
-		time_cam4 = np.array(GTtrjdic[key].time)[locationValidity[key]]
-		GTtrjdic_cam4[key] = GTtrj(GTupperL_list_cam4,GTLowerR_list_cam4,GTcenterXY_list_cam4,time_cam4)
+		for key in GTtrjdic.keys():
+			locationValidity[key] = clamp(np.array(GTtrjdic[key].GTcenterXY_list)[:,2],min(gis_cam4_coor[:,0]),max(gis_cam4_coor[:,0])) *\
+			clamp(np.array(GTtrjdic[key].GTcenterXY_list)[:,3],min(gis_cam4_coor[:,1]),max(gis_cam4_coor[:,1]))
+			GTcenterXY_list_cam4 = (np.array(GTtrjdic[key].GTcenterXY_list)[:,0][locationValidity[key]],np.array(GTtrjdic[key].GTcenterXY_list)[:,1][locationValidity[key]])
+			GTupperL_list_cam4 =np.array(GTtrjdic[key].GTupperL_list)[locationValidity[key]]
+			GTLowerR_list_cam4 = np.array(GTtrjdic[key].GTLowerR_list)[locationValidity[key]]
+			time_cam4 = np.array(GTtrjdic[key].time)[locationValidity[key]]
+			GTtrjdic_cam4[key] = GTtrj(GTupperL_list_cam4,GTLowerR_list_cam4,GTcenterXY_list_cam4,time_cam4)
 
-	plotGTonVideo(GTtrjdic_cam4)
-	pickle.dump(GTtrjdic_cam4,open(DataPathobj.DataPath+'/GTtrjdictionary_'+dataSource+'_cam4.p','wb'))
+		plotGTonVideo(GTtrjdic_cam4)
+		pickle.dump(GTtrjdic_cam4,open(DataPathobj.DataPath+'/GTtrjdictionary_'+dataSource+'_cam4.p','wb'))
 
 
 

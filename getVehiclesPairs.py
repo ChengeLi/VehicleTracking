@@ -9,8 +9,6 @@ import glob as glob
 import cPickle as pickle
 import matplotlib.pyplot as plt
 from Trj_class_and_func_definitions import *
-from DataPathclass import *
-DataPathobj = DataPath(dataSource, VideoIndex)
 import sys
 
 
@@ -39,15 +37,15 @@ def in_this_frame(VehicleObj,frame_idx):
 
         
 
-def get_Co_occur(VehicleObj1, VehicleObj2):
+def get_Co_occur(VehicleObj1, VehicleObj2, subSampRate):
 	if len(VehicleObj1.frame)==0 or len(VehicleObj2.frame)==0:
 		print "error! trj time is empty!"
 		return
 	else:
 		appeartime1 = VehicleObj1.frame[0]
-		gonetime1   = VehicleObj1.frame[1]
+		gonetime1   = VehicleObj1.frame[-1]
 		appeartime2 = VehicleObj2.frame[0]
-		gonetime2   = VehicleObj2.frame[1]
+		gonetime2   = VehicleObj2.frame[-1]
 
 	if appeartime1 >= appeartime2: ## swap 1 and 2, s.t. 1 always <=2
 		temp        = appeartime2
@@ -72,27 +70,45 @@ def get_Co_occur(VehicleObj1, VehicleObj2):
 	return coorccurStatus, cooccur_ran, cooccur_IDs
 
 
-def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite):
-	ID111      = cooccur_IDs[0]
-	ID222      = cooccur_IDs[1]
+# def get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,subSampRate,isWrite=False):
+# 	ID111      = cooccur_IDs[0]
+# 	ID222      = cooccur_IDs[1]
 	
-	xTrj       = obj_pair2loop.xTrj[ID111]  
+# 	xTrj       = obj_pair2loop.xTrj[ID111]  
 	
 	
-	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1*subSampRate,subSampRate)
+# 	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1*subSampRate,subSampRate)
+# 	startind1  = fullrange1.index(cooccur_ran[0])
+# 	endind1    = fullrange1.index(cooccur_ran[-1])
+	
+# 	fullrange2 = range(obj_pair2loop.frame[ID222][0], obj_pair2loop.frame[ID222][1]+1*subSampRate,subSampRate)
+# 	startind2  = fullrange2.index(cooccur_ran[0])
+# 	endind2    = fullrange2.index(cooccur_ran[-1])	
+
+
+# 	co1X = obj_pair2loop.xTrj[ID111][startind1:endind1+1]
+# 	co1Y = obj_pair2loop.yTrj[ID111][startind1:endind1+1]
+
+# 	co2X = obj_pair2loop.xTrj[ID222][startind2:endind2+1]
+# 	co2Y = obj_pair2loop.yTrj[ID222][startind2:endind2+1]
+
+
+"""use vehicle obj directly, no need to use trj obj"""
+def get_Co_location(cooccur_ran,VehicleObj1,VehicleObj2,subSampRate,isWrite=False):
+	fullrange1 = range(VehicleObj1.frame[0], VehicleObj1.frame[1]+1*subSampRate,subSampRate)
 	startind1  = fullrange1.index(cooccur_ran[0])
 	endind1    = fullrange1.index(cooccur_ran[-1])
 	
-	fullrange2 = range(obj_pair2loop.frame[ID222][0], obj_pair2loop.frame[ID222][1]+1*subSampRate,subSampRate)
+	fullrange2 = range(VehicleObj2.frame[0], VehicleObj2.frame[1]+1*subSampRate,subSampRate)
 	startind2  = fullrange2.index(cooccur_ran[0])
 	endind2    = fullrange2.index(cooccur_ran[-1])	
 
+	co1X = VehicleObj1.xTrj[startind1:endind1+1]
+	co1Y = VehicleObj1.yTrj[startind1:endind1+1]
 
-	co1X = obj_pair2loop.xTrj[ID111][startind1:endind1+1]
-	co1Y = obj_pair2loop.yTrj[ID111][startind1:endind1+1]
+	co2X = VehicleObj2.xTrj[startind2:endind2+1]
+	co2Y = VehicleObj2.yTrj[startind2:endind2+1]
 
-	co2X = obj_pair2loop.xTrj[ID222][startind2:endind2+1]
-	co2Y = obj_pair2loop.yTrj[ID222][startind2:endind2+1]
 	if isWrite:
 		for gkk in range(np.size(cooccur_ran)):
 			temp = []
@@ -174,9 +190,10 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 
 	if abs(VehicleObj1.frame[0] - VehicleObj2.frame[0]) >=600:
 		return
-	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2)
+	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2,subSampRate)
 	if coorccurStatus and np.size(cooccur_ran)>=overlap_pair_threshold:
-		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,isWrite) #get xy and write to file
+		# [co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,subSampRate, isWrite) #get xy and write to file
+		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,VehicleObj1, VehicleObj2,subSampRate, isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
 			# print "cooccur length: ", str(cooccur_ran)
 			print "len(cooccur_ran):", len(cooccur_ran), cooccur_ran[0],'-',cooccur_ran[-1]
@@ -187,11 +204,31 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 				visual_pair(co1X, co2X, co1Y, co2Y,cooccur_ran, color,loopVehicleID1,loopVehicleID2,saveflag) #visualize
 
 
-if __name__ == '__main__':
 
-	fps = 5
-	subSampRate = 6
+def assign_to_gt_box(trj,GTupperL_list,GTLowerR_list,GTcenterXY_list):
+	"""assgin trj to the nearest GroundTruth bounding box"""
+
+	"""find the overlapping time"""
+
+
+	pass
+
+
+
+
+if __name__ == '__main__':
+	from DataPathclass import *
+	DataPathobj = DataPath(dataSource, VideoIndex)
+	from parameterClass import *
+	Parameterobj = parameter(dataSource,VideoIndex)
+
+	# fps = 5
+	# subSampRate = 6
+	fps = Parameterobj.targetFPS
+	cap = cv2.VideoCapture(DataPathobj.video)
+	subSampRate = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))/Parameterobj.targetFPS
 	overlap_pair_threshold = 3*fps
+
 
 	test_vctime,test_vcxtrj,test_vcytrj,image_list,savePath = prepare_data(isAfterWarpping,dataSource,isLeft)
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime,subSampRate = subSampRate)

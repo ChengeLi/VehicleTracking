@@ -19,11 +19,17 @@ import pdb
 
 if __name__ == '__main__':
 
-	# test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
-	test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime_consecutive_frame.p'), "rb" ) )
-	test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
-	test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )			
-	image_list  = DataPathobj.imagePath
+	if useCC:
+		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vctime_consecutive_frame.p'), "rb" ) )
+		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcxtrj.p'), "rb" ) )
+		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcytrj.p'), "rb" ) )			
+	
+	else:
+		# test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime_consecutive_frame.p'), "rb" ) )
+		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )
+
 	savePath    = DataPathobj.pairpath
 
 	cap = cv2.VideoCapture(DataPathobj.video)

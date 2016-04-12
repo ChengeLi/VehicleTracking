@@ -335,19 +335,19 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     # adj_knn = knn_graph((fully_adj),knn = 20)
     adj = fully_adj
     """Hard thresholding adj based on spatial distance"""
-    # # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
     # # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
-    adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
+    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
 
     """Hard thresholding adj based on velocities"""
     # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
     # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
-    adj = adj*(feature_diff_tensor[:,:,0]< 0.2)
-    adj = adj*(feature_diff_tensor[:,:,1]< 0.1)
+    adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj_norm)
+    adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj_norm)
 
 
-    """Hard thresholding adj based on blob center dist"""
-    adj = adj*(feature_diff_tensor[:,:,4]< 15/(extremeValue[9]-extremeValue[8])*1)
+    # """Hard thresholding adj based on blob center dist"""
+    adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
 
     """Hard thresholding adj based on hue dist"""
     """Hue info is very very weak, even with 0.001, still almost fully connected"""
