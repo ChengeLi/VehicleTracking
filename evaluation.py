@@ -23,10 +23,13 @@ def metrics(vehicleCandidates_reorderedInd):
 	overSegement = 0
 	dist_list    = []
 	for key in vehicleCandidates_reorderedInd.keys():
+		if len(vehicleCandidates_reorderedInd[key][2])==0: ##not detected
+			continue
+
 		detect += (len(vehicleCandidates_reorderedInd[key][2])>0)
 		overSegement += (len(vehicleCandidates_reorderedInd[key][2])>1)
 
-		dist_ind = np.int16(vehicleCandidates_reorderedInd[key][2])
+		dist_ind = np.int16(vehicleCandidates_reorderedInd[key][5])
 		dist_list.append( min(np.array(vehicleCandidates[key])[dist_ind,2]))
 
 	Ntarget = (1.0*(len(vehicleCandidates_reorderedInd.keys())))
@@ -54,8 +57,10 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 	im  = plt.imshow(np.zeros_like(frame))
 	color = np.array([np.random.randint(0,255) for _ in range(3*len(GTtrjdic))]).reshape(len(GTtrjdic),3)
 	plt.axis('off')
+	plt.ion()
 	dots = []
-	for keyind in range(len(GTtrjdic.keys())):
+	# for keyind in range(len(GTtrjdic.keys())):
+	for keyind in range(40,70,1):
 		key = GTtrjdic.keys()[keyind]
 		print "key:", key
 		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
@@ -76,11 +81,10 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 			overlap_lowerRX = GTtrjdic[key].fullGTLowerR_list[:,0]
 			overlap_lowerRY = GTtrjdic[key].fullGTLowerR_list[:,1]
 
-
-			cnt = [np.int32([[overlap_upperLX[tt],overlap_upperLY[tt]], \
-				[overlap_lowerRX[tt],overlap_upperLY[tt]],\
-				[overlap_lowerRX[tt],overlap_lowerRY[tt]], \
-				[overlap_upperLX[tt],overlap_lowerRY[tt]]])]
+			cnt = [np.int32([[overlap_upperLX[tt-GTtrjdic[key].fullframe[0]],overlap_upperLY[tt-GTtrjdic[key].fullframe[0]]], \
+				[overlap_lowerRX[tt-GTtrjdic[key].fullframe[0]],overlap_upperLY[tt-GTtrjdic[key].fullframe[0]]],\
+				[overlap_lowerRX[tt-GTtrjdic[key].fullframe[0]],overlap_lowerRY[tt-GTtrjdic[key].fullframe[0]]], \
+				[overlap_upperLX[tt-GTtrjdic[key].fullframe[0]],overlap_lowerRY[tt-GTtrjdic[key].fullframe[0]]]])]
 
 
 			if len(cnt)>0:
@@ -111,16 +115,13 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 				plt.plot(VehicleObjDic[ind].fullxTrj[:tt-VehicleObjDic[ind].frame[0]],VehicleObjDic[ind].fullyTrj[:tt-VehicleObjDic[ind].frame[0]],color = 'r')
 			plt.draw()
 			plt.show()
-			plt.waitforbuttonpress()
-			# plt.pause(0.001)
+			# plt.waitforbuttonpress()
+			plt.pause(0.001)
+			# if len(dots)>0:
+				# for dot in dots:
+				# 	dot.remove()
+			# axL.lines.pop(0)
 
-		try:
-			for i in dots:
-				i.remove()
-
-			axL.lines.pop(0)
-		except:
-			pass
 
 
 
@@ -214,16 +215,18 @@ if __name__ == '__main__':
 	for ii in GTtrjdic.keys():
 		vehicleCandidates_reorderedInd[ii] = []
 		overlapInd = np.argsort( np.array(vehicleCandidates[ii])[:,1])[::-1]
+		"""relative ind in the list"""
 		distInd    = np.argsort( np.array(vehicleCandidates[ii])[:,2])
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
 		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
 		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
 		
-		nearestID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
-		nearestID_dist    = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
-		nearestID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] 
+		"""corresponding vehicle ID"""
+		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
+		nearestVehicleID_dist    = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
+		nearestVehicleID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] 
 
-		vehicleCandidates_reorderedInd[ii] = [nearestID_overlap,nearestID_dist, nearestID_inBB]
+		vehicleCandidates_reorderedInd[ii] = [nearestVehicleID_overlap,nearestVehicleID_dist, nearestVehicleID_inBB,overlapInd,distInd,withinInd]
 
 		# plt.figure()
 		# plt.plot(GTtrjdic[ii].fullGTupperL_list[:,0],GTtrjdic[ii].fullGTupperL_list[:,1],color ='g')
@@ -241,14 +244,13 @@ if __name__ == '__main__':
 		# plt.draw()
 		# plt.show()
 
-
-	pdb.set_trace()
 	plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd)
 	missRate, overSegementRate, dist, dist_list= metrics(vehicleCandidates_reorderedInd)
 	print "missRate, overSegementRate, dist", missRate, overSegementRate, dist
 
 
 	plt.figure()
+	plt.title('dist_list')
 	plt.plot(dist_list)
 
 

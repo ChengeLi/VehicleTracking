@@ -17,7 +17,7 @@ def readVideo(cap,subSampRate):
 
 def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 	reader = csv.reader(file)
-	# subsampleRate = 4
+	# reader = csv.reader(file, dialect=csv.excel_tab)
 	GTupperL_list = []
 	GTLowerR_list = []
 	GTcenterXY_list = []
@@ -29,7 +29,7 @@ def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 	lines = 0
 	while lines<line_limit:
 		temp = reader.next()
-		if np.double(temp[0])<frame_idx or lines==line_limit-1: # new car	
+		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (frame_idx-np.double(temp[0])>=20): # new car	
 			print "length", len(frame_idx_list)
 			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
 			frame_idx_list  = []
@@ -58,25 +58,27 @@ def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 def readGTdata():
 
 	if dataSource == 'DoT':
-		f =  open('/Users/Chenge/Desktop/FirstCanalGroundTruth.csv', 'rb')
+		f =  open(os.path.join(DataPathobj.DataPath,'FirstCanalGroundTruth.csv'), 'rb')
 		line_limit = 2062 ## number of lines in this csv file
 		# GTtrjdic = GTFromCSV(f,line_limit, ???)
-		GTtrjdic = GTFromCSV(f,line_limit, 1) #what's the interval for the canal video
+		GTtrjdic = GTFromCSV(f,line_limit, 2) #what's the interval for the canal video
 
 	elif dataSource == 'Johnson':
 		f =  open(os.path.join(DataPathobj.DataPath,'Johnson_00115_ROI_gt.csv'), 'rb')
 		line_limit = 1128
-		GTtrjdic = GTFromCSV(f, line_limit,1)
+		GTtrjdic = GTFromCSV(f, line_limit,3)
 
 	elif dataSource == 'NGSIM':
 		
 		"""read GT from the csv"""
-		f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_gt.csv'), 'rb')
-		line_limit = 18
+		# f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_gt.csv'), 'rb')
+		# line_limit = 76
+		f =  open(os.path.join(DataPathobj.DataPath,'merged.csv'), 'rb')
+		line_limit = 1402
 
 		# f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_gt_jiaxu.csv'), 'rb')
 		# line_limit = 527
-
+		pdb.set_trace()
 		GTtrjdic = GTFromCSV(f,line_limit,1)
 
 
@@ -233,10 +235,10 @@ def plotGTonVideo(GTtrjdic, VehicleObjCandidates=None):
 			overlap_lowerRY = GTtrjdic[key].fullGTLowerR_list[:,1]
 
 
-			cnt = [np.int32([[overlap_upperLX[tt],overlap_upperLY[tt]], \
-				[overlap_lowerRX[tt],overlap_upperLY[tt]],\
-				[overlap_lowerRX[tt],overlap_lowerRY[tt]], \
-				[overlap_upperLX[tt],overlap_lowerRY[tt]]])]
+			cnt = [np.int32([[overlap_upperLX[tt-GTtrjdic[key].fullframe[0]],overlap_upperLY[tt-GTtrjdic[key].fullframe[0]]], \
+				[overlap_lowerRX[tt-GTtrjdic[key].fullframe[0]],overlap_upperLY[tt-GTtrjdic[key].fullframe[0]]],\
+				[overlap_lowerRX[tt-GTtrjdic[key].fullframe[0]],overlap_lowerRY[tt-GTtrjdic[key].fullframe[0]]], \
+				[overlap_upperLX[tt-GTtrjdic[key].fullframe[0]],overlap_lowerRY[tt-GTtrjdic[key].fullframe[0]]]])]
 
 
 			if len(cnt)>0:
@@ -286,8 +288,8 @@ if __name__ == '__main__':
 	"""plot the ground truth on the video!"""
 	# plotGTonVideo(GTtrjdic)
 
-	for ii in GTtrjdic.keys():
-		plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)
+	# for ii in GTtrjdic.keys():
+	# 	plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)
 
 
 	"""if using the gt ngsim provided, we need to select out the cam-4 region"""

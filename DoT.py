@@ -20,7 +20,7 @@ def visGT():
     cap   = cv2.VideoCapture(video_name)
 
     cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , 0)
-    color      = np.array([np.random.randint(0,255) for _ in range(3*int(1000))]).reshape(int(1000),3)
+    color = np.array([np.random.randint(0,255) for _ in range(3*int(1000))]).reshape(int(1000),3)
 
     f      =  open('../GroundTruth/rejayjohnsonintersectionpairrelationships/Canal_2.csv', 'rb')
     reader = csv.reader(f)
@@ -118,15 +118,20 @@ def read_video(readlength, skipTime = 0, skipChunk = 0):
     # for ii in range(0,6*readlength,6):
     for ii in range(0+start_position,Numfrm,1):
         true_position = ii
-        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , true_position)
+        # cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , true_position)
         print(true_position)
-        rval, vid[ii] = cap.read()
-        # pdb.set_trace()
-        # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        # name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/' +str(true_position).zfill(8)+'.jpg'
-        name = os.path.join(DataPathobj.DataPath,str(true_position).zfill(8)+'.jpg')
-        cv2.imwrite(name,vid[ii])
+        # rval, vid[ii] = cap.read()
+        rval, frm = cap.read()
+
+        if rval:
+            # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
+            # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
+            # name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/' +str(true_position).zfill(8)+'.jpg'
+            name = os.path.join(DataPathobj.DataPath,str(true_position).zfill(8)+'.jpg')
+            # cv2.imwrite(name,vid[ii])
+            cv2.imwrite(name,frm)
+        else:
+            pdb.set_trace()
     return vid,start_position
 
 
