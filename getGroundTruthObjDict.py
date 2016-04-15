@@ -29,9 +29,11 @@ def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 	lines = 0
 	while lines<line_limit:
 		temp = reader.next()
-		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (frame_idx-np.double(temp[0])>=20): # new car	
+		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (np.double(temp[0])-frame_idx>=20): # new car	
 			print "length", len(frame_idx_list)
-			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
+			if len(frame_idx_list)>5: ##if the GT is too short, ditch it
+				GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
+			
 			frame_idx_list  = []
 			GTupperL_list   = []
 			GTLowerR_list   = []
@@ -61,24 +63,21 @@ def readGTdata():
 		f =  open(os.path.join(DataPathobj.DataPath,'FirstCanalGroundTruth.csv'), 'rb')
 		line_limit = 2062 ## number of lines in this csv file
 		# GTtrjdic = GTFromCSV(f,line_limit, ???)
-		GTtrjdic = GTFromCSV(f,line_limit, 2) #what's the interval for the canal video
+		GTtrjdic = GTFromCSV(f,line_limit, 1) #what's the interval for the canal video
 
 	elif dataSource == 'Johnson':
 		f =  open(os.path.join(DataPathobj.DataPath,'Johnson_00115_ROI_gt.csv'), 'rb')
 		line_limit = 1128
-		GTtrjdic = GTFromCSV(f, line_limit,3)
+		GTtrjdic = GTFromCSV(f, line_limit,2.5)
 
 	elif dataSource == 'NGSIM':
 		
 		"""read GT from the csv"""
-		# f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_gt.csv'), 'rb')
-		# line_limit = 76
-		f =  open(os.path.join(DataPathobj.DataPath,'merged.csv'), 'rb')
-		line_limit = 1402
+		f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_GT_merged.csv'), 'rb')
+		line_limit = 1496
 
 		# f =  open(os.path.join(DataPathobj.DataPath,'NGSIM_gt_jiaxu.csv'), 'rb')
 		# line_limit = 527
-		pdb.set_trace()
 		GTtrjdic = GTFromCSV(f,line_limit,1)
 
 
@@ -286,7 +285,7 @@ if __name__ == '__main__':
 	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_'+	dataSource+'.p','wb'))
 	
 	"""plot the ground truth on the video!"""
-	# plotGTonVideo(GTtrjdic)
+	plotGTonVideo(GTtrjdic)
 
 	# for ii in GTtrjdic.keys():
 	# 	plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)

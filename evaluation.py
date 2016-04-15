@@ -59,8 +59,8 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 	plt.axis('off')
 	plt.ion()
 	dots = []
-	# for keyind in range(len(GTtrjdic.keys())):
-	for keyind in range(40,70,1):
+	for keyind in range(len(GTtrjdic.keys())):
+	# for keyind in range(40,70,1):
 		key = GTtrjdic.keys()[keyind]
 		print "key:", key
 		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
@@ -121,11 +121,6 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 				# for dot in dots:
 				# 	dot.remove()
 			# axL.lines.pop(0)
-
-
-
-
-
 
 
 
@@ -219,7 +214,8 @@ if __name__ == '__main__':
 		distInd    = np.argsort( np.array(vehicleCandidates[ii])[:,2])
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
 		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
-		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.2*np.array(vehicleCandidates[ii])[withinInd[:],1]]
 		
 		"""corresponding vehicle ID"""
 		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
@@ -244,7 +240,7 @@ if __name__ == '__main__':
 		# plt.draw()
 		# plt.show()
 
-	plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd)
+	# plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd)
 	missRate, overSegementRate, dist, dist_list= metrics(vehicleCandidates_reorderedInd)
 	print "missRate, overSegementRate, dist", missRate, overSegementRate, dist
 
