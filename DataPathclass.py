@@ -12,10 +12,18 @@ class DataPath(object):
 				self.sysPathHeader = '/Users/Chenge/Documents/github/AIG/Jay&Johnson/'
 				self.videoPath = os.path.join(self.sysPathHeader,'./00115_ROI/')
 				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-				self.video = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+				self.video = self.videoList[VideoIndex
+				]
 				self.videoTime = '00115_ROI'
 
-				
+			if dataSource == 'DoT':
+				self.sysPathHeader = '/Users/Chenge/Documents/github/AIG/DoT/'
+				self.videoPath = os.path.join(self.sysPathHeader,'./Convert3/')
+				self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+				self.video = '/Users/Chenge/Documents/github/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi'
+				self.videoTime = '2015-06-16_16h03'
+
+
 			if dataSource == 'NGSIM':
 				self.sysPathHeader = '/Volumes/Transcend/US-101/US-101-RawVideo-0750am-0805am-Cam1234/'
 				self.videoPath = os.path.join(self.sysPathHeader,'./00115_ROI/')

@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import pdb
 import time
 import csv
+from DataPathclass import *
+DataPathobj = DataPath(dataSource,VideoIndex)
+from parameterClass import *
+Parameterobj = parameter(dataSource,VideoIndex)
 
 # import scipy.ndimage.morphology as ndm
 # from scipy.ndimage.filters import median_filter as mf
@@ -81,20 +85,19 @@ def visGT():
 
 
 
-def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
+def read_video(readlength, skipTime = 0, skipChunk = 0):
     # cap = cv2.VideoCapture('../Videos/TLC00005.AVI')
     # cap = cv2.VideoCapture('./TLC00000.AVI')
     # cap = cv2.VideoCapture('./TLC00001.AVI')  # a different view
-
     # cap = cv2.VideoCapture('./sternberg_park__mid_block_leonard_st_/TLC00004.AVI')
-    cap = cv2.VideoCapture(video_name)
+    cap = cv2.VideoCapture(DataPathobj.video)
     Numfrm = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) #20480  71131
     scaninterval = int(Numfrm/100.0)
     # startFrm = range(0, Numfrm, scaninterval)
 
 
     Frmrate = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
-    "use all the frames"
+    """use all the frames"""
     readlength = Numfrm
     frameH = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     frameW = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -102,7 +105,7 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     
     vid = np.zeros([readlength/3,frameH,frameW,3], dtype = np.uint8)
     # start_position = int(skipTime*(Frmrate))+skipChunk
-    start_position = 7059
+    start_position = 0
 
     print 'reading buffer...'
     # for ii in range(start_position):
@@ -113,17 +116,17 @@ def read_video(video_name, readlength, skipTime = 0, skipChunk = 0):
     # pdb.set_trace()
     print 'reading frames...'
     # for ii in range(0,6*readlength,6):
-    for ii in range(0+start_position,Numfrm,3):
+    for ii in range(0+start_position,Numfrm,1):
         true_position = ii
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , true_position)
         print(true_position)
-        rval, vid[ii/3] = cap.read()
-        pdb.set_trace()
-        # rval, vid[ii] = cap.read()
+        rval, vid[ii] = cap.read()
+        # pdb.set_trace()
         # name ='../DoT/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
         # name ='../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'+str(true_position).zfill(8)+'.jpg' # save several whole frames for testing 
-        name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/' +str(true_position).zfill(8)+'.jpg'
-        cv2.imwrite(name,vid[ii/3])
+        # name = '/Volumes/TOSHIBA/My Book/CUSP/AIG/DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/originalImgs/' +str(true_position).zfill(8)+'.jpg'
+        name = os.path.join(DataPathobj.DataPath,str(true_position).zfill(8)+'.jpg')
+        cv2.imwrite(name,vid[ii])
     return vid,start_position
 
 
@@ -143,7 +146,7 @@ if __name__ == '__main__':
     video_name = '../DoT/Convert3/5Ave@42St-96.81/5Ave@42St-96.81_2015-06-16_16h04min40s686ms.mp4'
 
     readlength = 5000
-    vid,start_position = read_video(video_name, readlength, skipTime = 0, skipChunk = 0)
+    vid,start_position = read_video(readlength, skipTime = 0, skipChunk = 0)
     
 
     # plt.show()

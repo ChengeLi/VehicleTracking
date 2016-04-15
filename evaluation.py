@@ -17,6 +17,117 @@ from getVehiclesPairs import get_Co_occur,get_Co_location
 
 
 
+"""evaluation metrics"""
+def metrics(vehicleCandidates_reorderedInd):
+	detect       = 0
+	overSegement = 0
+	dist_list    = []
+	for key in vehicleCandidates_reorderedInd.keys():
+		detect += (len(vehicleCandidates_reorderedInd[key][2])>0)
+		overSegement += (len(vehicleCandidates_reorderedInd[key][2])>1)
+
+		dist_ind = np.int16(vehicleCandidates_reorderedInd[key][2])
+		dist_list.append( min(np.array(vehicleCandidates[key])[dist_ind,2]))
+
+	Ntarget = (1.0*(len(vehicleCandidates_reorderedInd.keys())))
+	missRate         = 1- detect/Ntarget
+	overSegementRate = overSegement/Ntarget
+	dist             = np.sum(dist_list)/Ntarget
+
+	return missRate, overSegementRate, dist, dist_list
+
+
+
+def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
+	if dataSource == 'DoT':
+		cap = cv2.VideoCapture(DataPathobj.video)
+	elif dataSource == 'Johnson':
+		cap = cv2.VideoCapture(DataPathobj.video)
+	elif dataSource == 'NGSIM':
+		# cap = cv2.VideoCapture('/Volumes/Transcend/US-101/US-101-ProcessedVideo-0750am-0805am-Cam1234/sb-camera4-0750am-0805am-processed.avi')
+		cap = cv2.VideoCapture('/Volumes/Transcend/US-101/US-101-RawVideo-0750am-0805am-Cam1234/sb-camera4-0750am-0805am.avi')
+
+	status, frame = cap.read()
+	
+	fig = plt.figure('vis GT on video')
+	axL = plt.subplot(1,1,1)
+	im  = plt.imshow(np.zeros_like(frame))
+	color = np.array([np.random.randint(0,255) for _ in range(3*len(GTtrjdic))]).reshape(len(GTtrjdic),3)
+	plt.axis('off')
+	dots = []
+	for keyind in range(len(GTtrjdic.keys())):
+		key = GTtrjdic.keys()[keyind]
+		print "key:", key
+		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
+		
+
+		for tind in range(len(GTtrjdic[key].fullframe)):
+			tt = GTtrjdic[key].fullframe[tind]
+			print "frame:", tt
+			# cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,1.5*(GTtrjdic[key].frame[tind]-GTtrjdic[key].frame[max(0,tind-1)])+frame_here)
+			status, frame = cap.read()
+			# frame = readVideo(cap,2*(GTtrjdic[key].frame[tind]-GTtrjdic[key].frame[max(0,tind-1)]))
+			im.set_data(frame[:,:,::-1])
+
+			"""draw GT rectangle"""
+			overlap_upperLX = GTtrjdic[key].fullGTupperL_list[:,0]
+			overlap_upperLY = GTtrjdic[key].fullGTupperL_list[:,1]
+
+			overlap_lowerRX = GTtrjdic[key].fullGTLowerR_list[:,0]
+			overlap_lowerRY = GTtrjdic[key].fullGTLowerR_list[:,1]
+
+
+			cnt = [np.int32([[overlap_upperLX[tt],overlap_upperLY[tt]], \
+				[overlap_lowerRX[tt],overlap_upperLY[tt]],\
+				[overlap_lowerRX[tt],overlap_lowerRY[tt]], \
+				[overlap_upperLX[tt],overlap_lowerRY[tt]]])]
+
+
+			if len(cnt)>0:
+				cv2.drawContours(frame, cnt, 0  , (0, 255, 0), 2 )
+				im.set_data(frame[:,:,::-1])
+
+
+			"""draw GT trj"""
+			# xx = np.array(GTtrjdic[key].xTrj)[:tind+1]
+			# yy = np.array(GTtrjdic[key].yTrj)[:tind+1]
+			xx = np.array(GTtrjdic[key].fullxTrj)[:tind+1]
+			yy = np.array(GTtrjdic[key].fullyTrj)[:tind+1]
+
+			# xx = np.array(GTtrjdic[key].fullxTrj)[tind]
+			# yy = np.array(GTtrjdic[key].fullyTrj)[tind]
+
+			# dots.append(axL.scatter(xx,yy, s=10, color=(color[keyind].T)/255.,edgecolor='none')) 
+			# lines = axL.plot(xx,yy,color=(color[keyind].T)/255.,linewidth=1)
+
+			dots.append(axL.scatter(xx,yy, s=10, color='g')) 
+			lines = axL.plot(xx,yy,color = 'g',linewidth=1)
+			plt.draw()
+			plt.show()
+			
+
+			"""draw our vehicle obj result"""
+			for ind in vehicleCandidates_reorderedInd[key][2]:
+				plt.plot(VehicleObjDic[ind].fullxTrj[:tt-VehicleObjDic[ind].frame[0]],VehicleObjDic[ind].fullyTrj[:tt-VehicleObjDic[ind].frame[0]],color = 'r')
+			plt.draw()
+			plt.show()
+			plt.waitforbuttonpress()
+			# plt.pause(0.001)
+
+		try:
+			for i in dots:
+				i.remove()
+
+			axL.lines.pop(0)
+		except:
+			pass
+
+
+
+
+
+
+
 if __name__ == '__main__':
 
 	"""load GT trj dictionary:"""
@@ -54,8 +165,6 @@ if __name__ == '__main__':
 				distance = np.mean(np.sqrt((co1X-co2X)**2+(co1Y-co2Y)**2))
 				
 
-				
-				"""length within the bbox"""
 				relativeID = cooccur_ran-GTtrjdic[ii].frame[0]
 				overlap_upperLX = GTtrjdic[ii].fullGTupperL_list[relativeID,0]
 				overlap_upperLY = GTtrjdic[ii].fullGTupperL_list[relativeID,1]
@@ -63,86 +172,87 @@ if __name__ == '__main__':
 				overlap_lowerRX = GTtrjdic[ii].fullGTLowerR_list[relativeID,0]
 				overlap_lowerRY = GTtrjdic[ii].fullGTLowerR_list[relativeID,1]
 
+				"""draw GT and vehicle obj together"""
 
 
-				plt.plot(GTtrjdic[ii].fullGTupperL_list[:,0],GTtrjdic[ii].fullGTupperL_list[:,1])
-				plt.plot(GTtrjdic[ii].fullGTLowerR_list[:,0],GTtrjdic[ii].fullGTLowerR_list[:,1])
+				# plt.plot(GTtrjdic[ii].fullGTupperL_list[:,0],GTtrjdic[ii].fullGTupperL_list[:,1])
+				# plt.plot(GTtrjdic[ii].fullGTLowerR_list[:,0],GTtrjdic[ii].fullGTLowerR_list[:,1])
 
-				plt.draw()
-				# pdb.set_trace()
-				plt.show()
-				# plt.plot(co1X,co1Y,color = 'r')
-				# plt.plot(co2X,co2Y,color = 'g')
 				# plt.draw()
 				# plt.show()
-				# pdb.set_trace()
+				# # plt.plot(co1X,co1Y,color = 'r')
+				# # plt.plot(co2X,co2Y,color = 'g')
+				# # plt.draw()
+				# # plt.show()
+				# # pdb.set_trace()
 
-				# cnt = [np.int32([[np.minimum(overlap_upperLX[0],overlap_lowerRX[0]),np.minimum(overlap_upperLY[0],overlap_lowerRY[0])], \
-				# 	[np.maximum(overlap_upperLX[0],overlap_lowerRX[0]),np.minimum(overlap_upperLY[0],overlap_lowerRY[0])],\
-				# 	[np.maximum(overlap_upperLX[0],overlap_lowerRX[0]),np.maximum(overlap_upperLY[0],overlap_lowerRY[0])], \
-				# 	[np.minimum(overlap_upperLX[0],overlap_lowerRX[0]),np.maximum(overlap_upperLY[0],overlap_lowerRY[0])]])]
-
-				cnt = [np.int32([[overlap_upperLX[0],overlap_upperLY[0]], \
-					[overlap_lowerRX[0],overlap_upperLY[0]],\
-					[overlap_lowerRX[0],overlap_lowerRY[0]], \
-					[overlap_upperLX[0],overlap_lowerRY[0]]])]
-
-
-				if len(cnt)>0:
-					cap = cv2.VideoCapture(DataPathobj.video)
-					st,frame = cap.read()
-					# cv2.drawContours( frame, np.int16(cnt), -1, (0, 255, 0), 3 )
-
-					cv2.drawContours( frame, cnt, 0  , (0, 255, 0), 3 )
-
-					cv2.imshow('cnt',frame)
-					# cv2.waitKey(0)
-				pdb.set_trace()
+				# cnt = [np.int32([[overlap_upperLX[0],overlap_upperLY[0]], \
+				# 	[overlap_lowerRX[0],overlap_upperLY[0]],\
+				# 	[overlap_lowerRX[0],overlap_lowerRY[0]], \
+				# 	[overlap_upperLX[0],overlap_lowerRY[0]]])]
 
 
+				# if len(cnt)>0:
+				# 	cap = cv2.VideoCapture(DataPathobj.video)
+				# 	st,frame = cap.read()
+				# 	cv2.drawContours( frame, cnt, 0  , (0, 255, 0), 2 )
+				# 	cv2.imshow('cnt',frame)
+				# 	cv2.waitKey(0)
 
-				# withinBBox = (co2X<np.maximum(overlap_upperLX,overlap_lowerRX))*\
-				# (co2X>np.minimum(overlap_upperLX,overlap_lowerRX))* \
-				# (co2Y<np.maximum(overlap_upperLY,overlap_lowerRY))* \
-				# (co2Y>np.minimum(overlap_upperLY,overlap_lowerRY))
-				# vehicleCandidates[ii].append([jj,len(cooccur_ran),distance,np.sum(withinBBox)])
-				# pdb.set_trace()
+				"""length within the bbox"""
+				withinBBox = (co2X<np.maximum(overlap_upperLX,overlap_lowerRX))*\
+				(co2X>np.minimum(overlap_upperLX,overlap_lowerRX))* \
+				(co2Y<np.maximum(overlap_upperLY,overlap_lowerRY))* \
+				(co2Y>np.minimum(overlap_upperLY,overlap_lowerRY))
+				vehicleCandidates[ii].append([jj,len(cooccur_ran),distance,np.sum(withinBBox)])
 
 
 
-	"""find the same time, assign the nearest one to the GT"""
-	"""nearest neighbour"""
-	vehicleCandidates_reordered ={}
+	"""find the same time, assign the one that is within the bbox to GT"""
+	vehicleCandidates_reorderedInd ={}
 
 	for ii in GTtrjdic.keys():
-		vehicleCandidates_reordered[ii] = []
+		vehicleCandidates_reorderedInd[ii] = []
 		overlapInd = np.argsort( np.array(vehicleCandidates[ii])[:,1])[::-1]
 		distInd    = np.argsort( np.array(vehicleCandidates[ii])[:,2])
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
-		# np.array(vehicleCandidates[ii])[distInd]
-		# np.array(vehicleCandidates[ii])[overlapInd]
+		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
+		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		
+		nearestID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
+		nearestID_dist    = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
+		nearestID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] 
 
-		nearestID = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
-		nearestID_inBB = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] #5 nearest
-
-		vehicleCandidates_reordered[ii] = nearestID
+		vehicleCandidates_reorderedInd[ii] = [nearestID_overlap,nearestID_dist, nearestID_inBB]
 
 		# plt.figure()
-		plt.plot(GTtrjdic[ii].fullGTupperL_list,GTtrjdic[ii].fullGTLowerR_list,color ='g')
-		# plt.plot(GTtrjdic[ii].fullxTrj,GTtrjdic[ii].fullyTrj,color='r')
-		# plt.plot(GTtrjdic[ii].GTupperL_list,GTtrjdic[ii].GTLowerR_list,color ='g')
-		# plt.plot(GTtrjdic[ii].xTrj,GTtrjdic[ii].yTrj,color='r')
-		# for ind in vehicleCandidates_reordered[ii] :
-		# for ind in np.array(vehicleCandidates[ii])[distInd[:10]][:,0]:
-		# for ind in np.array(vehicleCandidates[ii])[overlapInd[:3]][:,0]:
-		for ind in nearestID_inBB[:2]:
-			plt.plot(VehicleObjDic[ind].fullxTrj,VehicleObjDic[ind].fullyTrj,color='r')
-			pdb.set_trace()
-		plt.draw()
-		plt.show()
-		pdb.set_trace()
-		plt.cla()
-		plt.draw()
+		# plt.plot(GTtrjdic[ii].fullGTupperL_list[:,0],GTtrjdic[ii].fullGTupperL_list[:,1],color ='g')
+		# plt.plot(GTtrjdic[ii].fullGTLowerR_list[:,0],GTtrjdic[ii].fullGTLowerR_list[:,1],color ='g')
+
+		# # plt.plot(GTtrjdic[ii].fullxTrj,GTtrjdic[ii].fullyTrj,color='r')
+		# # plt.plot(GTtrjdic[ii].GTupperL_list,GTtrjdic[ii].GTLowerR_list,color ='g')
+		# # plt.plot(GTtrjdic[ii].xTrj,GTtrjdic[ii].yTrj,color='r')
+		# # for ind in vehicleCandidates_reorderedInd[ii] :
+		# # for ind in np.array(vehicleCandidates[ii])[distInd[:10]][:,0]:
+		# # for ind in np.array(vehicleCandidates[ii])[overlapInd[:3]][:,0]:
+		# for ind in nearestID_inBB[:3]:
+		# 	plt.plot(VehicleObjDic[ind].fullxTrj,VehicleObjDic[ind].fullyTrj)
+		# 	pdb.set_trace()
+		# plt.draw()
+		# plt.show()
+
+
+	pdb.set_trace()
+	plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd)
+	missRate, overSegementRate, dist, dist_list= metrics(vehicleCandidates_reorderedInd)
+	print "missRate, overSegementRate, dist", missRate, overSegementRate, dist
+
+
+	plt.figure()
+	plt.plot(dist_list)
+
+
+
 
 
 

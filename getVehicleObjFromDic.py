@@ -15,6 +15,7 @@ Parameterobj = parameter(dataSource,VideoIndex)
 import pdb
 
 if __name__ == '__main__':
+	# useCC = True  #For johnson
 	useCC = False
 	isClustered = True
 	if isClustered:
@@ -36,7 +37,7 @@ if __name__ == '__main__':
 
 
 
-	savePath    = DataPathobj.pairpath
+	savePath = DataPathobj.pairpath
 
 	cap = cv2.VideoCapture(DataPathobj.video)
 	fps = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))

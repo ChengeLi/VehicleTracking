@@ -193,7 +193,7 @@ def clamp(n, minn, maxn):
     return (n<=maxn)*(n>=minn)
 
     
-def plotGTonVideo(GTtrjdic):
+def plotGTonVideo(GTtrjdic, VehicleObjCandidates=None):
 	if dataSource == 'DoT':
 		cap = cv2.VideoCapture(DataPathobj.video)
 	elif dataSource == 'Johnson':
@@ -225,6 +225,26 @@ def plotGTonVideo(GTtrjdic):
 			# frame = readVideo(cap,2*(GTtrjdic[key].frame[tind]-GTtrjdic[key].frame[max(0,tind-1)]))
 			im.set_data(frame[:,:,::-1])
 
+			"""draw rectangle"""
+			overlap_upperLX = GTtrjdic[key].fullGTupperL_list[:,0]
+			overlap_upperLY = GTtrjdic[key].fullGTupperL_list[:,1]
+
+			overlap_lowerRX = GTtrjdic[key].fullGTLowerR_list[:,0]
+			overlap_lowerRY = GTtrjdic[key].fullGTLowerR_list[:,1]
+
+
+			cnt = [np.int32([[overlap_upperLX[tt],overlap_upperLY[tt]], \
+				[overlap_lowerRX[tt],overlap_upperLY[tt]],\
+				[overlap_lowerRX[tt],overlap_lowerRY[tt]], \
+				[overlap_upperLX[tt],overlap_lowerRY[tt]]])]
+
+
+			if len(cnt)>0:
+				cv2.drawContours( frame, cnt, 0  , (0, 255, 0), 2 )
+				im.set_data(frame[:,:,::-1])
+
+
+			"""draw trj"""
 			# xx = np.array(GTtrjdic[key].xTrj)[:tind+1]
 			# yy = np.array(GTtrjdic[key].yTrj)[:tind+1]
 			xx = np.array(GTtrjdic[key].fullxTrj)[:tind+1]
@@ -239,6 +259,8 @@ def plotGTonVideo(GTtrjdic):
 			plt.show()
 			plt.pause(0.001)
 			# plt.waitforbuttonpress()
+
+
 
 	for i in dots:
 		i.remove()
@@ -260,10 +282,12 @@ if __name__ == '__main__':
 	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
 	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_'+	dataSource+'.p','wb'))
-	plotGTonVideo(GTtrjdic)
+	
+	"""plot the ground truth on the video!"""
+	# plotGTonVideo(GTtrjdic)
 
-	# for ii in GTtrjdic.keys():
-	# 	plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)
+	for ii in GTtrjdic.keys():
+		plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)
 
 
 	"""if using the gt ngsim provided, we need to select out the cam-4 region"""
