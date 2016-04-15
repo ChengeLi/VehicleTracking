@@ -329,15 +329,26 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     save_vctime = {}
                     save_vcxtrj = {}
                     save_vcytrj = {}
+                    
+                    save_vctime2 = {}
+
+
+
                     print "notconnectedLabel:", notconnectedLabel
                     # for i in np.unique(IDintrunk): #for non-clustered, ID is the label
                     for i in np.unique(labinT):
                         save_vctime[i] = np.array(vctime[i])
                         save_vcxtrj[i] = np.array(vcxtrj[i])
                         save_vcytrj[i] = np.array(vcytrj[i])
+                        
+                        save_vctime2[i] = np.array(vctime2[i])
+
                     pickle.dump( save_vctime, open( savenameT, "wb" ) )
                     pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
                     pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
+
+                    pickle.dump( save_vctime2, open(os.path.join(savePath,'vctime_consecutive_frame'+str(subsample_frmIdx/trunclen).zfill(3)+'.p'),'wb'))
+
 
         subsample_frmIdx += 1
         frame_idx = subsample_frmIdx*subSampRate
@@ -501,7 +512,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = True
+    useCC = False
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

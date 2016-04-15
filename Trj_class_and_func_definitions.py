@@ -1,5 +1,7 @@
 import numpy as np
 import pdb
+from scipy.interpolate import interp1d
+
 class TrjObj():
     def __init__(self,vcxtrj,vcytrj,vctime,subSampRate):
         self.Trj_with_ID     = [] # [ID,x,y]
@@ -99,8 +101,21 @@ class VehicleObj():
         self.Xdir      = TrjObj.Xdir[ID]
         self.Ydir      = TrjObj.Ydir[ID]
 
+        fullFrameLen = self.frame[-1]-self.frame[0]+1
+        if fullFrameLen>len(self.frame):
+            """interpolate gt vector to full time resolution"""
+            # interpolationMethod = 'cubic'
+            interpolationMethod = 'linear'
+            fx = interp1d(self.frame,self.xTrj, kind=interpolationMethod)
+            fy = interp1d(self.frame,self.yTrj, kind=interpolationMethod)
+            self.fullxTrj  = fx(range(self.frame[0],self.frame[-1]+1,1))
+            self.fullyTrj  = fy(range(self.frame[0],self.frame[-1]+1,1))
+            self.fullframe = range(self.frame[0],self.frame[-1]+1,1)
 
-
+        else:
+            self.fullxTrj = self.xTrj
+            self.fullyTrj = self.yTrj
+            self.fullframe = self.frame
 
 
 

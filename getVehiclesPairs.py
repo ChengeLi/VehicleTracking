@@ -47,10 +47,14 @@ def get_Co_occur(VehicleObj1, VehicleObj2, subSampRate):
 		appeartime2 = VehicleObj2.frame[0]
 		gonetime2   = VehicleObj2.frame[-1]
 
-	if appeartime1 >= appeartime2: ## swap 1 and 2, s.t. 1 always <=2
+	if appeartime1 > appeartime2: ## swap 1 and 2, s.t. appeartime1 always <=appeartime2
 		temp        = appeartime2
 		appeartime2 = appeartime1
 		appeartime1 = temp
+		temp2     = gonetime2
+		gonetime2 = gonetime1
+		gonetime1 = temp2
+
 
 	if gonetime1 >= appeartime2:
 		if gonetime1 <=gonetime2:
@@ -60,8 +64,7 @@ def get_Co_occur(VehicleObj1, VehicleObj2, subSampRate):
 		cooccur_IDs    = [VehicleObj1.VehicleID, VehicleObj2.VehicleID]
 		coorccurStatus = 1	
 
-
-	if gonetime1 < appeartime2:
+	else:
 		print "no co-occurance!"
 		coorccurStatus = 0
 		cooccur_ran    = []
@@ -74,7 +77,6 @@ def get_Co_occur(VehicleObj1, VehicleObj2, subSampRate):
 # 	ID111      = cooccur_IDs[0]
 # 	ID222      = cooccur_IDs[1]
 	
-# 	xTrj       = obj_pair2loop.xTrj[ID111]  
 	
 	
 # 	fullrange1 = range(obj_pair2loop.frame[ID111][0], obj_pair2loop.frame[ID111][1]+1*subSampRate,subSampRate)
@@ -94,22 +96,24 @@ def get_Co_occur(VehicleObj1, VehicleObj2, subSampRate):
 
 
 """use vehicle obj directly, no need to use trj obj"""
-def get_Co_location(cooccur_ran,VehicleObj1,VehicleObj2,subSampRate,isWrite=False):
-	fullrange1 = range(VehicleObj1.frame[0], VehicleObj1.frame[1]+1*subSampRate,subSampRate)
+def get_Co_location(cooccur_ran,cooccur_IDs, VehicleObj1,VehicleObj2,subSampRate,isWrite=False):
+	fullrange1 = range(VehicleObj1.frame[0], VehicleObj1.frame[-1]+1*subSampRate,subSampRate)
 	startind1  = fullrange1.index(cooccur_ran[0])
 	endind1    = fullrange1.index(cooccur_ran[-1])
 	
-	fullrange2 = range(VehicleObj2.frame[0], VehicleObj2.frame[1]+1*subSampRate,subSampRate)
+	fullrange2 = range(VehicleObj2.frame[0], VehicleObj2.frame[-1]+1*subSampRate,subSampRate)
 	startind2  = fullrange2.index(cooccur_ran[0])
 	endind2    = fullrange2.index(cooccur_ran[-1])	
 
-	co1X = VehicleObj1.xTrj[startind1:endind1+1]
-	co1Y = VehicleObj1.yTrj[startind1:endind1+1]
+	co1X = VehicleObj1.fullxTrj[startind1:endind1+1]
+	co1Y = VehicleObj1.fullyTrj[startind1:endind1+1]
 
-	co2X = VehicleObj2.xTrj[startind2:endind2+1]
-	co2Y = VehicleObj2.yTrj[startind2:endind2+1]
+	co2X = VehicleObj2.fullxTrj[startind2:endind2+1]
+	co2Y = VehicleObj2.fullyTrj[startind2:endind2+1]
 
 	if isWrite:
+		ID111 = cooccur_IDs[0]
+		ID222 = cooccur_IDs[1]
 		for gkk in range(np.size(cooccur_ran)):
 			temp = []
 			temp.append(ID111)
@@ -193,7 +197,7 @@ def visual_givenID(loopVehicleID1, loopVehicleID2, obj_pair2loop,  color, isWrit
 	[coorccurStatus, cooccur_ran, cooccur_IDs ] = get_Co_occur(VehicleObj1, VehicleObj2,subSampRate)
 	if coorccurStatus and np.size(cooccur_ran)>=overlap_pair_threshold:
 		# [co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,obj_pair2loop,subSampRate, isWrite) #get xy and write to file
-		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,VehicleObj1, VehicleObj2,subSampRate, isWrite) #get xy and write to file
+		[co1X, co2X, co1Y, co2Y] = get_Co_location(cooccur_ran,cooccur_IDs,VehicleObj1, VehicleObj2,subSampRate, isWrite) #get xy and write to file
 		if np.size(cooccur_ran)>=visualize_threshold:
 			# print "cooccur length: ", str(cooccur_ran)
 			print "len(cooccur_ran):", len(cooccur_ran), cooccur_ran[0],'-',cooccur_ran[-1]

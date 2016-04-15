@@ -14,21 +14,27 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 import pdb
 
-
-
-
 if __name__ == '__main__':
+	useCC = False
+	isClustered = True
+	if isClustered:
+		if useCC:
+			test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vctime_consecutive_frame.p'), "rb" ) )
+			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcxtrj.p'), "rb" ) )
+			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcytrj.p'), "rb" ) )			
+		
+		else:
+			# test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
+			test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime_consecutive_frame.p'), "rb" ) )
+			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
+			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )
+	else: ## directly from smoothed trj
+			test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'vctime_consecutive_frame000.p'), "rb" ) )
+			test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'vcxtrj_000.p'), "rb" ) )
+			test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'vcytrj_000.p'), "rb" ) )
 
-	if useCC:
-		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vctime_consecutive_frame.p'), "rb" ) )
-		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcxtrj.p'), "rb" ) )
-		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'CC_final_vcytrj.p'), "rb" ) )			
-	
-	else:
-		# test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime.p'), "rb" ) )
-		test_vctime = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vctime_consecutive_frame.p'), "rb" ) )
-		test_vcxtrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcxtrj.p'), "rb" ) )
-		test_vcytrj = pickle.load( open(os.path.join(DataPathobj.dicpath,'final_vcytrj.p'), "rb" ) )
+
+
 
 	savePath    = DataPathobj.pairpath
 
@@ -59,7 +65,10 @@ if __name__ == '__main__':
 	VehicleObjDic = {}
 	for loopVehicleID1 in AllTrjObj.globalID:
 		VehicleObjDic[loopVehicleID1] = VehicleObj(AllTrjObj,loopVehicleID1)
-	pickle.dump(VehicleObjDic,open(os.path.join(savePath,'VehicleObjDic.p'),'wb'))
+	if isClustered:
+		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'VehicleObjDic.p'),'wb'))
+	else:
+		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'notClustered_VehicleObjDic.p'),'wb'))
 
 
 
