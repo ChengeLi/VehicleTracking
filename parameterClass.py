@@ -21,7 +21,8 @@ class parameter(object):
 			self.loc_change = 5
 			self.minspdth = 5
 			self.transth = 100*self.targetFPS  #100s
-			self.livelong_thresh = 0.5*self.targetFPS   # chk if trj is long enough, 1s
+			# self.livelong_thresh = 0.5*self.targetFPS   # chk if trj is long enough, 1s
+			self.livelong_thresh = 0
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
@@ -44,30 +45,33 @@ class parameter(object):
 
 		""" canal st """
 		if dataSource == 'DoT':
-			self.useSBS = False
+			self.useSBS = True
 			self.useWarpped = True
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=2, blockSize=3)
 			self.targetFPS = 30
 
-
 			"""for fit_extrapolate filtering"""
 			self.loc_change = 3
 			self.minspdth = 5
 			self.transth = 100*self.targetFPS  #100s
-			self.livelong_thresh = 0.5*self.targetFPS   # chk if trj is long enough, 1s
+			# self.livelong_thresh = 0.5*self.targetFPS   # chk if trj is long enough, 1s
+			self.livelong_thresh = 2    # chk if trj is long enough, 1s
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.nullDist_for_adj = 300#if dis>= this value, adj[i,j] will be set to 0 
+			self.nullXspd_for_adj_norm = 0.1
+			self.nullYspd_for_adj_norm = 0.1
+			self.nullBlob_for_adj = 30
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 4
 			self.DPGMM_alpha = 10
 
-			self.useMask = True
+			self.useMask = False
 			self.adj_weight = [2,2,2,0,0.8]
 
 		if dataSource == 'laurier':

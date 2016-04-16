@@ -335,19 +335,18 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     # adj_knn = knn_graph((fully_adj),knn = 20)
     adj = fully_adj
     """Hard thresholding adj based on spatial distance"""
-    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
     # # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
-    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+    # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
 
-    """Hard thresholding adj based on velocities"""
-    # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
-    # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
-    adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj_norm)
-    adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj_norm)
+    # """Hard thresholding adj based on velocities"""
+    # # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
+    # # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
+    # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj_norm)
+    # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj_norm)
 
 
-    # """Hard thresholding adj based on blob center dist"""
-    adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
+    """Hard thresholding adj based on blob center dist"""
+    # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
 
     """Hard thresholding adj based on hue dist"""
     """Hue info is very very weak, even with 0.001, still almost fully connected"""
@@ -355,7 +354,6 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
 
     adj = adj + adj.transpose() 
     # adj_GTind(fully_adj,sameDirTrjID)
-
     return adj
 
 
@@ -507,6 +505,7 @@ if __name__ == '__main__':
             sameDirTrjID = DirTrjID[dirii]
             NumGoodsampleSameDir = len(sameDirInd)
             cumNumSample += NumGoodsampleSameDir
+            pdb.set_trace()
             if NumGoodsampleSameDir==0:
                 continue
 
@@ -613,6 +612,7 @@ if __name__ == '__main__':
 
             print "saving adj..."
             """save each same direction adj"""
+            pdb.set_trace()
             sparsemtx = csr_matrix(adj)
             s,c = connected_components(sparsemtx) #s is the total CComponent, c is the label
             result['adj_'+DirName[dirii]]   = sparsemtx
@@ -631,7 +631,9 @@ if __name__ == '__main__':
         # result['trjID'] = ptsidx
 
         if Parameterobj.useWarpped:
-            savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'usewarpped_'+adj_methods+'_April15_'+str(matidx+1+start_position_offset).zfill(3)
+
         else:
             # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'spa_velo_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)

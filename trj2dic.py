@@ -173,12 +173,13 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
-                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'NoBlob*.mat'))):
+                # if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'NoBlob*.mat'))):
+                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*April15*.mat'))):
                     print "already used up the adj files"
                     break
 
             else:
-                if matidx>=len(sorted(glob.glob(DataPathobj.sscpath +'0*.mat'))):
+                if matidx>=len(sorted(glob.glob(DataPathobj.sscpath +'*0*.mat'))):
                     print "already used up the ssc files"
                     break
             if createGT:
@@ -365,12 +366,15 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             savenameX = os.path.join(savePath,'CC_final_vcxtrj.p')
             savenameY = os.path.join(savePath,'CC_final_vcytrj.p')
             savenameclusterSize = os.path.join(savePath,'CC_final_clusterSize.p')
+            savenameT_consecutive = os.path.join(savePath,'CC_final_vctime_consecutive_frame.p')
+            savename_cross = os.path.join(savePath,'CC_CrossingClassLbel.p')
         else:
             savenameT = os.path.join(savePath,'final_vctime.p')
             savenameX = os.path.join(savePath,'final_vcxtrj.p')
             savenameY = os.path.join(savePath,'final_vcytrj.p')
             savenameclusterSize = os.path.join(savePath,'final_clusterSize.p')
-
+            savenameT_consecutive = os.path.join(savePath,'final_vctime_consecutive_frame.p')
+            savename_cross = os.path.join(savePath,'CrossingClassLbel.p')
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
@@ -387,14 +391,13 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             clean_vctime2 = {key: value for key, value in vctime2.items() if key not in notconnectedLabel and key!=-1}
 
 
-            pdb.set_trace()
             pickle.dump( clean_vctime, open(savenameT,"wb"))
-            pickle.dump( clean_vctime2, open(os.path.join(savePath,'final_vctime_consecutive_frame.p'),'wb'))
+            pickle.dump( clean_vctime2, open(savenameT_consecutive,'wb'))
+            pickle.dump(CrossingClassLbel, open(savename_cross,'wb'))
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
             pickle.dump( clean_clusterSize, open(savenameclusterSize,"wb"))
 
-            pickle.dump(CrossingClassLbel, open(os.path.join(savePath,'CrossingClassLbel.p'),'wb'))
 
 
 
@@ -429,7 +432,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 line_exist = 1
             else:
                 dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=8))
+            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=8))
 
 
     im.set_data(frame[:,:,::-1])
@@ -475,7 +478,8 @@ def prepare_input_data(isVideo,isClustered):
     """to visulize raw klt"""
     # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     if Parameterobj.useWarpped:
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
+        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
     else:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
         """to visulize the connected component"""
@@ -492,8 +496,8 @@ def prepare_input_data(isVideo,isClustered):
         # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
         dataPath = DataPathobj.video
     else:
-        dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
-
+        # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
+        dataPath = DataPathobj.imagePath
     return matfiles,dataPath,clustered_result,savePath,result_file_Ind
 
 

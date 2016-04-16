@@ -54,9 +54,7 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 	
 	fig = plt.figure('vis GT on video')
 	axL = plt.subplot(1,1,1)
-	im  = plt.imshow(np.zeros_like(frame))
 	color = np.array([np.random.randint(0,255) for _ in range(3*len(GTtrjdic))]).reshape(len(GTtrjdic),3)
-	plt.axis('off')
 	plt.ion()
 	dots = []
 	for keyind in range(len(GTtrjdic.keys())):
@@ -65,7 +63,9 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 		print "key:", key
 		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
 		
-
+		im  = plt.imshow(np.zeros_like(frame))
+		plt.axis('off')
+		
 		for tind in range(len(GTtrjdic[key].fullframe)):
 			tt = GTtrjdic[key].fullframe[tind]
 			print "frame:", tt
@@ -109,7 +109,6 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 			plt.draw()
 			plt.show()
 			
-
 			"""draw our vehicle obj result"""
 			for ind in vehicleCandidates_reorderedInd[key][2]:
 				plt.plot(VehicleObjDic[ind].fullxTrj[:tt-VehicleObjDic[ind].frame[0]],VehicleObjDic[ind].fullyTrj[:tt-VehicleObjDic[ind].frame[0]],color = 'r')
@@ -122,7 +121,10 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 				# 	dot.remove()
 			# axL.lines.pop(0)
 
+		plt.cla()
 
+		plt.draw()
+		plt.show()
 
 if __name__ == '__main__':
 
@@ -208,6 +210,9 @@ if __name__ == '__main__':
 	vehicleCandidates_reorderedInd ={}
 
 	for ii in GTtrjdic.keys():
+		if len(vehicleCandidates[ii])==0:
+			continue
+
 		vehicleCandidates_reorderedInd[ii] = []
 		overlapInd = np.argsort( np.array(vehicleCandidates[ii])[:,1])[::-1]
 		"""relative ind in the list"""

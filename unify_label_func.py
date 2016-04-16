@@ -86,6 +86,7 @@ def unify_label(matfiles,savename,label_choice):
             flab[:]   = flab +list(L2)
             ftrjID[:] = ftrjID + list(M2)
 
+        pdb.set_trace()
         #== eliminate duplicate part == 
            
         data      = np.vstack((ftrjID,flab))
@@ -102,7 +103,7 @@ def unify_label(matfiles,savename,label_choice):
         result          = {}
         result['label'] = labels
         result['trjID'] = savetrjID
-        savemat(savename+LabelName,result)
+        savemat(savename+LabelName+DirName[dirii],result)
 
 
 
@@ -111,26 +112,32 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = True
-    if not useCC:
-        matfilePath = DataPathobj.sscpath
-    else:
+    useCC = False
+    # global useRawSmooth
+    # useRawSmooth = True
+
+
+    # if useRawSmooth:
+    #     matfilePath = DataPathobj.smoothpath
+    if useCC:
         matfilePath = DataPathobj.adjpath
+    else:
+        matfilePath = DataPathobj.sscpath
 
     savePath      = DataPathobj.unifiedLabelpath
     label_choice = Parameterobj.clustering_choice
 
     if Parameterobj.useWarpped:
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
-    else:
-        if useCC:
-            # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
-            # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlob*.mat'))
-            # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
-            matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
+    if useCC:
+        # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
+        # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlob*.mat'))
+        # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
+        # matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
+        matfilesAll = sorted(glob.glob(matfilePath +'*April15*.mat')) 
 
-        else:
-            matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
+    else:
+        matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
 
 
     numTrunc = len(matfilesAll)
@@ -138,10 +145,13 @@ if __name__ == '__main__':
     if numTrunc<=200:
         if Parameterobj.useWarpped:
             savename = os.path.join(savePath,'usewarpped_Complete_result')
+        # if useRawSmooth:
+        #     savename = os.path.join(savePath,'rawSmoothResult')
+        if useCC:
+            savename = os.path.join(savePath,'concomp')
         else:
             savename = os.path.join(savePath,'Complete_result')
-            if useCC:
-                savename = os.path.join(savePath,'concomp')
+
         unify_label(matfilesAll,savename,label_choice)
     else:
         for kk in range(0,numTrunc,25):

@@ -29,7 +29,12 @@ def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 	lines = 0
 	while lines<line_limit:
 		temp = reader.next()
-		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (np.double(temp[0])-frame_idx>=20): # new car	
+		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (np.double(temp[0])-frame_idx>=10): # new car	
+		# if (np.double(temp[0])<frame_idx) or (lines==line_limit-1)\
+		# or (np.sqrt((np.double(temp[1])-GTupperL_list[-1][0])**2+(np.double(temp[2])-GTupperL_list[-1][1])**2)>10)\
+		# or (np.sqrt((np.double(temp[3])-GTLowerR_list[-1][0])**2+(np.double(temp[4])-GTLowerR_list[-1][1])**2)>30): # new car	
+
+
 			print "length", len(frame_idx_list)
 			if len(frame_idx_list)>5: ##if the GT is too short, ditch it
 				GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
@@ -214,7 +219,11 @@ def plotGTonVideo(GTtrjdic, VehicleObjCandidates=None):
 	for keyind in range(len(GTtrjdic.keys())):
 		key = GTtrjdic.keys()[keyind]
 		print "key:", key
-		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
+		# cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,GTtrjdic[key].frame[0])
+		print "reading buffer"
+		cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,0)
+		for bb in range(GTtrjdic[key].frame[0]):
+			status, frame = cap.read()
 		# pdb.set_trace()
 		# for tind in range(len(GTtrjdic[key].frame)+1):
 		# 	tt = GTtrjdic[key].frame[tind]

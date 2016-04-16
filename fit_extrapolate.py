@@ -55,7 +55,7 @@ def filteringCriterion(xk,yk,xspd,yspd):
 		return False
 	else:
 		notStationary = sum(speed<3) < transth
-		moving1       = max(speed)>minspdth # check if it is a moving point
+		moving1       = np.max(speed)>minspdth # check if it is a moving point
 		moving2       = (np.abs(np.sum(xspd))>=1e-2) and (np.abs(np.sum(yspd))>=1e-2)
 		loc_change    = (np.max(xk)-np.min(xk)>=loc_change_th) or (np.max(yk)-np.min(yk)>=loc_change_th)
 		
@@ -66,19 +66,25 @@ def filteringCriterion(xk,yk,xspd,yspd):
 
 
 
-def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
+def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx,t):
 	badTrj  = []
 	goodTrj = []
 	p3      = [] #polynomial coefficients, order 3
 	for kk in range(x.shape[0]):
-		xk = x[kk,:][x[kk,:]!=0]
-		yk = y[kk,:][y[kk,:]!=0]
+		# xk = x[kk,:][x[kk,:]!=0]
+		# yk = y[kk,:][y[kk,:]!=0]
+		stuffer=np.max(t)
+		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
+		yk = y[kk,:][t[kk,:]!=stuffer]
+
 		
 		# xaccelerate = np.diff(xspd)
 		# yaccelerate = np.diff(yspd)
 
-		xspd = xspd_mtx[kk,:][x[kk,:]!=0][1:]
-		yspd = yspd_mtx[kk,:][y[kk,:]!=0][1:]
+		# xspd = xspd_mtx[kk,:][x[kk,:]!=0][1:]
+		# yspd = yspd_mtx[kk,:][y[kk,:]!=0][1:]
+		xspd = xspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
+		yspd = yspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
 		# print sum(xspd)
 		# print sum(accelerate)
 		satisfyCriterion = filteringCriterion(xk,yk,xspd,yspd)
@@ -90,7 +96,8 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx):
 			goodTrj.append(kk)
 			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
 			#### p3.append(np.polyfit( y[kk,:][y[kk,:]!=0], x[kk,:][x[kk,:]!=0],3))
-			p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
+			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
+			p3.append(np.polyfit(x[kk,:][t[kk,:]!=stuffer], y[kk,:][t[kk,:]!=stuffer], 2))
 
 	outlierID =[]
 	p3 = np.array(p3)
@@ -147,7 +154,6 @@ def smooth(xk, yk):
 	# s = InterpolatedUnivariateSpline(yk, xk, k=2)
 	# x_smooth = s(y_smooth)
 	# plt.plot(x_smooth, y_smooth, linewidth=1)
-
 	f1 = interp1d(xk, yk, kind='linear', axis=-1, copy=True, bounds_error=True, fill_value=np.nan, assume_sorted=False)
 	x_smooth_per_pixel = np.arange(xk.min(), xk.max(),0.5)
 	y_smooth_per_pixel = f1(x_smooth_per_pixel)
@@ -191,7 +197,9 @@ def readData(matfile):
 	ptstrj = loadmat(matfile)
 	x    = csr_matrix(ptstrj['xtracks'], shape=ptstrj['xtracks'].shape).toarray()
 	y    = csr_matrix(ptstrj['ytracks'], shape=ptstrj['ytracks'].shape).toarray()
-	return x,y,ptstrj
+	t    = csr_matrix(ptstrj['Ttracks'], shape=ptstrj['Ttracks'].shape).toarray()
+
+	return x,y,t,ptstrj
 
 
 
@@ -232,7 +240,7 @@ def getSpdMtx(dataMtx_withnan):
 	spdMtx[np.isnan(spdMtx)]=0 # change every nan to 0
 	return spdMtx
 
-def getSmoothMtx(x,y):
+def getSmoothMtx(x,y,t):
 	x_spatial_smooth_mtx = np.zeros(x.shape)
 	y_spatial_smooth_mtx = np.zeros(y.shape)
 
@@ -240,17 +248,30 @@ def getSmoothMtx(x,y):
 	y_time_smooth_mtx = np.ones(y.shape)*np.nan
 
 	for kk in range(0,x.shape[0],1):
-		xk = x[kk,:][x[kk,:]!=0]
-		yk = y[kk,:][y[kk,:]!=0]
+		# xk = x[kk,:][x[kk,:]!=0]
+		# yk = y[kk,:][y[kk,:]!=0]
+		stuffer=np.max(t)
+		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
+		yk = y[kk,:][t[kk,:]!=stuffer]
 		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>Parameterobj.loc_change): # range span >=2 pixels  # loger than 5, otherwise all zero out
+			if len(xk)!=len(yk):
+				pdb.set_trace()
 			x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
 			x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
 
-			x_spatial_smooth_mtx[kk,:][x[kk,:]!=0]=x_spatial_smooth
-			y_spatial_smooth_mtx[kk,:][y[kk,:]!=0]=y_spatial_smooth
+			# x_spatial_smooth_mtx[kk,:][x[kk,:]!=0]=x_spatial_smooth
+			# y_spatial_smooth_mtx[kk,:][y[kk,:]!=0]=y_spatial_smooth
 
-			x_time_smooth_mtx[kk,:][x[kk,:]!=0]=x_time_smooth
-			y_time_smooth_mtx[kk,:][y[kk,:]!=0]=y_time_smooth
+			# x_time_smooth_mtx[kk,:][x[kk,:]!=0]=x_time_smooth
+			# y_time_smooth_mtx[kk,:][y[kk,:]!=0]=y_time_smooth
+			
+			x_spatial_smooth_mtx[kk,:][t[kk,:]!=stuffer]=x_spatial_smooth
+			y_spatial_smooth_mtx[kk,:][t[kk,:]!=stuffer]=y_spatial_smooth
+
+			x_time_smooth_mtx[kk,:][t[kk,:]!=stuffer]=x_time_smooth
+			y_time_smooth_mtx[kk,:][t[kk,:]!=stuffer]=y_time_smooth
+
+
 
 	xspd_smooth_mtx = getSpdMtx(x_time_smooth_mtx)
 	yspd_smooth_mtx = getSpdMtx(y_time_smooth_mtx)
@@ -267,8 +288,12 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 	plt.figure()
 	for ii in range(0,len(Trjchoice),1):
 		kk = Trjchoice[ii]
-		xk = x[kk,:][x[kk,:]!=0]
-		yk = y[kk,:][y[kk,:]!=0]
+		# xk = x[kk,:][x[kk,:]!=0]
+		# yk = y[kk,:][y[kk,:]!=0]
+		stuffer=np.max(t)
+		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
+		yk = y[kk,:][t[kk,:]!=stuffer]
+
 		if len(xk)>=Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>2): # range span >=2 pixels
 			# plt.plot(xk)
 			# plt.plot(yk)
@@ -354,11 +379,11 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 def main(matfile):
 	# "if consecutive points are similar to each other, merge them, using one to represent"
 	# didn't do this, smooth and resample instead
-	x,y,ptstrj = readData(matfile)	
-	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y)
+	x,y,t,ptstrj = readData(matfile)	
+	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
 
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
-	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx)
+	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,t)
 	# kmeansPolyCoeff(p3)
 	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,p3,goodTrj)
 	saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
