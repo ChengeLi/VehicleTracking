@@ -12,7 +12,7 @@ class parameter(object):
 		"""for KLT tracker"""
 		self.klt_detect_interval = 5
 		if dataSource == 'Johnson':
-			self.useSBS = False
+			self.useSBS = True
 			self.useWarpped = False
 			self.lk_params = dict(winSize=(5, 5), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),flags = cv2.OPTFLOW_LK_GET_MIN_EIGENVALS) #maxLevel: level of pyramid
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=3, blockSize=3)  #qualityLevel, below which dots will be rejected
@@ -26,16 +26,20 @@ class parameter(object):
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
-			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
-			#a car len: ~=100 to 200
-			self.nullXspd_for_adj_norm = 0.1
-			self.nullYspd_for_adj_norm = 0.1
-			self.nullBlob_for_adj = 30
+			# self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
+			# #a car len: ~=100 to 200
+			# self.nullXspd_for_adj_norm = 0.1
+			# self.nullYspd_for_adj_norm = 0.1
+
+			self.nullDist_for_adj = 40
+			self.nullXspd_for_adj_norm = 0.05
+			self.nullYspd_for_adj_norm = 0.05
+			self.nullBlob_for_adj = 40
 
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 20
-			self.DPGMM_num_component_shirink_factor = 1000
+			self.DPGMM_num_component_shirink_factor = 100
 			self.DPGMM_alpha = 0.1
 
 
@@ -122,10 +126,12 @@ class parameter(object):
 			"""for adj SBS"""
 			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.trjoverlap_len_thresh = 2
-			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
-			self.nullXspd_for_adj_norm = 0.2
-			self.nullYspd_for_adj_norm = 0.1
-			self.nullBlob_for_adj = 15
+			self.nullDist_for_adj = 60 #if dis>= this value, adj[i,j] will be set to 0 
+			# self.nullXspd_for_adj_norm = 0.2
+			# self.nullYspd_for_adj_norm = 0.1
+			self.nullXspd_for_adj = 3
+			self.nullYspd_for_adj = 3
+			self.nullBlob_for_adj = 90
 
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
@@ -136,8 +142,9 @@ class parameter(object):
 			self.useMask = False
 
 			# self.adj_weight = [2,1,1,0,1]
-			# self.adj_weight = [4,1,1,0,2]
-			self.adj_weight = [1,1,1,0,1]
+			self.adj_weight = [10,1,1,0,2]
+			# self.adj_weight = [1,1,1,0,1]
+			# self.adj_weight = [10,0,0,0,2]
 
 			# self.adj_weight = [4,1,1,0,0]
 			# self.adj_weight = [0,0,0,0,1]

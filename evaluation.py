@@ -132,6 +132,8 @@ if __name__ == '__main__':
 	if dataSource == 'NGSIM':
 		# filename = os.path.join(DataPathobj.pairpath,'GTtrjdictionary_'+dataSource+'_cam4.p')
 		filename = os.path.join(DataPathobj.pairpath,'GTtrjdictionary_'+dataSource+'.p')
+	elif dataSource =='Johnson':
+		filename = os.path.join(DataPathobj.pairpath,'GTtrjdictionary_1st&2ndTrunc_'+dataSource+'.p')
 	else:
 		filename = os.path.join(DataPathobj.pairpath,'GTtrjdictionary_'+dataSource+'.p')
 	GTtrjdic = pickle.load(open(filename,'rb'))
@@ -220,7 +222,7 @@ if __name__ == '__main__':
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
 		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
 		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
-		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.2*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0*np.array(vehicleCandidates[ii])[withinInd[:],1]]
 		
 		"""corresponding vehicle ID"""
 		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 

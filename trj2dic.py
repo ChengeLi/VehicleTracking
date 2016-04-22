@@ -29,6 +29,10 @@ def Virctr(x,y):
     '''
     calculate virtual center, and remove outlier
     '''
+    vcx = np.median(x)
+    vcy = np.median(y)
+
+
     # x = x[x!=0]
     # y = y[y!=0]
 
@@ -47,29 +51,34 @@ def Virctr(x,y):
     #     idx = ((x-mx)<=sx)&((y-my)<=sy)
     #     vcx = np.mean(x[idx])
     #     vcy = np.mean(y[idx])
-    if len(x)<3:
-        vcx = np.median(x)
-        vcy = np.median(y)
-    else:
-        mx = np.mean(x)
-        my = np.mean(y)
-        sx = np.std(x)
-        sy = np.std(y)
+   
+    """more robust???"""
+    # if len(x)<3:
+    #     vcx = np.median(x)
+    #     vcy = np.median(y)
+    # else:
+    #     mx = np.mean(x)
+    #     my = np.mean(y)
+    #     sx = np.std(x)
+    #     sy = np.std(y)
 
-        idx = ((x-mx)<=sx)&((y-my)<=sy)
-        vcx = np.median(x[idx])
-        vcy = np.median(y[idx])
+    #     idx = ((x-mx)<=sx)&((y-my)<=sy)
+    #     vcx = np.median(x[idx])
+    #     vcy = np.median(y[idx])
 
-        """discard very big group???"""
-        # if sx>20 or sy>20:
-        # if sx>0.8*Parameterobj.nullDist_for_adj or sy>0.8*nullDist_for_adj:
-        #     vcx = np.nan
-        #     vcy = np.nan
-        # else:
-        #     # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
-        #     idx = ((x-mx)<=sx)&((y-my)<=sy)
-        #     vcx = np.median(x[idx])
-        #     vcy = np.median(y[idx])
+
+
+    """discard very big group???"""
+    # if sx>20 or sy>20:
+    # if sx>0.8*Parameterobj.nullDist_for_adj or sy>0.8*Parameterobj.nullDist_for_adj:
+    #     vcx = np.nan
+    #     vcy = np.nan
+    #     pdb.set_trace()
+    # else:
+    #     # idx = ((x-mx)<2*sx)&((y-my)<2*sy)
+    #     idx = ((x-mx)<=sx)&((y-my)<=sy)
+    #     vcx = np.median(x[idx])
+    #     vcy = np.median(y[idx])
     return vcx,vcy
 
 
@@ -163,7 +172,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
     while frame_idx < np.int(matfiles[-1][-7:-4])*subSampRate*trunclen:
         print("frame {0}\r".format(frame_idx)),
         sys.stdout.flush()
-        if subsample_frmIdx%trunclen == 0:
+        if subsample_frmIdx%trunclen == 0 or (start_frame_idx!=0):
             if subsample_frmIdx!=0:
                 if createGT:
                     annotation_file.close()
@@ -174,7 +183,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
                 # if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'NoBlob*.mat'))):
-                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*April15*.mat'))):
+                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_spatial_*.mat'))):
                     print "already used up the adj files"
                     break
 
@@ -249,8 +258,10 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             #                 vctime[k].append(-2000)
             #                 vctime[k].append(-2000)
 
+        PtsInCurFrm = xtrj[:,subsample_frmIdx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0 
+        # PtsInCurFrm = xtrj[:,floor(float(subsample_frmIdx)/trunclen)]!=0  ## this is wrong!
 
-        PtsInCurFrm = xtrj[:,subsample_frmIdx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0
+
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf      = mlabels[IDinCurFrm] # label in current frame
         # print "labinf: ",labinf
@@ -260,7 +271,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 x = xtrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 y = ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 if useVirtualCenter:
-                    vx,vy = Virctr(x,y) # find virtual center
+                    vx,vy = Virctr(x[x!=0],y[y!=0]) # find virtual center; exist zero points.. don't know why
                     if np.isnan(vx) or np.isnan(vy):
                         if len(vcxtrj[k])>1:
                             vx = vcxtrj[k][-1]  # duplicate the last (x,y) in label k
@@ -273,7 +284,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                         else:
                             pdb.set_trace()
                             # vx= [np.nan]
-                            # vy= [np.nan] 
+                            # vy= [np.nan]
+
                     vcxtrj[k].extend([vx]) 
                     vcytrj[k].extend([vy])
                 else:
@@ -282,8 +294,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     vcxtrj[k].extend(vx) 
                     vcytrj[k].extend(vy)
 
-                # if vx<=0 or vy<=0:  # why exist negative???? 
-                    # pdb.set_trace()
+                    # if np.sum(x<=0)>0 or np.sum(y<=0)>0:  # why exist negative???? 
+                    #     pdb.set_trace()
 
                 """get vctime with the X and Y"""
                 vctime2[k].extend([frame_idx])
@@ -305,7 +317,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         if isVisualize:
             image2gif=[]
             if isVideo:
-                trueLoc = start_frame_idx+(trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
+                trueLoc = (trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
                 """trueLoc!=frame_idx if not starting from 0??? why"""
                 """change set to loopy read!!"""
                 cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
@@ -412,10 +424,12 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     annos = []
     line_exist = 0
     for k in labinf:
-       # print "x,y",vcxtrj[k],vcytrj[k]
+        # print "x,y",vcxtrj[k][-1],vcytrj[k][-1]
         if useVirtualCenter:
             xx = np.array(vcxtrj[k])[~np.isnan(vcxtrj[k])]
             yy = np.array(vcytrj[k])[~np.isnan(vcytrj[k])]
+
+
         else:
             # xx = np.array(vcxtrj[k]).reshape((1,-1))
             # yy = np.array(vcytrj[k]).reshape((1,-1))
@@ -431,8 +445,16 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 lines = axL.plot(xx,yy,color = (color[k-1].T)/255.,linewidth=2)
                 line_exist = 1
             else:
+                """only draw the last 10 points"""
+                # dots.append(axL.scatter(xx[-10:],yy[-10:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=8))
+                # if k in [1092, 1484, 1522, 1556, 1611]:
+                #     dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                #     annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
+
+            annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
+            # if xx[-1]<=0 or yy[-1]<=0:
+            #     pdb.set_trace()
 
 
     im.set_data(frame[:,:,::-1])
@@ -455,6 +477,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()  
     plt.show()
     plt.pause(0.0001)
+    # if frame_idx>200:
+    #     plt.waitforbuttonpress()
     # plt.waitforbuttonpress()
 
     # image2gif = Figtodat.fig2img(fig)
@@ -493,7 +517,6 @@ def prepare_input_data(isVideo,isClustered):
     else:
         clustered_result =[]
     if isVideo:
-        # dataPath = os.path.join(DataPathobj.sysPathHeader,'My Book/CUSP/AIG/DoT/Convert3/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms.avi')
         dataPath = DataPathobj.video
     else:
         # dataPath = '../DoT/CanalSt@BaxterSt-96.106/CanalSt@BaxterSt-96.106_2015-06-16_16h03min52s762ms/'
@@ -506,7 +529,7 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = False
+    isVisualize      = True
     useVirtualCenter = True
     isSave           = True
     global createGT
@@ -520,11 +543,8 @@ if __name__ == '__main__':
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)
-    # start_frame_idx = (np.int(matfiles[result_file_Ind*25][-7:-4])-1)*trunclen #start frame_idx
-    start_frame_idx = 0
-    # start_frame_idx = trunclen*subSampRate*6
+    start_frame_idx = 0*subSampRate
     print "start_frame_idx: ",start_frame_idx
-    # matfiles = matfiles[result_file_Ind*25:(result_file_Ind+1)*25]
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
 
 

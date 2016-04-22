@@ -105,7 +105,7 @@ def read_video(readlength, skipTime = 0, skipChunk = 0):
     
     vid = np.zeros([readlength/3,frameH,frameW,3], dtype = np.uint8)
     # start_position = int(skipTime*(Frmrate))+skipChunk
-    start_position = 0
+    start_position = 1200
 
     print 'reading buffer...'
     # for ii in range(start_position):

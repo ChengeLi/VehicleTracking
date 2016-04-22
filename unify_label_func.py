@@ -86,7 +86,6 @@ def unify_label(matfiles,savename,label_choice):
             flab[:]   = flab +list(L2)
             ftrjID[:] = ftrjID + list(M2)
 
-        pdb.set_trace()
         #== eliminate duplicate part == 
            
         data      = np.vstack((ftrjID,flab))
@@ -103,7 +102,7 @@ def unify_label(matfiles,savename,label_choice):
         result          = {}
         result['label'] = labels
         result['trjID'] = savetrjID
-        savemat(savename+LabelName+DirName[dirii],result)
+        savemat(savename+LabelName,result)
 
 
 
@@ -131,10 +130,11 @@ if __name__ == '__main__':
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
-        # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlob*.mat'))
+        # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlobThresh*.mat'))
         # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
         # matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
-        matfilesAll = sorted(glob.glob(matfilePath +'*April15*.mat')) 
+        matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_all_*.mat')) 
+        # matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_spatial_*.mat')) 
 
     else:
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))

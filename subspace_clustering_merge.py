@@ -175,8 +175,6 @@ def uniqulizeLabel(labels):
 
 def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     small_connected_comp = []
-    # one_car_trjID = pickle.load(open('./johnson_one_car_trjID','rb'))
-
     labels_DPGMM = np.ones(CClabel.size)*(-222)
     labels_spectral = np.ones(CClabel.size)*(-222)
 
@@ -187,9 +185,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
     FeatureMtx[np.isnan(FeatureMtx)] = 0
     
-    # FeatureMtxLoc = []
-    # for aa in one_car_trjID:
-    #     FeatureMtxLoc+=list(np.where(trjID[0]==aa)[0])
+    # big_CC_trjID = {}##look into the big CC's
 
     for i in np.unique(CClabel):
         color = ((color_choice[i].T) / 255.)
@@ -198,7 +194,14 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         sub_adjMtx = trjAdj[sub_index][:, sub_index]
         # sub_FeatureMtx = FeatureMtx[sub_index,:]
         sub_FeatureMtx = []
+
+        """there are some very big CCs, what happend inside??"""
         if sub_index.size > 3:
+            # if sub_index.size>50:
+            #     big_CC_trjID[i] = []
+            #     big_CC_trjID[i]+=list(trjID[0,sub_index])
+
+
             project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             print "CC size:", sub_index.size
             """restrict the prj dim <=200, otherwise too slow"""
@@ -275,6 +278,8 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     # plt.plot(sub_labels_spectral,'g')
     # plt.plot(labels_new,'r')
     # pdb.set_trace()
+
+    # pickle.dump(big_CC_trjID,open('./NGSIM_bigCC_trjID','wb'))
     return trjID, labels_DPGMM, labels_spectral, small_connected_comp
 
 
@@ -363,7 +368,7 @@ def prepare_input_data():
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*SpaSpdBlob*.mat')))
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*NoBlobThreshGaussian_diff_dir*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*thresholding_adj_all*.mat')))
 
     savePath = DataPathobj.sscpath
     trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))

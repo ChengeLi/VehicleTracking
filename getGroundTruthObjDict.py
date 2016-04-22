@@ -29,16 +29,13 @@ def GTFromCSV(file, line_limit,Gdd_img_list_interval):
 	lines = 0
 	while lines<line_limit:
 		temp = reader.next()
-		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1) or (np.double(temp[0])-frame_idx>=10): # new car	
+		if (np.double(temp[0])<frame_idx) or (lines==line_limit-1): # new car	
 		# if (np.double(temp[0])<frame_idx) or (lines==line_limit-1)\
 		# or (np.sqrt((np.double(temp[1])-GTupperL_list[-1][0])**2+(np.double(temp[2])-GTupperL_list[-1][1])**2)>10)\
 		# or (np.sqrt((np.double(temp[3])-GTLowerR_list[-1][0])**2+(np.double(temp[4])-GTLowerR_list[-1][1])**2)>30): # new car	
-
-
 			print "length", len(frame_idx_list)
-			if len(frame_idx_list)>5: ##if the GT is too short, ditch it
-				GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
-			
+			# if len(frame_idx_list)>5: ##if the GT is too short, ditch it
+			GTtrjdic[vehicleInd] = GTtrj(GTupperL_list,GTLowerR_list,GTcenterXY_list,frame_idx_list,vehicleInd)
 			frame_idx_list  = []
 			GTupperL_list   = []
 			GTLowerR_list   = []
@@ -71,9 +68,17 @@ def readGTdata():
 		GTtrjdic = GTFromCSV(f,line_limit, 1) #what's the interval for the canal video
 
 	elif dataSource == 'Johnson':
-		f =  open(os.path.join(DataPathobj.DataPath,'Johnson_00115_ROI_gt.csv'), 'rb')
-		line_limit = 1128
-		GTtrjdic = GTFromCSV(f, line_limit,2.5)
+		# f =  open(os.path.join(DataPathobj.DataPath,'Johnson_00115_ROI_gt.csv'), 'rb') ## not temporally aligned!
+		# line_limit = 1128
+		# f =  open(os.path.join(DataPathobj.DataPath,'Johnson1stTruncation.csv'), 'rb')
+		# line_limit = 1128
+		# line_limit = 1399
+		# f =  open(os.path.join(DataPathobj.DataPath,'Johnson2ndTruncation.csv'), 'rb')
+		# line_limit = 1905
+
+		f =  open(os.path.join(DataPathobj.DataPath,'Johnson1st&2nd.csv'), 'rU')
+		line_limit = 3304
+		GTtrjdic = GTFromCSV(f, line_limit,1)
 
 	elif dataSource == 'NGSIM':
 		
@@ -291,10 +296,10 @@ if __name__ == '__main__':
 
 	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
-	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_'+	dataSource+'.p','wb'))
+	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_1st&2ndTrunc_'+	dataSource+'.p','wb'))
 	
 	"""plot the ground truth on the video!"""
-	plotGTonVideo(GTtrjdic)
+	# plotGTonVideo(GTtrjdic)
 
 	# for ii in GTtrjdic.keys():
 	# 	plot(GTtrjdic[ii].fullxTrj, GTtrjdic[ii].fullyTrj)
