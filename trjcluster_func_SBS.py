@@ -376,9 +376,9 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj)
     adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj)
 
-    """Hard thresholding adj based on blob center dist"""
-    # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
-    adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
+    # """Hard thresholding adj based on blob center dist"""
+    # # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
+    # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
 
     """Hard thresholding adj based on hue dist"""
     """Hue info is very very weak, even with 0.001, still almost fully connected"""
@@ -386,7 +386,6 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
 
     adj = adj + adj.transpose() 
     fully_adj = fully_adj + fully_adj.transpose() 
-
     # if np.sum(adj>1)>0:
     #     pdb.set_trace()
 
@@ -678,7 +677,7 @@ if __name__ == '__main__':
                         idx  = num[tmp1&tmp2]
                       
                         if len(idx)>= Parameterobj.trjoverlap_len_thresh: # has overlapping
-                            sidx   = idx[1:] # for speedss
+                            sidx   = idx[1:] # for speeds
                             sxdiff,sydiff,mdis = get_spd_dis_diff(xspd[i,sidx],xspd[j,sidx],yspd[i,sidx],yspd[j,sidx],x[i,idx],x[j,idx],y[i,idx],y[j,idx])
                             # if i in [0, 1, 24, 55, 111, 88] and j in [0, 1, 24, 55, 111, 88]:
                             #     print 'trjID1,trjID2',trjID[i],trjID[j]
@@ -720,6 +719,7 @@ if __name__ == '__main__':
                             
                             """normalize the distance"""
                             # normalized_feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
+
                             feature_diff_tensor[i,j,:] = dataForKernel_ele
 
                         # else: # overlapping too short
@@ -757,10 +757,6 @@ if __name__ == '__main__':
             """save each same direction adj"""
             temp = (adj>0).astype(int)
             s,c = connected_components(temp) #s is the total CComponent, c is the label
-            ss,cc = connected_components((fully_adj>0).astype(int)) #s is the total CComponent, c is the label
-            if ss>1:
-                pdb.set_trace()
-
             """delete trjs that formed isolated very small CC"""
             non_isolatedCC = []
             for CClabel in np.unique(c):
@@ -775,6 +771,13 @@ if __name__ == '__main__':
             result['adj_'+DirName[dirii]]   = sparsemtx
             result['c_'+DirName[dirii]]     = c
             result['trjID_'+DirName[dirii]] = sameDirTrjID
+
+
+            ss,cc = connected_components((adj>0).astype(int)) #s is the total CComponent, c is the label
+            if ss>1:
+                pdb.set_trace()
+
+
 
             """often, one vehicle is already over-segmented by CC, why"""
             # final_trjID   = np.uint32(loadmat(open(os.path.join(DataPathobj.unifiedLabelpath,'concomp'+'c_'+DirName[dirii]+'.mat')))['trjID'][0]) 
@@ -807,7 +810,7 @@ if __name__ == '__main__':
 
         if Parameterobj.useWarpped:
             # savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'usewarpped_'+adj_methods+'_April15_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'usewarpped_'+adj_methods+'_April22_'+str(matidx+1+start_position_offset).zfill(3)
 
         else:
             # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)

@@ -182,8 +182,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
-                # if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'NoBlob*.mat'))):
-                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_spatial_*.mat'))):
+                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))):
+                # if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))):
                     print "already used up the adj files"
                     break
 
@@ -506,9 +506,9 @@ def prepare_input_data(isVideo,isClustered):
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
     else:
         clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
-        """to visulize the connected component"""
-        if useCC:
-            clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
+    """to visulize the connected component"""
+    if useCC:
+        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
 
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
@@ -530,7 +530,7 @@ if __name__ == '__main__':
     trunclen         = Parameterobj.trunclen
     isClustered      = True
     isVisualize      = True
-    useVirtualCenter = True
+    useVirtualCenter = False
     isSave           = True
     global createGT
     createGT = False

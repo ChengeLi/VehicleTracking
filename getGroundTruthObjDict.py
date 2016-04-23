@@ -296,7 +296,8 @@ if __name__ == '__main__':
 
 	"""construct GT trj dictionary:"""
 	GTtrjdic = readGTdata()
-	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_1st&2ndTrunc_'+	dataSource+'.p','wb'))
+	# pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary_1st&2ndTrunc_'+dataSource+'.p','wb'))
+	pickle.dump(GTtrjdic,open(DataPathobj.pairpath+'/GTtrjdictionary'+dataSource+'.p','wb'))
 	
 	"""plot the ground truth on the video!"""
 	# plotGTonVideo(GTtrjdic)

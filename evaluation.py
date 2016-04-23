@@ -227,7 +227,7 @@ if __name__ == '__main__':
 		"""corresponding vehicle ID"""
 		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
 		nearestVehicleID_dist    = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
-		nearestVehicleID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] 
+		nearestVehicleID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:5]][:,0] 
 
 		vehicleCandidates_reorderedInd[ii] = [nearestVehicleID_overlap,nearestVehicleID_dist, nearestVehicleID_inBB,overlapInd,distInd,withinInd]
 

@@ -182,8 +182,8 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
     print 'connected component number:',len(np.unique(CClabel))
 
     # FeatureMtx = pickle.load(open('./NGSIM_FeatureMtx', 'rb'))
-    FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
-    FeatureMtx[np.isnan(FeatureMtx)] = 0
+    # FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
+    # FeatureMtx[np.isnan(FeatureMtx)] = 0
     
     # big_CC_trjID = {}##look into the big CC's
 
@@ -210,7 +210,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
-            n_components_DPGMM = max(1,int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)))
+            n_components_DPGMM = max(1,int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)+2))
             print 'DPGMM n_components =', n_components_DPGMM
             sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=n_components_DPGMM, alpha=Parameterobj.DPGMM_alpha)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()

@@ -125,32 +125,31 @@ if __name__ == '__main__':
 
     savePath      = DataPathobj.unifiedLabelpath
     label_choice = Parameterobj.clustering_choice
-
-    if Parameterobj.useWarpped:
-        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
         # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlobThresh*.mat'))
         # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
         # matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
-        matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_all_*.mat')) 
+        matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_all_G*.mat')) 
         # matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_spatial_*.mat')) 
 
     else:
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
 
+    if Parameterobj.useWarpped:
+        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
 
     numTrunc = len(matfilesAll)
 
     if numTrunc<=200:
-        if Parameterobj.useWarpped:
-            savename = os.path.join(savePath,'usewarpped_Complete_result')
         # if useRawSmooth:
         #     savename = os.path.join(savePath,'rawSmoothResult')
         if useCC:
             savename = os.path.join(savePath,'concomp')
         else:
             savename = os.path.join(savePath,'Complete_result')
+        if Parameterobj.useWarpped:
+            savename = os.path.join(savePath,'usewarpped_Complete_result')
 
         unify_label(matfilesAll,savename,label_choice)
     else:
