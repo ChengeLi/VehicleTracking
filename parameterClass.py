@@ -142,7 +142,8 @@ class parameter(object):
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 15
 			self.DPGMM_num_component_shirink_factor = 1.1
-			self.DPGMM_alpha = 1000
+			self.DPGMM_alpha = 1e10
+			self.spectral_num_component_shirink_factor = 5
 
 			self.useMask = False
 
@@ -155,8 +156,8 @@ class parameter(object):
 			# self.adj_weight = [0,0,0,0,1]
 
 
-		self.clustering_choice = 'labels_DPGMM_'
-		# self.clustering_choice = 'labels_spectral_'
+		# self.clustering_choice = 'labels_DPGMM_'
+		self.clustering_choice = 'labels_spectral_'
 
 
 

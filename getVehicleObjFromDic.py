@@ -16,7 +16,7 @@ import pdb
 
 if __name__ == '__main__':
 	# useCC = True  #For johnson
-	useCC = True
+	useCC = False
 	isClustered = True
 	if isClustered:
 		if useCC:

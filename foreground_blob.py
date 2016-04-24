@@ -117,13 +117,13 @@ if __name__ == '__main__':
 
 			maskgray = ImgSlice
 
-			"""see the foreground blob image"""
+			# """see the foreground blob image"""
 
-			# plt.imshow(np.uint8(ImgSlice),cmap = 'gray')
-			# plt.draw()
-			# plt.pause(0.0001)
+			# # plt.imshow(np.uint8(ImgSlice),cmap = 'gray')
+			# # plt.draw()
+			# # plt.pause(0.0001)
 
-			"""visualization"""
+			# """visualization"""
 			# frame = readVideo(cap,subSampRate)
 			# frame2 = frame
 			# # # frame2[:,:,1] = frame[:,:,1]+(maskgray*100)

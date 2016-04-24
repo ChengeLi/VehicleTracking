@@ -180,10 +180,11 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pdb.set_trace()
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
 
+            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
+            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
-                if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))):
-                # if matidx>=len(sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))):
+                if matidx>=len(adjFiles):
                     print "already used up the adj files"
                     break
 
@@ -202,17 +203,23 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 subsample_frmIdx = subsample_frmIdx+trunclen
                 continue
             IDintrunk = trunkTrjFile['trjID'][0]
-            Nsample   = trunkTrjFile['xtracks'].shape[0] # num of trjs in this trunk
             
+            """as we deleted small isolated connected component trjs in trjcluster"""
+            adjFile = loadmat(adjFiles[matidx])
+            non_isolatedCC = adjFile['non_isolatedCCupup']
+            xtrj = xtrj[non_isolatedCC[0,:],:]
+            ytrj = ytrj[non_isolatedCC[0,:],:]
+            IDintrunk = IDintrunk[non_isolatedCC][0,:]
+            Nsample   = xtrj.shape[0] # num of trjs in this trunk
 
             #  get the mlabels for unclustered trjs, just the original global ID
             if not isClustered:
                 for idx,ID in enumerate(IDintrunk):  
                     mlabels[int(ID)] = np.int(IDintrunk[int(idx)])
             labinT = mlabels[IDintrunk] # label in this trunk
-
             """get vctime trunk-wise, one vctime per trunk"""
             # ttrj      = csr_matrix(trunkTrjFile['Ttracks'], shape=trunkTrjFile['Ttracks'].shape).toarray()
+            # ttrj = ttrj[non_isolatedCC,:]
             # ttrj[ttrj==np.max(ttrj[:])]=np.nan
             # startT = np.int32(np.ones([Nsample,1])*-999)
             # endT   = np.int32(np.ones([Nsample,1])*-999)
@@ -446,8 +453,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 line_exist = 1
             else:
                 """only draw the last 10 points"""
-                # dots.append(axL.scatter(xx[-10:],yy[-10:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 # if k in [1092, 1484, 1522, 1556, 1611]:
                 #     dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 #     annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
@@ -529,8 +536,8 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = True
-    useVirtualCenter = False
+    isVisualize      = False
+    useVirtualCenter = True
     isSave           = True
     global createGT
     createGT = False
@@ -539,7 +546,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = False
+    useCC = True
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

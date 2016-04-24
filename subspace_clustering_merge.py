@@ -196,7 +196,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         sub_FeatureMtx = []
 
         """there are some very big CCs, what happend inside??"""
-        if sub_index.size > 3:
+        if sub_index.size > 5:
             # if sub_index.size>50:
             #     big_CC_trjID[i] = []
             #     big_CC_trjID[i]+=list(trjID[0,sub_index])
@@ -210,7 +210,10 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
-            n_components_DPGMM = max(1,int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor)+2))
+            n_components_DPGMM = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
+            n_components_DPGMM = max(1,n_components_DPGMM)
+            n_components_DPGMM = min(sub_index.size,n_components_DPGMM)
+
             print 'DPGMM n_components =', n_components_DPGMM
             sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=n_components_DPGMM, alpha=Parameterobj.DPGMM_alpha)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()
@@ -243,9 +246,12 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
             """N cut spectral"""
             # pdb.set_trace()
-            print 'spectral clustering num_cluster is', num_cluster_prior
+            n_components_spectral = int(np.floor(sub_index.size/Parameterobj.spectral_num_component_shirink_factor))
+            n_components_spectral = max(2,n_components_spectral)
+            n_components_spectral = min(sub_index.size,n_components_spectral)
+            print 'spectral clustering num_cluster is', n_components_spectral
             # sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
-            sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
+            sub_labels_spectral = ssc.clustering_spectral(n_components_spectral)
 
             # arrange_index = []
             # for ii in np.unique(sub_labels_spectral):

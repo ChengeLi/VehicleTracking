@@ -221,13 +221,13 @@ if __name__ == '__main__':
 		distInd    = np.argsort( np.array(vehicleCandidates[ii])[:,2])
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
 		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
-		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.5*np.array(vehicleCandidates[ii])[withinInd[:],1]]
-		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.3*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0*np.array(vehicleCandidates[ii])[withinInd[:],1]]
 		
 		"""corresponding vehicle ID"""
 		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
 		nearestVehicleID_dist    = np.array(vehicleCandidates[ii])[distInd[:]][:,0] #5 nearest
-		nearestVehicleID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:5]][:,0] 
+		nearestVehicleID_inBB    = np.array(vehicleCandidates[ii])[withinInd[:]][:,0] 
 
 		vehicleCandidates_reorderedInd[ii] = [nearestVehicleID_overlap,nearestVehicleID_dist, nearestVehicleID_inBB,overlapInd,distInd,withinInd]
 

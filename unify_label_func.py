@@ -111,7 +111,7 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = False
+    useCC = True
     # global useRawSmooth
     # useRawSmooth = True
 

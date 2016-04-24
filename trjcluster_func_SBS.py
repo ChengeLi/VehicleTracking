@@ -771,7 +771,7 @@ if __name__ == '__main__':
             result['adj_'+DirName[dirii]]   = sparsemtx
             result['c_'+DirName[dirii]]     = c
             result['trjID_'+DirName[dirii]] = sameDirTrjID
-
+            result['non_isolatedCC'+DirName[dirii]] = non_isolatedCC
 
             ss,cc = connected_components((adj>0).astype(int)) #s is the total CComponent, c is the label
             if ss>1:
