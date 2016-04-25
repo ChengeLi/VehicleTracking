@@ -132,8 +132,8 @@ class parameter(object):
 			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.trjoverlap_len_thresh = 2
 			self.nullDist_for_adj = 60 #if dis>= this value, adj[i,j] will be set to 0 
-			# self.nullXspd_for_adj_norm = 0.2
-			# self.nullYspd_for_adj_norm = 0.1
+			self.nullXspd_for_adj_norm = 0.2
+			self.nullYspd_for_adj_norm = 0.1
 			self.nullXspd_for_adj = 3
 			self.nullYspd_for_adj = 3
 			self.nullBlob_for_adj = 90
@@ -143,7 +143,7 @@ class parameter(object):
 			self.embedding_projection_factor = 15
 			self.DPGMM_num_component_shirink_factor = 1.1
 			self.DPGMM_alpha = 1e10
-			self.spectral_num_component_shirink_factor = 5
+			self.spectral_num_component_shirink_factor = 8
 
 			self.useMask = False
 
@@ -156,8 +156,8 @@ class parameter(object):
 			# self.adj_weight = [0,0,0,0,1]
 
 
-		# self.clustering_choice = 'labels_DPGMM_'
-		self.clustering_choice = 'labels_spectral_'
+		self.clustering_choice = 'labels_DPGMM_'
+		# self.clustering_choice = 'labels_spectral_'
 
 
 

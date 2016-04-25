@@ -210,10 +210,11 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
-            n_components_DPGMM = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
-            n_components_DPGMM = max(1,n_components_DPGMM)
-            n_components_DPGMM = min(sub_index.size,n_components_DPGMM)
-
+            # n_components_DPGMM = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
+            # n_components_DPGMM = max(1,n_components_DPGMM)
+            # n_components_DPGMM = min(sub_index.size,n_components_DPGMM)
+            n_components_DPGMM = sub_index.size
+            
             print 'DPGMM n_components =', n_components_DPGMM
             sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=n_components_DPGMM, alpha=Parameterobj.DPGMM_alpha)
             sub_adjMtx = csr_matrix(sub_adjMtx, shape=sub_adjMtx.shape).toarray()

@@ -102,6 +102,7 @@ def unify_label(matfiles,savename,label_choice):
         result          = {}
         result['label'] = labels
         result['trjID'] = savetrjID
+        savename = os.path.join(DataPathobj.unifiedLabelpath,savename+label_choice)
         savemat(savename+LabelName,result)
 
 
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = True
+    useCC = False
     # global useRawSmooth
     # useRawSmooth = True
 
@@ -123,7 +124,6 @@ if __name__ == '__main__':
     else:
         matfilePath = DataPathobj.sscpath
 
-    savePath      = DataPathobj.unifiedLabelpath
     label_choice = Parameterobj.clustering_choice
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
@@ -140,23 +140,21 @@ if __name__ == '__main__':
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
 
     numTrunc = len(matfilesAll)
-
+    savename = ''
     if numTrunc<=200:
-        # if useRawSmooth:
-        #     savename = os.path.join(savePath,'rawSmoothResult')
         if useCC:
-            savename = os.path.join(savePath,'concomp')
+            savename = 'concomp'+savename
         else:
-            savename = os.path.join(savePath,'Complete_result')
+            savename = 'Complete_result'+savename
         if Parameterobj.useWarpped:
-            savename = os.path.join(savePath,'usewarpped_Complete_result')
+            savename = 'usewarpped_'+savename
 
         unify_label(matfilesAll,savename,label_choice)
     else:
         for kk in range(0,numTrunc,25):
             print "saved trunk",str(kk+1).zfill(3),'to' ,str(min(kk+25,numTrunc)).zfill(3)
             matfiles = matfilesAll[kk:min(kk+25,numTrunc)]
-            savename = os.path.join(savePath,'result_'+label_choice+str(kk+1).zfill(3)+'-'+str(min(kk+25,numTrunc)).zfill(3))
+            savename = os.path.join(DataPathobj.unifiedLabelpath,'result_'+label_choice+str(kk+1).zfill(3)+'-'+str(min(kk+25,numTrunc)).zfill(3))
             unify_label(matfiles,savename,label_choice)
             
 

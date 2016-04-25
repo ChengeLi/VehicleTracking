@@ -320,21 +320,23 @@ def get_thresholding_adj(adj,feature_diff_tensor):
     adj = adj + adj.transpose() 
     return adj
 
-def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
+def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True):
     """assign different weights to different features"""
     weight = Parameterobj.adj_weight
-    # """if loaded from normalized feature tensor:"""
-    # sxdiff_normalized    = feature_diff_tensor[:,:,0]
-    # sydiff_normalized    = feature_diff_tensor[:,:,1]
-    # mdis_normalized      = feature_diff_tensor[:,:,2]
-    # huedis_normalized    = feature_diff_tensor[:,:,3]
-    # centerDis_normalized = feature_diff_tensor[:,:,4]
-    """if loaded from unnormalized feature tensor:"""
-    sxdiff_normalized    = feature_diff_tensor[:,:,0]/Parameterobj.nullXspd_for_adj
-    sydiff_normalized    = feature_diff_tensor[:,:,1]/Parameterobj.nullYspd_for_adj
-    mdis_normalized      = feature_diff_tensor[:,:,2]/Parameterobj.nullDist_for_adj
-    huedis_normalized    = feature_diff_tensor[:,:,3] ##ignore
-    centerDis_normalized = feature_diff_tensor[:,:,4]/Parameterobj.nullBlob_for_adj
+    if afterNormalize:
+        """if loaded from normalized feature tensor:"""
+        sxdiff_normalized    = feature_diff_tensor[:,:,0]
+        sydiff_normalized    = feature_diff_tensor[:,:,1]
+        mdis_normalized      = feature_diff_tensor[:,:,2]
+        huedis_normalized    = feature_diff_tensor[:,:,3]
+        centerDis_normalized = feature_diff_tensor[:,:,4]
+    else:
+        """if loaded from unnormalized feature tensor:"""
+        sxdiff_normalized    = feature_diff_tensor[:,:,0]/Parameterobj.nullXspd_for_adj
+        sydiff_normalized    = feature_diff_tensor[:,:,1]/Parameterobj.nullYspd_for_adj
+        mdis_normalized      = feature_diff_tensor[:,:,2]/Parameterobj.nullDist_for_adj
+        huedis_normalized    = feature_diff_tensor[:,:,3] ##ignore
+        centerDis_normalized = feature_diff_tensor[:,:,4]/Parameterobj.nullBlob_for_adj
 
     # sigma_xspd_diff = 0.7
     # sigma_yspd_diff = 0.7
@@ -362,27 +364,31 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID):
     # print np.unique((fully_adj+fully_adj.T)[np.array(FeatureMtxLoc[vehicle1ind]),:][:,np.array(FeatureMtxLoc[vehicle1ind])])
     # print np.unique((fully_adj+fully_adj.T)[np.array(FeatureMtxLoc[vehicle2ind]),:][:,np.array(FeatureMtxLoc[vehicle2ind])])
 
+    if afterNormalize:
+        """spatial distance"""
+        adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
+        """velocities"""
+        # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
+        # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
+        adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj_norm)
+        adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj_norm)
+        """blob"""
+        # # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
 
-    """Hard thresholding adj based on spatial distance"""
-    # # # adj = adj*(feature_diff_tensor[:,:,2]< 50/(extremeValue[5]-extremeValue[4])*1)
-    # # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
-    adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj)
+    else:
+        """Hard thresholding adj based on spatial distance"""
+        adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj)
 
-    """Hard thresholding adj based on velocities"""
-    # # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj/(extremeValue[1]-extremeValue[0])*1)
-    # # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj/(extremeValue[3]-extremeValue[2])*1)
-    # # adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj_norm)
-    # # adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj_norm)
-    adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj)
-    adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj)
+        """Hard thresholding adj based on velocities"""
+        adj = adj*(feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj)
+        adj = adj*(feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj)
 
-    # """Hard thresholding adj based on blob center dist"""
-    # # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj/(extremeValue[9]-extremeValue[8])*1)
-    # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
+        # """Hard thresholding adj based on blob center dist"""
+        # adj = adj*(feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
 
-    """Hard thresholding adj based on hue dist"""
-    """Hue info is very very weak, even with 0.001, still almost fully connected"""
-    # adj = adj*(feature_diff_tensor[:,:,3]< 0.001)
+        """Hard thresholding adj based on hue dist"""
+        """Hue info is very very weak, even with 0.001, still almost fully connected"""
+        # adj = adj*(feature_diff_tensor[:,:,3]< 0.001)
 
     adj = adj + adj.transpose() 
     fully_adj = fully_adj + fully_adj.transpose() 
@@ -644,31 +650,31 @@ if __name__ == '__main__':
             color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
             num = np.arange(fnum)
 
-            # if adj_methods =="Gaussian":
-            #     if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
-            #         print "mean_std_ForKernel and extremeValue already stored, load..."
-            #         mean_std_ForKernel = pickle.load(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-            #         extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-            #     else:              
-            #         mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
-            #         pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
-            #         pickle.dump(extremeValue,open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+            if adj_methods =="Gaussian":
+                if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                    print "mean_std_ForKernel and extremeValue already stored, load..."
+                    mean_std_ForKernel = pickle.load(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                    extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                else:              
+                    mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
+                    pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                    pickle.dump(extremeValue,open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
 
 
 
             # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
             """store all pair feature distances"""
             """Nsample*Nsample* 5 distance features"""
-            # if len(sorted(glob.glob(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
-            #     print "normalized distance diff already stored, load..."
-            #     normalized_feature_diff_tensor = pickle.load(open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-            if len(sorted(glob.glob(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
-                print "distance diff already stored, load..."
-                feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+            if len(sorted(glob.glob(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                print "normalized distance diff already stored, load..."
+                normalized_feature_diff_tensor = pickle.load(open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+            # if len(sorted(glob.glob(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+            #     print "distance diff already stored, load..."
+            #     feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
         
             else:
-                # normalized_feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
-                feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
+                normalized_feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
+                # feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
                 for i in range(NumGoodsampleSameDir):
                     print "i", i
                     for j in range(i+1, NumGoodsampleSameDir):
@@ -718,9 +724,8 @@ if __name__ == '__main__':
                             #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                             
                             """normalize the distance"""
-                            # normalized_feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
-
-                            feature_diff_tensor[i,j,:] = dataForKernel_ele
+                            normalized_feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
+                            # feature_diff_tensor[i,j,:] = dataForKernel_ele
 
                         # else: # overlapping too short
                         #     # SBS[i,j] = 0
@@ -728,8 +733,8 @@ if __name__ == '__main__':
                         #     feature_diff_tensor[i,j,:] = np.nan
 
 
-                # pickle.dump(normalized_feature_diff_tensor,open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
-                pickle.dump(feature_diff_tensor,open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                pickle.dump(normalized_feature_diff_tensor,open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                # pickle.dump(feature_diff_tensor,open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
 
 
 
@@ -741,8 +746,8 @@ if __name__ == '__main__':
                 adj=get_thresholding_adj(adj,feature_diff_tensor)
 
             if adj_methods =="Gaussian":
-                adj,fully_adj=get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID)
-
+                # adj,fully_adj=get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID)
+                adj,fully_adj=get_gaussian_adj(adj,normalized_feature_diff_tensor,sameDirTrjID,afterNormalize = True)
 
 
             # SBS = SBS + SBS.transpose()  #add diag twice
@@ -773,9 +778,9 @@ if __name__ == '__main__':
             result['trjID_'+DirName[dirii]] = sameDirTrjID
             result['non_isolatedCC'+DirName[dirii]] = non_isolatedCC
 
-            ss,cc = connected_components((adj>0).astype(int)) #s is the total CComponent, c is the label
-            if ss>1:
-                pdb.set_trace()
+            # ss,cc = connected_components((adj>0).astype(int)) #s is the total CComponent, c is the label
+            # if ss>1:
+            #     pdb.set_trace()
 
 
 

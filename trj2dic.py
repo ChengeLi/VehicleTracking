@@ -453,8 +453,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 line_exist = 1
             else:
                 """only draw the last 10 points"""
-                dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                # dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 # if k in [1092, 1484, 1522, 1556, 1611]:
                 #     dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 #     annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
@@ -508,15 +508,18 @@ def prepare_input_data(isVideo,isClustered):
     matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
     """to visulize raw klt"""
     # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
-    if Parameterobj.useWarpped:
-        # clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*'+Parameterobj.clustering_choice+'*.mat')))
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'usewarpped_*.mat')))
-    else:
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'Complete*'+Parameterobj.clustering_choice+'*.mat')))
+    
+    clustereFileName = '*'
     """to visulize the connected component"""
     if useCC:
-        clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,'concompc_upup.mat')))
+        clustereFileName = 'concomp'+clustereFileName
+    else:
+        clustereFileName = 'Complete_result'+clustereFileName
+    if Parameterobj.useWarpped:
+        clustereFileName = 'usewarpped_'+clustereFileName
 
+    clustereFileName = clustereFileName[:-1]+Parameterobj.clustering_choice+'*'
+    clustered_result_files = sorted(glob.glob(os.path.join(DataPathobj.unifiedLabelpath,clustereFileName)))
     savePath = DataPathobj.dicpath
     result_file_Ind  = 0 # use the clustered result for the 2nd truncs(26-50)
     if isClustered:
@@ -536,7 +539,7 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = False
+    isVisualize      = True
     useVirtualCenter = True
     isSave           = True
     global createGT
@@ -546,7 +549,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = True
+    useCC = False
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)
