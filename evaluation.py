@@ -32,12 +32,25 @@ def metrics(vehicleCandidates_reorderedInd):
 		dist_ind = np.int16(vehicleCandidates_reorderedInd[key][5])
 		dist_list.append( min(np.array(vehicleCandidates[key])[dist_ind,2]))
 
+
+
+
 	Ntarget = (1.0*(len(vehicleCandidates_reorderedInd.keys())))
 	missRate         = 1- detect/Ntarget
 	overSegementRate = overSegement/Ntarget
 	dist             = np.sum(dist_list)/Ntarget
 
-	return missRate, overSegementRate, dist, dist_list
+
+	"""get rid of large distance"""
+	mx = np.mean(dist_list)
+	sx = np.std(dist_list)
+	idx = (dist_list-mx)<=sx
+	dist2 = np.mean(np.array(dist_list)[idx])
+	missRate2 = 1- np.sum(idx)/Ntarget
+	print "missRate2, dist2",missRate2, dist2
+
+
+	return missRate2, overSegementRate, dist2, np.array(dist_list)[idx]
 
 
 
@@ -140,11 +153,13 @@ if __name__ == '__main__':
 
 
 	"""load our system result trj dictionary:"""
-	isClustered = True
-	if isClustered:
-		VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'VehicleObjDic.p'),'rb'))
+	useCC = False
+	if useCC:
+		VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'CCVehicleObjDic.p'),'rb'))
 	else:
-		VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'notClustered_VehicleObjDic.p'),'rb'))
+		# VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'Clustered_VehicleObjDic.p'),'rb'))
+		# VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'Spectral_Clustered_VehicleObjDic.p'),'rb'))
+		VehicleObjDic = pickle.load(open(os.path.join(DataPathobj.pairpath,'DPGMM_Clustered_VehicleObjDic2.p'),'rb'))
 
 
 
@@ -221,8 +236,8 @@ if __name__ == '__main__':
 		distInd    = np.argsort( np.array(vehicleCandidates[ii])[:,2])
 		withinInd  = np.argsort( np.array(vehicleCandidates[ii])[:,3])[::-1]
 		"""only left with vehicles that are within the bbox for more than 1/2 of the overlapping time"""
-		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.3*np.array(vehicleCandidates[ii])[withinInd[:],1]]
-		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		# withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.3*np.array(vehicleCandidates[ii])[withinInd[:],1]]
+		withinInd = withinInd[np.array(vehicleCandidates[ii])[withinInd[:],3]>=0.1*np.array(vehicleCandidates[ii])[withinInd[:],1]]
 		
 		"""corresponding vehicle ID"""
 		nearestVehicleID_overlap = np.array(vehicleCandidates[ii])[overlapInd[:]][:,0] 
@@ -248,7 +263,7 @@ if __name__ == '__main__':
 		# plt.show()
 
 	# plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd)
-	missRate, overSegementRate, dist, dist_list= metrics(vehicleCandidates_reorderedInd)
+	missRate, overSegementRate, dist, dist_list = metrics(vehicleCandidates_reorderedInd)
 	print "missRate, overSegementRate, dist", missRate, overSegementRate, dist
 
 

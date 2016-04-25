@@ -54,6 +54,17 @@ def unify_label(matfiles,savename,label_choice):
             L2[:] = L2 + L1max + 1 # to make sure there're no duplicate labels
 
             commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
+
+
+            # interesting_trjID =  [  77,  104,  295,  330,  367,  445,  518,  606,  723,  840,  855,
+            # 865,  891, 1138, 1362, 1724, 1745]
+
+            interesting_trjID = [2887, 2896, 3000, 3399, 3609,       2714, 2735, 2755, 2764, 2844, 2976, 3192, 4004]
+
+            for mm in interesting_trjID:
+                print L1[M1==mm]
+            pdb.set_trace()
+
             
             print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))
        
@@ -106,8 +117,6 @@ def unify_label(matfiles,savename,label_choice):
         savemat(savename+LabelName,result)
 
 
-
-
 if __name__ == '__main__':
     # 
     """to visulize the connected component"""
@@ -127,11 +136,7 @@ if __name__ == '__main__':
     label_choice = Parameterobj.clustering_choice
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
-        # matfilesAll = sorted(glob.glob(matfilePath +'*onlyBlobThresh*.mat'))
-        # matfilesAll = sorted(glob.glob(matfilePath +'*SpaSpdBlobthresh*.mat')) #thresholded by spatial dis, spd dis and blob center dis
-        # matfilesAll = sorted(glob.glob(matfilePath +'*NoBlobThreshGaussian_diff_dir*.mat')) 
-        matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_all_G*.mat')) 
-        # matfilesAll = sorted(glob.glob(matfilePath +'*thresholding_adj_spatial_*.mat')) 
+        matfilesAll = sorted(glob.glob(matfilePath +'baseline*.mat')) 
 
     else:
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))

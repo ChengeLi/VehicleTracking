@@ -262,6 +262,10 @@ if __name__ == '__main__':
                             tracksdic[idx].append((x,y,frame_idx,hue))
                         # if isVisualize:
                         cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
+                        # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (int(tracksdic[idx][-1][0]),int(tracksdic[idx][-1][1])), (0, 255, 0), 2)
+                        # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (x,y), (0, 255, 0), 1)
+                        for vvv in range(len(tracksdic[idx])-1,1,-1):
+                            cv2.line(vis, (int(tracksdic[idx][vvv][0]),int(tracksdic[idx][vvv][1])), (int(tracksdic[idx][vvv-1][0]),int(tracksdic[idx][vvv-1][1])), (0, 255, 0), 1)
 
 
 

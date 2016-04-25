@@ -105,7 +105,6 @@ class parameter(object):
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 10
 			self.DPGMM_alpha = 10
-
 			self.useMask = True
 			self.adj_weight = [2,2,2,0,0.8]
 
@@ -131,13 +130,17 @@ class parameter(object):
 			"""for adj SBS"""
 			# self.trjoverlap_len_thresh = 0.5*self.targetFPS  #0.5 s
 			self.trjoverlap_len_thresh = 2
-			self.nullDist_for_adj = 60 #if dis>= this value, adj[i,j] will be set to 0 
-			self.nullXspd_for_adj_norm = 0.2
-			self.nullYspd_for_adj_norm = 0.1
+			# self.nullDist_for_adj = 30 #if dis>= this value, adj[i,j] will be set to 0 
+			# self.nullXspd_for_adj = 3
+			# self.nullYspd_for_adj = 3
+			# self.nullBlob_for_adj = 90
+
+
+			"""baseline thresholds:"""
+			self.nullDist_for_adj = 20 #if dis>= this value, adj[i,j] will be set to 0 
 			self.nullXspd_for_adj = 3
 			self.nullYspd_for_adj = 3
 			self.nullBlob_for_adj = 90
-
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 15
@@ -148,7 +151,8 @@ class parameter(object):
 			self.useMask = False
 
 			# self.adj_weight = [2,1,1,0,1]
-			self.adj_weight = [10,1,1,0,2]
+			# self.adj_weight = [10,1,1,0,2]
+			self.adj_weight = [10,0,0,0,2]
 			# self.adj_weight = [1,1,1,0,1]
 			# self.adj_weight = [10,0,0,0,2]
 

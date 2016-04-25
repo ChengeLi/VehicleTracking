@@ -66,10 +66,10 @@ if __name__ == '__main__':
 	VehicleObjDic = {}
 	for loopVehicleID1 in AllTrjObj.globalID:
 		VehicleObjDic[loopVehicleID1] = VehicleObj(AllTrjObj,loopVehicleID1)
-	if isClustered:
-		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'VehicleObjDic.p'),'wb'))
+	if useCC:
+		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'CCVehicleObjDic.p'),'wb'))
 	else:
-		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'notClustered_VehicleObjDic.p'),'wb'))
+		pickle.dump(VehicleObjDic,open(os.path.join(savePath,'Clustered_VehicleObjDic.p'),'wb'))
 
 
 

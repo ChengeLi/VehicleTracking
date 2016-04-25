@@ -196,17 +196,20 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
         sub_FeatureMtx = []
 
         """there are some very big CCs, what happend inside??"""
-        if sub_index.size > 5:
+        if sub_index.size > 0:
             # if sub_index.size>50:
             #     big_CC_trjID[i] = []
             #     big_CC_trjID[i]+=list(trjID[0,sub_index])
 
 
-            project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
+            # project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
+            project_dimension = 10
+
             print "CC size:", sub_index.size
             """restrict the prj dim <=200, otherwise too slow"""
-            print "project dimension is: ", min(200, project_dimension)  ## embeded lower dimension
-            ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=min(200, project_dimension))
+            # print "project dimension is: ", min(200, project_dimension)  ## embeded lower dimension
+            print "project dimension is: ", min(int(np.sqrt(sub_index.size)), project_dimension)  ## embeded lower dimension
+            ssc = sparse_subspace_clustering(2000000, sub_FeatureMtx, n_dimension=min(int(np.sqrt(sub_index.size)), project_dimension))
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
             """DPGMM"""
@@ -278,9 +281,18 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             small_connected_comp.append(sub_index)
             # print 'number of trajectory %s'%sub_labels.size + '  unique labels %s' % np.unique(sub_labels).size
         
+
+
     labels_DPGMM = uniqulizeLabel(labels_DPGMM)
     labels_spectral = uniqulizeLabel(labels_spectral)
     
+
+
+    # interesting_loc = array([93, 78, 77, 58, 80, 96, 57, 91, 60, 95, 59, 84, 61, 97, 94, 92])
+    # interesting_trjID = [2887, 2896, 3000, 3399, 3609,       2714, 2735, 2755, 2764, 2844, 2976, 3192, 4004]
+    # print labels_DPGMM[interesting_trjID] ##should be 16;  56 57
+    # pdb.set_trace()
+
     # plt.figure()
     # plt.plot(sub_labels_spectral,'g')
     # plt.plot(labels_new,'r')
@@ -375,7 +387,7 @@ def prepare_input_data():
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*SpaSpdBlob*.mat')))
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*thresholding_adj_all*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'normalize_thresholding_adj_all*.mat')))
 
     savePath = DataPathobj.sscpath
     trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))

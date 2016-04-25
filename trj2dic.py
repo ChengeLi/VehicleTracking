@@ -163,6 +163,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vctime[i]=[]
             vctime2[i] = []
 
+
     global notconnectedLabel
     notconnectedLabel =[]
     CrossingClassLbel = [] # class labels that go across 2 trunks
@@ -209,7 +210,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             non_isolatedCC = adjFile['non_isolatedCCupup']
             xtrj = xtrj[non_isolatedCC[0,:],:]
             ytrj = ytrj[non_isolatedCC[0,:],:]
-            IDintrunk = IDintrunk[non_isolatedCC][0,:]
+            IDintrunk = IDintrunk[non_isolatedCC[0,:]]
             Nsample   = xtrj.shape[0] # num of trjs in this trunk
 
             #  get the mlabels for unclustered trjs, just the original global ID
@@ -271,6 +272,14 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
 
         IDinCurFrm  = IDintrunk[PtsInCurFrm] #select IDs in this frame
         labinf      = mlabels[IDinCurFrm] # label in current frame
+        
+        # if isClustered:
+        #     interestingFinalLabel = 56
+        #     interestingTrjID = np.where(mlabels==interestingFinalLabel)[0]
+        #     # print 'interestingTrjID'
+        #     interestingTrjID
+        #     pdb.set_trace()
+
         # print "labinf: ",labinf
         for k in np.unique(labinf):
 
@@ -455,9 +464,11 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
                 """only draw the last 10 points"""
                 # dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                # if k in [1092, 1484, 1522, 1556, 1611]:
-                #     dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                #     annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
+                # if k in [1,11,27,9,49,51,67,47]:
+        #         if k in [56, 57]:
+        # #         if k in [  77,  104,  295,  330,  367,  445,  518,  606,  723,  840,  855,
+        # # 865,  891, 1138, 1362, 1724, 1745]:
+        #             dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
 
             annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
             # if xx[-1]<=0 or yy[-1]<=0:
@@ -484,9 +495,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()  
     plt.show()
     plt.pause(0.0001)
-    # if frame_idx>200:
-    #     plt.waitforbuttonpress()
-    # plt.waitforbuttonpress()
+    plt.waitforbuttonpress()
 
     # image2gif = Figtodat.fig2img(fig)
     # images2gif.append(image2gif)
@@ -539,7 +548,7 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = True
+    isVisualize      = False
     useVirtualCenter = True
     isSave           = True
     global createGT
