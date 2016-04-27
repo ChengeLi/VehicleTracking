@@ -280,7 +280,7 @@ def getSmoothMtx(x,y,t):
 	return x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx
 
 
-def plotTrj(x,y,p3=[],Trjchoice=[]):
+def plotTrj(x,y,t,p3=[],Trjchoice=[]):
 	if Trjchoice==[]:
 		Trjchoice=range(x.shape[0])
 
@@ -317,6 +317,7 @@ def plotTrj(x,y,p3=[],Trjchoice=[]):
 			# plt.plot(x_fit, y_fit,'g')
 			plt.plot(x_fit, y_fit)
 			plt.draw()
+			pdb.set_trace()
 	plt.show()
 	pdb.set_trace()
 
@@ -394,11 +395,11 @@ def main(matfile):
 	# didn't do this, smooth and resample instead
 	x,y,t,ptstrj = readData(matfile)	
 	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
-
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
 	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,t)
+	pdb.set_trace()
 	# kmeansPolyCoeff(p3)
-	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,p3,goodTrj)
+	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,t,p3,goodTrj)
 	saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
@@ -416,7 +417,8 @@ if __name__ == '__main__':
 	_, _, warpingMtx, limitX, limitY = loadWarpMtx()
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
-	matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+	# matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
+	matfiles       = sorted(glob.glob(matfilepath + 'sim*.mat'))
 	start_position =  0
 	matfiles       = matfiles[start_position:]
 

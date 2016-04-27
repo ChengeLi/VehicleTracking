@@ -117,8 +117,8 @@ def plotGTonVideo(GTtrjdic, vehicleCandidates_reorderedInd=None):
 			# dots.append(axL.scatter(xx,yy, s=10, color=(color[keyind].T)/255.,edgecolor='none')) 
 			# lines = axL.plot(xx,yy,color=(color[keyind].T)/255.,linewidth=1)
 
-			dots.append(axL.scatter(xx,yy, s=10, color='g')) 
-			lines = axL.plot(xx,yy,color = 'g',linewidth=1)
+			dots.append(axL.scatter(xx,yy, s=10, color='lime')) 
+			lines = axL.plot(xx,yy,color = 'lime',linewidth=1)
 			plt.draw()
 			plt.show()
 			

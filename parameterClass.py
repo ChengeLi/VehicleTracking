@@ -124,7 +124,7 @@ class parameter(object):
 			self.loc_change = 0.5
 			self.minspdth = 3
 			self.transth = 3*self.targetFPS #don't allow stopping
-			self.livelong_thresh = 0  ##at least 2, for speed
+			self.livelong_thresh = 2  ##at least 2, for speed
 
 
 			"""for adj SBS"""

@@ -423,6 +423,8 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True
     if np.sum(adj==adj.T)!=adj.shape[0]*adj.shape[1]:
         pdb.set_trace()
     # adj_GTind(fully_adj,sameDirTrjID)
+
+
     return adj,fully_adj
 
 

@@ -114,7 +114,7 @@ def unify_label(matfiles,savename,label_choice):
         result['label'] = labels
         result['trjID'] = savetrjID
         savename = os.path.join(DataPathobj.unifiedLabelpath,savename+label_choice)
-        savemat(savename+LabelName,result)
+        savemat(savename,result)
 
 
 if __name__ == '__main__':

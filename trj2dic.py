@@ -24,6 +24,10 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 
+import sys
+sys.path.insert(0,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
+from k_center import *
+
 
 def Virctr(x,y):
     '''
@@ -163,7 +167,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             vctime[i]=[]
             vctime2[i] = []
 
-
     global notconnectedLabel
     notconnectedLabel =[]
     CrossingClassLbel = [] # class labels that go across 2 trunks
@@ -280,9 +283,23 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         #     interestingTrjID
         #     pdb.set_trace()
 
+
+
+        # ===
+        """try k-center algo to see whether output is similar with initial groups"""
+
+        points = []
+        for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
+            xx = xtrj[mm,subsample_frmIdx%trunclen]
+            yy = ytrj[mm,subsample_frmIdx%trunclen]
+            points = points+[Point(xx, yy)]
+        k_center = KCenter(points)
+        # print k_center.furtherst_first(3, start_location=points[0])
+        k_center.chenge_plot_point()
+        # ===
+
         # print "labinf: ",labinf
         for k in np.unique(labinf):
-
             if k != -1:
                 x = xtrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
                 y = ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][labinf==k]
@@ -496,7 +513,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.show()
     plt.pause(0.0001)
     plt.waitforbuttonpress()
-
+    if frame_idx==97:
+        pdb.set_trace()
     # image2gif = Figtodat.fig2img(fig)
     # images2gif.append(image2gif)
 
@@ -548,8 +566,8 @@ if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
     isClustered      = True
-    isVisualize      = False
-    useVirtualCenter = True
+    isVisualize      = True
+    useVirtualCenter = False
     isSave           = True
     global createGT
     createGT = False
@@ -565,6 +583,8 @@ if __name__ == '__main__':
     start_frame_idx = 0*subSampRate
     print "start_frame_idx: ",start_frame_idx
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
+
+
 
 
 
