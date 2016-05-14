@@ -358,20 +358,26 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 		ptstrjNew['Ydir_warpped'] = np.sum(warpped_yspd_mtx,1)>=0
 
 	plt.figure()
-	bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
+	ax1 = plt.subplot2grid((1,3),(0, 0))
+	ax2 = plt.subplot2grid((1,3),(0, 1))
+	ax3 = plt.subplot2grid((1,3),(0, 2))
+
+
+	# bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
+	# im = plt.imshow(bkg[:,:,::-1])
 	for ii in range(len(goodTrj)):
 		xraw = x_smooth_mtx[goodTrj,:][ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
 		yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
 		xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
 		ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
 		plt.subplot(121)
-		im = plt.imshow(bkg[:,:,::-1])
+
 		plt.axis('off')
-		plt.plot(xraw,yraw,color = 'red')
+		plt.plot(xraw,yraw,color = 'red',linewidth=2)
 		plt.title('tracklets before perspective transformation', fontsize=10)
 		plt.subplot(122)
 		plt.ylim(700,0) ## flip the Y axis
-		plt.plot(xnew,ynew,color = 'green')
+		plt.plot(xnew,ynew,color = 'black',linewidth=2)
 		plt.title('tracklets after perspective transformation', fontsize=10)
 		plt.draw()
 		plt.axis('off')

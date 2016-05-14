@@ -142,7 +142,7 @@ if __name__ == '__main__':
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
 
     if Parameterobj.useWarpped:
-        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
+        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*26*.mat'))    
 
     numTrunc = len(matfilesAll)
     savename = ''

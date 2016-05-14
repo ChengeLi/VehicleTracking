@@ -158,7 +158,7 @@ def visulize(data, labels, clf, colors):
             #    plt.xlim(-6, 4 * np.pi - 6)
             #    plt.ylim(-5, 5)
             #    plt.title(title)
-    # plt.xticks(())
+    # plt.xticks(())ls 
     # plt.yticks(())
     plt.show()
 
@@ -249,10 +249,10 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID):
             """k-means"""
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
             """N cut spectral"""
-            # pdb.set_trace()
-            n_components_spectral = int(np.floor(sub_index.size/Parameterobj.spectral_num_component_shirink_factor))
-            n_components_spectral = max(2,n_components_spectral)
-            n_components_spectral = min(sub_index.size,n_components_spectral)
+            # n_components_spectral = int(np.floor(sub_index.size/Parameterobj.spectral_num_component_shirink_factor))
+            # n_components_spectral = max(2,n_components_spectral)
+            # n_components_spectral = min(sub_index.size,n_components_spectral)
+            n_components_spectral = 2
             print 'spectral clustering num_cluster is', n_components_spectral
             # sub_labels_spectral = ssc.clustering_spectral(num_cluster_prior)
             sub_labels_spectral = ssc.clustering_spectral(n_components_spectral)
@@ -382,7 +382,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
 def prepare_input_data():
     global savePath
     if Parameterobj.useWarpped:      
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*25*.mat')))
     else:
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))

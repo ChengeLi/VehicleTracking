@@ -24,17 +24,16 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 
-import sys
-sys.path.insert(0,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
+sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
 from k_center import *
 
 
 def Virctr(x,y):
     '''
     calculate virtual center, and remove outlier
-    '''
-    vcx = np.median(x)
-    vcy = np.median(y)
+    # '''
+    # vcx = np.median(x)
+    # vcy = np.median(y)
 
 
     # x = x[x!=0]
@@ -57,18 +56,18 @@ def Virctr(x,y):
     #     vcy = np.mean(y[idx])
    
     """more robust???"""
-    # if len(x)<3:
-    #     vcx = np.median(x)
-    #     vcy = np.median(y)
-    # else:
-    #     mx = np.mean(x)
-    #     my = np.mean(y)
-    #     sx = np.std(x)
-    #     sy = np.std(y)
+    if len(x)<3:
+        vcx = np.median(x)
+        vcy = np.median(y)
+    else:
+        mx = np.mean(x)
+        my = np.mean(y)
+        sx = np.std(x)
+        sy = np.std(y)
 
-    #     idx = ((x-mx)<=sx)&((y-my)<=sy)
-    #     vcx = np.median(x[idx])
-    #     vcy = np.median(y[idx])
+        idx = ((x-mx)<=sx)&((y-my)<=sy)
+        vcx = np.median(x[idx])
+        vcy = np.median(y[idx])
 
 
 
@@ -294,10 +293,14 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             yy = ytrj[mm,subsample_frmIdx%trunclen]
             points = points+[Point(xx, yy)]
         k_center = KCenter(points)
-        # print k_center.furtherst_first(3, start_location=points[0])
-        k_center.chenge_plot_point()
+        # locations = k_center.furtherst_first(10, start_location=points[0])
+        # print locations
+        # k_center.chenge_plot_point(locations)
         # ===
 
+        threshold = 50
+        locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
+        k_center.chenge_plot_point(locations2,axL)
         # print "labinf: ",labinf
         for k in np.unique(labinf):
             if k != -1:
@@ -480,14 +483,15 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             else:
                 """only draw the last 10 points"""
                 # dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                
                 # if k in [1,11,27,9,49,51,67,47]:
         #         if k in [56, 57]:
         # #         if k in [  77,  104,  295,  330,  367,  445,  518,  606,  723,  840,  855,
         # # 865,  891, 1138, 1362, 1724, 1745]:
         #             dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
 
-            annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
+            # annos.append(plt.annotate(str(k),(xx[-1],yy[-1]),fontsize=11))
             # if xx[-1]<=0 or yy[-1]<=0:
             #     pdb.set_trace()
 
@@ -512,9 +516,8 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     plt.draw()  
     plt.show()
     plt.pause(0.0001)
-    plt.waitforbuttonpress()
-    if frame_idx==97:
-        pdb.set_trace()
+    # plt.waitforbuttonpress()
+
     # image2gif = Figtodat.fig2img(fig)
     # images2gif.append(image2gif)
 
@@ -568,7 +571,7 @@ if __name__ == '__main__':
     isClustered      = True
     isVisualize      = True
     useVirtualCenter = False
-    isSave           = True
+    isSave           = False
     global createGT
     createGT = False
     if createGT:
@@ -583,8 +586,6 @@ if __name__ == '__main__':
     start_frame_idx = 0*subSampRate
     print "start_frame_idx: ",start_frame_idx
     get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunclen, isVisualize,isVideo, dataPath ,isSave, savePath, useVirtualCenter=useVirtualCenter)
-
-
 
 
 

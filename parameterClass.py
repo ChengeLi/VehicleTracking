@@ -70,18 +70,19 @@ class parameter(object):
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 2 
-			self.nullDist_for_adj = 60#if dis>= this value, adj[i,j] will be set to 0 
-			self.nullXspd_for_adj = 10
-			self.nullYspd_for_adj = 10
+			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
+			self.nullXspd_for_adj = 3
+			self.nullYspd_for_adj = 3
 			self.nullBlob_for_adj = 300
 
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 10
-			self.DPGMM_num_component_shirink_factor = 2
+			self.DPGMM_num_component_shirink_factor = 100
 			self.DPGMM_alpha = 1e-10
+			self.spectral_num_component_shirink_factor = 8
 
-			self.adj_weight = [2,2,2,0,0.8]
+			self.adj_weight = [10,2,2,0,1]
 
 		if dataSource == 'laurier':
 			self.useSBS = True

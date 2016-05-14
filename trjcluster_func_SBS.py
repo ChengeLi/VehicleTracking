@@ -16,6 +16,12 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+# add k_center to sys path temporally, add to the end of the list
+sys.path.insert(-1,os.path.realpath(os.path.abspath("/Users/Chenge/Desktop/k-center-problem-master/k_center/")))
+from k_center import *
+
+
+
 def adj_GTind(fully_adj,trjID):
     rearrange_adj = np.zeros_like(fully_adj)
     matidx = 0
@@ -419,12 +425,16 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True
         """Hue info is very very weak, even with 0.001, still almost fully connected"""
         # adj = adj*(feature_diff_tensor[:,:,3]< 0.001)
 
+        """try k-center"""
+
+
+
+
+
     adj = adj + adj.transpose() 
     if np.sum(adj==adj.T)!=adj.shape[0]*adj.shape[1]:
         pdb.set_trace()
     # adj_GTind(fully_adj,sameDirTrjID)
-
-
     return adj,fully_adj
 
 
@@ -819,8 +829,8 @@ if __name__ == '__main__':
                 adj=get_thresholding_adj(adj,feature_diff_tensor)
 
             if adj_methods =="Gaussian":
-                # adj,fully_adj=get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID,afterNormalize = False)
-                adj,fully_adj=get_gaussian_adj(adj,normalized_feature_diff_tensor,sameDirTrjID,afterNormalize = True)
+                adj,fully_adj=get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID,afterNormalize = False)
+                # adj,fully_adj=get_gaussian_adj(adj,normalized_feature_diff_tensor,sameDirTrjID,afterNormalize = True)
 
 
             # SBS = SBS + SBS.transpose()  #add diag twice
@@ -889,7 +899,7 @@ if __name__ == '__main__':
 
         if Parameterobj.useWarpped:
             # savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'usewarpped_'+adj_methods+'_April22_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'usewarpped_'+adj_methods+'_April26_'+str(matidx+1+start_position_offset).zfill(3)
 
         else:
             # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
