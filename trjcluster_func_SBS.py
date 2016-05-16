@@ -16,12 +16,6 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
-# add k_center to sys path temporally, add to the end of the list
-sys.path.insert(-1,os.path.realpath(os.path.abspath("/Users/Chenge/Desktop/k-center-problem-master/k_center/")))
-from k_center import *
-
-
-
 def adj_GTind(fully_adj,trjID):
     rearrange_adj = np.zeros_like(fully_adj)
     matidx = 0
@@ -425,12 +419,6 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True
         """Hue info is very very weak, even with 0.001, still almost fully connected"""
         # adj = adj*(feature_diff_tensor[:,:,3]< 0.001)
 
-        """try k-center"""
-
-
-
-
-
     adj = adj + adj.transpose() 
     if np.sum(adj==adj.T)!=adj.shape[0]*adj.shape[1]:
         pdb.set_trace()
@@ -756,8 +744,8 @@ if __name__ == '__main__':
                 print "distance diff already stored, load..."
                 feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
             else:
-                normalized_feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
-                # feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
+                # normalized_feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
+                feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
                 for i in range(NumGoodsampleSameDir):
                     print "i", i
                     for j in range(i+1, NumGoodsampleSameDir):
@@ -807,8 +795,8 @@ if __name__ == '__main__':
                             #     SBS[i,j] = sameBlobScore(np.array(FgBlobIndex[i,idx]),np.array(FgBlobIndex[j,idx]))
                             
                             """normalize the distance"""
-                            normalized_feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
-                            # feature_diff_tensor[i,j,:] = dataForKernel_ele
+                            # normalized_feature_diff_tensor[i,j,:] = normalize_features(dataForKernel_ele,mean_std_ForKernel,extremeValue,Parameterobj.useSBS)
+                            feature_diff_tensor[i,j,:] = dataForKernel_ele
 
                         # else: # overlapping too short
                         #     # SBS[i,j] = 0
@@ -909,7 +897,7 @@ if __name__ == '__main__':
             # savename = 'onlyBlobThresh'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'SpaSpdBlobthresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'thresholding_adj_spatial_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'normalize_thresholding_adj_all_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'May14'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'baseline_thresholding_adj_all'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
 
 

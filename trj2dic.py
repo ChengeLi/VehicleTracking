@@ -24,8 +24,8 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 
-sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
-from k_center import *
+# sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
+# from k_center import *
 
 
 def Virctr(x,y):
@@ -183,7 +183,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pdb.set_trace()
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
 
-            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
+            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*May14*.mat'))
+            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
             # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
@@ -209,6 +210,7 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             
             """as we deleted small isolated connected component trjs in trjcluster"""
             adjFile = loadmat(adjFiles[matidx])
+            pdb.set_trace()
             non_isolatedCC = adjFile['non_isolatedCCupup']
             xtrj = xtrj[non_isolatedCC[0,:],:]
             ytrj = ytrj[non_isolatedCC[0,:],:]
@@ -287,20 +289,22 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # ===
         """try k-center algo to see whether output is similar with initial groups"""
 
-        points = []
-        for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
-            xx = xtrj[mm,subsample_frmIdx%trunclen]
-            yy = ytrj[mm,subsample_frmIdx%trunclen]
-            points = points+[Point(xx, yy)]
-        k_center = KCenter(points)
-        # locations = k_center.furtherst_first(10, start_location=points[0])
-        # print locations
-        # k_center.chenge_plot_point(locations)
+        # points = []
+        # for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
+        #     xx = xtrj[mm,subsample_frmIdx%trunclen]
+        #     yy = ytrj[mm,subsample_frmIdx%trunclen]
+        #     points = points+[Point(xx, yy)]
+        # k_center = KCenter(points)
+
+        ## locations = k_center.furtherst_first(10, start_location=points[0])
+        ## print locations
+        ## k_center.chenge_plot_point(locations)
+
+        # threshold = 50
+        # locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
+        # k_center.chenge_plot_point(locations2,axL)
         # ===
 
-        threshold = 50
-        locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
-        k_center.chenge_plot_point(locations2,axL)
         # print "labinf: ",labinf
         for k in np.unique(labinf):
             if k != -1:
@@ -483,7 +487,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
             else:
                 """only draw the last 10 points"""
                 # dots.append(axL.scatter(xx[-20:],yy[-20:], s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
-                # dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
+                dots.append(axL.scatter(xx,yy, s=10, color=(color[k-1].T)/255.,edgecolor='none')) 
                 
                 # if k in [1,11,27,9,49,51,67,47]:
         #         if k in [56, 57]:
@@ -500,9 +504,9 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
     fig.canvas.draw()
     # plt.pause(0.00001) 
 
-    # plt.title('frame '+str(frame_idx))
-    # name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
-    # plt.savefig(name) ##save figure
+    plt.title('frame '+str(frame_idx))
+    name = os.path.join(DataPathobj.visResultPath,str(frame_idx).zfill(6)+'.jpg')
+    plt.savefig(name) ##save figure
     """sort the annotation list base dn x location. from left to right"""
     if createGT:
         # annolist = sorted(annos, key=lambda x: sqrt(x.xy[0]**2+x.xy[1]**2), reverse=False) 

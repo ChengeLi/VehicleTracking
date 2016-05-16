@@ -136,7 +136,8 @@ if __name__ == '__main__':
     label_choice = Parameterobj.clustering_choice
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
-        matfilesAll = sorted(glob.glob(matfilePath +'baseline*.mat')) 
+        # matfilesAll = sorted(glob.glob(matfilePath +'baseline*.mat')) 
+        matfilesAll = sorted(glob.glob(matfilePath +'May14*.mat')) 
 
     else:
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))

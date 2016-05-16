@@ -33,7 +33,7 @@ class parameter(object):
 			# self.nullXspd_for_adj_norm = 0.1
 			# self.nullYspd_for_adj_norm = 0.1
 
-			self.nullDist_for_adj = 40
+			self.nullDist_for_adj = 20
 			# self.nullXspd_for_adj_norm = 0.05
 			# self.nullYspd_for_adj_norm = 0.05
 			self.nullXspd_for_adj = 10
@@ -44,7 +44,7 @@ class parameter(object):
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 20
 			self.DPGMM_num_component_shirink_factor = 20
-			self.DPGMM_alpha = 0.1
+			self.DPGMM_alpha = 0.01
 
 
 			self.useMask = False #already masked out!
