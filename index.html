@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Robust Vehicle Tracking for Urban Traffic Videos at Intersections by ChengeLi</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Robust Vehicle Tracking for Urban Traffic Videos at Intersections</h1>
+        <p></p>
+
+        <p class="view"><a href="https://github.com/ChengeLi/VehicleTracking">View the Project on GitHub <small>ChengeLi/VehicleTracking</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/ChengeLi/VehicleTracking/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/ChengeLi/VehicleTracking/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/ChengeLi/VehicleTracking">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a id="automatic-vehicle-tracking-system" class="anchor" href="#automatic-vehicle-tracking-system" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Automatic Vehicle Tracking System</h2>
+
+<p>A robust, unsupervised vehicle tracking system
+for videos of very congested road intersections in urban
+environments is develpped. Raw tracklets from the standard Kanade-
+Lucas-Tomasi tracking algorithm are treated as sample
+points and grouped to form different vehicle candidates.
+Each tracklet is described by multiple features including position,
+velocity, and a foreground score derived from robust
+PCA background subtraction. By considering each tracklet
+as a node in a graph, we build the adjacency matrix for
+the graph based on the feature similarity between the tracklets
+and group these tracklets using spectral embedding and
+Dirichelet Process Gaussian Mixture Models. The proposed
+system yields excellent performance for traffic videos captured
+in urban environments and highways.</p>
+
+<p><img src="https://github.com/ChengeLi/VehicleTracking/blob/master/SiteFigures/blobs.jpg" alt="Foreground Blobs">
+<img src="https://github.com/ChengeLi/VehicleTracking/blob/master/SiteFigures/initial_group_and_clustered.jpg" alt="Intermediate and Final clustered result"></p>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>An-ti Chiang, New York University,  <a href="mailto:dawnandyknight@gmail.com">dawnandyknight@gmail.com</a> </p>
+
+<p>Chenge Li, New York University,    <a href="mailto:cl2840@nyu.edu">cl2840@nyu.edu</a></p>
+
+<p>Greg Dobler, New York University,  <a href="mailto:greg.dobler@nyu.edu">greg.dobler@nyu.edu</a> </p>
+
+<h2>
+<a id="information" class="anchor" href="#information" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Information</h2>
+
+<p>If you have any questions or need more detailed explanations, 
+please email Chenge Li for further information. :D</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/ChengeLi">ChengeLi</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
