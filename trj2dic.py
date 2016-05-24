@@ -24,8 +24,8 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 
-# sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
-# from k_center import *
+sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
+from k_center import *
 
 
 def Virctr(x,y):
@@ -183,8 +183,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                     pdb.set_trace()
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
 
-            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*May14*.mat'))
-            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
+            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*May14*.mat'))
+            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
             # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
@@ -289,20 +289,21 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # ===
         """try k-center algo to see whether output is similar with initial groups"""
 
-        # points = []
-        # for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
-        #     xx = xtrj[mm,subsample_frmIdx%trunclen]
-        #     yy = ytrj[mm,subsample_frmIdx%trunclen]
-        #     points = points+[Point(xx, yy)]
+        points = []
+        for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
+            xx = xtrj[mm,subsample_frmIdx%trunclen]
+            yy = ytrj[mm,subsample_frmIdx%trunclen]
+            points = points+[Point(xx, yy)]
         # k_center = KCenter(points)
+        k_center = KCenter_by_threshold(points)
 
-        ## locations = k_center.furtherst_first(10, start_location=points[0])
-        ## print locations
-        ## k_center.chenge_plot_point(locations)
+        # locations = k_center.furtherst_first(10, start_location=points[0])
+        # print locations
+        # k_center.chenge_plot_point(locations)
 
-        # threshold = 50
-        # locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
-        # k_center.chenge_plot_point(locations2,axL)
+        threshold = 50
+        locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
+        k_center.chenge_plot_point(locations2,axL)
         # ===
 
         # print "labinf: ",labinf
