@@ -35,7 +35,7 @@ if __name__ == '__main__':
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
     useBlobCenter = Parameterobj.useSBS
-    isVisualize   = True
+    isVisualize   = False
 
     # -- utilities
     if isVisualize: 
@@ -44,7 +44,9 @@ if __name__ == '__main__':
     feature_params = Parameterobj.feature_params
 
 
-    previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
+    # previousLastFiles = sorted(glob.glob(savePath+'*klt_*'))
+    previousLastFiles = sorted(glob.glob(savePath+'*.mat'))
+
     if len(previousLastFiles)>0:
         if len(previousLastFiles) >1:
             previousLastFile = previousLastFiles[-1]
@@ -229,8 +231,9 @@ if __name__ == '__main__':
                             tracksdic[idx].append((np.nan,np.nan,frame_idx,np.nan,0,np.nan,np.nan))
                         else:
                             tracksdic[idx].append((np.nan,np.nan,frame_idx,np.nan))
+                    else:
+                        pass ## already dead, already has end[idx]
                 else:
-                    """stop appending nans after this point is already lost."""
                     if (not np.isnan(x)) and (not np.isnan(y)): 
                         if end[idx]>0:
                             pdb.set_trace()
@@ -260,12 +263,19 @@ if __name__ == '__main__':
 
                         else:
                             tracksdic[idx].append((x,y,frame_idx,hue))
-                        # if isVisualize:
+                        
+                        """mask out this point, avoid duplicating"""
                         cv2.circle(vis, (x, y), 3, (0, 0, 255), -1)
-                        # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (int(tracksdic[idx][-1][0]),int(tracksdic[idx][-1][1])), (0, 255, 0), 2)
-                        # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (x,y), (0, 255, 0), 1)
-                        for vvv in range(len(tracksdic[idx])-1,1,-1):
-                            cv2.line(vis, (int(tracksdic[idx][vvv][0]),int(tracksdic[idx][vvv][1])), (int(tracksdic[idx][vvv-1][0]),int(tracksdic[idx][vvv-1][1])), (0, 255, 0), 1)
+
+                        if isVisualize:    
+                            # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (int(tracksdic[idx][-1][0]),int(tracksdic[idx][-1][1])), (0, 255, 0), 2)
+                            # cv2.line(vis, (int(tracksdic[idx][-2][0]),int(tracksdic[idx][-2][1])), (x,y), (0, 255, 0), 1)
+                            for vvv in range(len(tracksdic[idx])-1,1,-1):
+                                cv2.line(vis, (int(tracksdic[idx][vvv][0]),int(tracksdic[idx][vvv][1])), (int(tracksdic[idx][vvv-1][0]),int(tracksdic[idx][vvv-1][1])), (0, 255, 0), 1)
+                    else:
+                        """stop appending nans after this point is already lost."""
+                        pass
+
 
 
 
@@ -273,7 +283,10 @@ if __name__ == '__main__':
         if subsample_frmIdx % detect_interval == 0: 
 
             # GGD: this is (I *think*) eliminating redundant non-moving points
+            # mask = masktouse
+            masktouse[:,:] = 255
             mask = masktouse
+
             for x, y in [tracksdic[tr][-1][:2] for tr in tracksdic.keys()]:
                 if not np.isnan(x):
                     cv2.circle(mask, (np.int32(x), np.int32(y)), 5, 0, -1)    

@@ -43,6 +43,7 @@ def unify_label(matfiles,savename,label_choice):
                 M1 = M2
 
             # L2 = loadmat(matfiles[matidx+1])['labels_DPGMMupup'][0]
+            pdb.set_trace()
             L2 = loadmat(matfiles[matidx+1])[LabelName][0]
             L2 = L2+1
             M2 = loadmat(matfiles[matidx+1])[IDName][0]
@@ -59,11 +60,11 @@ def unify_label(matfiles,savename,label_choice):
             # interesting_trjID =  [  77,  104,  295,  330,  367,  445,  518,  606,  723,  840,  855,
             # 865,  891, 1138, 1362, 1724, 1745]
 
-            interesting_trjID = [2887, 2896, 3000, 3399, 3609,       2714, 2735, 2755, 2764, 2844, 2976, 3192, 4004]
+            # interesting_trjID = [2887, 2896, 3000, 3399, 3609,       2714, 2735, 2755, 2764, 2844, 2976, 3192, 4004]
 
-            for mm in interesting_trjID:
-                print L1[M1==mm]
-            pdb.set_trace()
+            # for mm in interesting_trjID:
+            #     print L1[M1==mm]
+            # pdb.set_trace()
 
             
             print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))

@@ -63,7 +63,7 @@ def readVideo(cap,subSampRate):
 
 
 if __name__ == '__main__':
-	userPCA = False
+	userPCA = True
 	maskfiles, offset = readData(userPCA)
 
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 		Nrows  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 		Ncols  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 		"""in the incPCP code, mask file is saved as a mtx with width=fps/5*600"""
-		MaskMatfileShape=int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/5*trunclen))
+		MaskMatfileShape=int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/5)*trunclen)
 
 		
 		frame_idx = 0
@@ -119,9 +119,9 @@ if __name__ == '__main__':
 
 			# """see the foreground blob image"""
 
-			# # plt.imshow(np.uint8(ImgSlice),cmap = 'gray')
-			# # plt.draw()
-			# # plt.pause(0.0001)
+			# plt.imshow(np.uint8(ImgSlice),cmap = 'gray')
+			# plt.draw()
+			# plt.pause(0.0001)
 
 			# """visualization"""
 			# frame = readVideo(cap,subSampRate)
@@ -137,15 +137,14 @@ if __name__ == '__main__':
 			# # cv2.imshow('frame2', frame2)
 			# # cv2.waitKey(0)
 
-
 			# plt.imshow(frame2[:,:,::-1])
 			# plt.draw()
 			# plt.pause(0.001)
 
 
 			"""use ndimage.measurements"""
+
 			blobLabelMatrix, BlobCenters = blobImg2blobmatrix(maskgray)
-			pdb.set_trace()
 			sparse_slice = csr_matrix(blobLabelMatrix)
 			blobLabelMtxList.append(sparse_slice)
 			blobCenterList.append(BlobCenters)
@@ -153,11 +152,13 @@ if __name__ == '__main__':
 			global_frame_idx = int(mask_tensor.shape[0]*(offset+matidx)+frame_idx*subSampRate)
 			#end of while loop
 
+			# if global_frame_idx<1800:
+			# 	continue
 			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate==mask_tensor.shape[0]):
-				pdb.set_trace()
 				print "Save the blob index tensor into a pickle file:"
 				# savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
-				index = global_frame_idx/trunclen
+				# index = global_frame_idx/(trunclen*subSampRate)
+				index = offset+matidx
 				print 'index',index
 				savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(index).zfill(3)+'.p')
 

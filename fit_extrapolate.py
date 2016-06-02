@@ -326,6 +326,8 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	print "saving smooth new trj:", matfile
 	'only keep the goodTrj, delete all bad ones'
 	ptstrjNew = {}
+	goodTrj.astype(int)
+
 	ptstrjNew['xtracks'] = csr_matrix(x_smooth_mtx[goodTrj,:])
 	ptstrjNew['ytracks'] = csr_matrix(y_smooth_mtx[goodTrj,:])
 	ptstrjNew['Ttracks'] = ptstrj['Ttracks'][goodTrj,:]
@@ -357,32 +359,33 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 		ptstrjNew['Xdir_warpped'] = np.sum(warpped_xspd_mtx,1)>=0
 		ptstrjNew['Ydir_warpped'] = np.sum(warpped_yspd_mtx,1)>=0
 
-	plt.figure()
-	ax1 = plt.subplot2grid((1,3),(0, 0))
-	ax2 = plt.subplot2grid((1,3),(0, 1))
-	ax3 = plt.subplot2grid((1,3),(0, 2))
+	# plt.figure()
+	# ax1 = plt.subplot2grid((1,3),(0, 0))
+	# ax2 = plt.subplot2grid((1,3),(0, 1))
+	# ax3 = plt.subplot2grid((1,3),(0, 2))
 
+	if Parameterobj.useWarpped:
+		# bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
+		# im = plt.imshow(bkg[:,:,::-1])
+		for ii in range(len(goodTrj)):
+			xraw = x_smooth_mtx[goodTrj,:][ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
+			yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
+			xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
+			ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
+			plt.subplot(121)
 
-	# bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
-	# im = plt.imshow(bkg[:,:,::-1])
-	for ii in range(len(goodTrj)):
-		xraw = x_smooth_mtx[goodTrj,:][ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
-		yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
-		xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
-		ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
-		plt.subplot(121)
+			plt.axis('off')
+			pdb.set_trace()
+			plt.plot(xraw,yraw,color = 'red',linewidth=2)
+			plt.title('tracklets before perspective transformation', fontsize=10)
+			plt.subplot(122)
+			plt.ylim(700,0) ## flip the Y axis
+			plt.plot(xnew,ynew,color = 'black',linewidth=2)
+			plt.title('tracklets after perspective transformation', fontsize=10)
+			plt.draw()
+			plt.axis('off')
 
-		plt.axis('off')
-		plt.plot(xraw,yraw,color = 'red',linewidth=2)
-		plt.title('tracklets before perspective transformation', fontsize=10)
-		plt.subplot(122)
-		plt.ylim(700,0) ## flip the Y axis
-		plt.plot(xnew,ynew,color = 'black',linewidth=2)
-		plt.title('tracklets after perspective transformation', fontsize=10)
-		plt.draw()
-		plt.axis('off')
-
-	pdb.set_trace()
+		pdb.set_trace()
 	# parentPath = os.path.dirname(matfile)
 	# smoothPath = os.path.join(parentPath,'smooth/')
 	# if not os.path.exists(smoothPath):
@@ -391,9 +394,9 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 
 
 
-	# onlyFileName = matfile[len(DataPathobj.kltpath):]
-	# savename = os.path.join(DataPathobj.smoothpath,onlyFileName)
-	# savemat(savename,ptstrjNew)
+	onlyFileName = matfile[len(DataPathobj.kltpath):]
+	savename = os.path.join(DataPathobj.smoothpath,onlyFileName)
+	savemat(savename,ptstrjNew)
 
 
 def main(matfile):
@@ -403,7 +406,6 @@ def main(matfile):
 	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
 	# plotTrj(x_smooth_mtx,y_smooth_mtx)
 	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,t)
-	pdb.set_trace()
 	# kmeansPolyCoeff(p3)
 	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,t,p3,goodTrj)
 	saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
@@ -423,8 +425,9 @@ if __name__ == '__main__':
 	_, _, warpingMtx, limitX, limitY = loadWarpMtx()
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
+	matfiles       = sorted(glob.glob(matfilepath + '*.mat'))
 	# matfiles       = sorted(glob.glob(matfilepath + 'klt_*.mat'))
-	matfiles       = sorted(glob.glob(matfilepath + 'sim*.mat'))
+	# matfiles       = sorted(glob.glob(matfilepath + 'sim*.mat'))
 	start_position =  0
 	matfiles       = matfiles[start_position:]
 

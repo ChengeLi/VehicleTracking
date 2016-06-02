@@ -583,7 +583,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = False
+    useCC = True
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

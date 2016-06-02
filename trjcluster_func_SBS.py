@@ -522,7 +522,9 @@ def sameBlobScore(fgBlobInd1,fgBlobInd2):
 def prepare_input_data():
     # if smooth:
     matfilepath = DataPathobj.smoothpath
-    matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
+    # matfiles = sorted(glob.glob(matfilepath + 'klt*.mat'))
+    matfiles = sorted(glob.glob(matfilepath + '*.mat'))
+
     # else:
     #     matfilepath = DataPathobj.filteredKltPath
     #     matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
@@ -679,7 +681,6 @@ if __name__ == '__main__':
         Numsample = ptstrj['xtracks'].shape[0]
         fnum      = ptstrj['xtracks'].shape[1]
         
-
         """First cluster using just direction Information"""
         upup = ((Xdir>=0)*(Ydir>=0))[0]
         upupind = np.array(range(Numsample))[upup]

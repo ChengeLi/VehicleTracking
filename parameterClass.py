@@ -55,11 +55,13 @@ class parameter(object):
 		if dataSource == 'DoT':
 			self.useMask    = False
 			self.useSBS     = True
-			self.useWarpped = True
+			# self.useWarpped = True
+			self.useWarpped = False #for 5th ave
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
 			self.feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=2, blockSize=3)
-			self.targetFPS = 30
+			# self.targetFPS = 30
+			self.targetFPS = 5
 
 			"""for fit_extrapolate filtering"""
 			self.loc_change = 3
