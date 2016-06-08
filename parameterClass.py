@@ -54,12 +54,16 @@ class parameter(object):
 		""" canal st """
 		if dataSource == 'DoT':
 			self.useMask    = False
-			self.useSBS     = True
+			# self.useSBS     = True
+			self.useSBS     = False # for people counter
+
 			# self.useWarpped = True
 			self.useWarpped = False #for 5th ave
 			self.lk_params = dict(winSize=(10, 10), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03)) 
 			# self.feature_params = dict(maxCorners=500, qualityLevel=0.2, minDistance=7,blockSize=7)  
-			self.feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=2, blockSize=3)
+			# self.feature_params = dict(maxCorners=1000, qualityLevel=0.2, minDistance=2, blockSize=3)
+			self.feature_params = dict(maxCorners=1000, qualityLevel=0.01, minDistance=2, blockSize=3) #for people counter
+
 			# self.targetFPS = 30
 			self.targetFPS = 5
 
