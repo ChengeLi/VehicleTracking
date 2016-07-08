@@ -35,7 +35,7 @@ if __name__ == '__main__':
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
     useBlobCenter = Parameterobj.useSBS
-    isVisualize   = True
+    isVisualize   = False
 
     # -- utilities
     if isVisualize: 
@@ -87,6 +87,8 @@ if __name__ == '__main__':
 
         nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+        print 'fps',fps
+
         print 'reading buffer...'
         cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
         status, frame = cap.read()
@@ -111,8 +113,9 @@ if __name__ == '__main__':
 
 
     trunclen = Parameterobj.trunclen
-    # subSampRate = fps/Parameterobj.targetFPS
-    subSampRate = 1 # for people counter
+    subSampRate = fps/Parameterobj.targetFPS
+
+    # subSampRate = 1 # for people counter
     if len(previousLastFiles)>0:
         frame_idx = len(previousLastFiles)*trunclen*subSampRate
     else:

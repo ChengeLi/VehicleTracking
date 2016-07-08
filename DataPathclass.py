@@ -49,10 +49,14 @@ class DataPath(object):
 					self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
 					self.videoTime = self.video[28:-4] ## fix this
 				else:# on badminton linux
+					## the 5th ave video
+					# self.sysPathHeader = '/media/My Book/DOT Video/FifthAve/'
+					# self.videoPath = '/home/chengeli/CUSP/AIG/DoT/ASF_files/'
+					# self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))  
 					"""use .asf folder"""
-					self.sysPathHeader = '/media/My Book/DOT Video/FifthAve/'
-					self.videoPath = '/home/chengeli/CUSP/AIG/DoT/ASF_files/'
-					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))  ##include the 5th ave video
+					self.sysPathHeader = '/media/My Book/DOT Video/'
+					self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
+					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 					"""use .avi folder"""
 					# self.sysPathHeader = '/media/My Book/DOT Video/'
 					# self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter_avi/')

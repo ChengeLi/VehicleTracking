@@ -372,28 +372,25 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 			yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
 			xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
 			ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
-			plt.subplot(121)
+			# plt.subplot(121)
 
-			plt.axis('off')
-			pdb.set_trace()
-			plt.plot(xraw,yraw,color = 'red',linewidth=2)
-			plt.title('tracklets before perspective transformation', fontsize=10)
-			plt.subplot(122)
-			plt.ylim(700,0) ## flip the Y axis
-			plt.plot(xnew,ynew,color = 'black',linewidth=2)
-			plt.title('tracklets after perspective transformation', fontsize=10)
-			plt.draw()
-			plt.axis('off')
+			# plt.axis('off')
+			# pdb.set_trace()
+			# plt.plot(xraw,yraw,color = 'red',linewidth=2)
+			# plt.title('tracklets before perspective transformation', fontsize=10)
+			# plt.subplot(122)
+			# plt.ylim(700,0) ## flip the Y axis
+			# plt.plot(xnew,ynew,color = 'black',linewidth=2)
+			# plt.title('tracklets after perspective transformation', fontsize=10)
+			# plt.draw()
+			# plt.axis('off')
 
-		pdb.set_trace()
+		# pdb.set_trace()
 	# parentPath = os.path.dirname(matfile)
 	# smoothPath = os.path.join(parentPath,'smooth/')
 	# if not os.path.exists(smoothPath):
 	# 	os.mkdir(smoothPath)
 	# onlyFileName = matfile[len(parentPath)+1:]
-
-
-
 	onlyFileName = matfile[len(DataPathobj.kltpath):]
 	savename = os.path.join(DataPathobj.smoothpath,onlyFileName)
 	savemat(savename,ptstrjNew)

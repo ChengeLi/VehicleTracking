@@ -39,15 +39,12 @@ def readData(userPCA):
 	else:
 		maskfiles = sorted(glob.glob(DataPathobj.blobPath + '*running_bgsub_mask_tensor*.p'))
 
-
-
 	"""==============================================================================="""
 	"""change the offset!!"""
 	"""==============================================================================="""
 	offset = 0
 	maskfiles = maskfiles[offset:]
 	return maskfiles,offset
-
 
 
 def readVideo(cap,subSampRate):
@@ -65,26 +62,23 @@ def readVideo(cap,subSampRate):
 if __name__ == '__main__':
 	userPCA = True
 	maskfiles, offset = readData(userPCA)
-
-
-	"""for video reading"""
-	video_src = DataPathobj.video
-	cap       = cv2.VideoCapture(video_src)
 	"""this frame count is not the same with what Matlab detected! bug in opencv"""
 	# nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	fps = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+	fps = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+	assert fps==30, "fps=%d" %fps
 
-	for matidx, matfile in enumerate(maskfiles):
-	# for	matidx in range(1,len(maskfiles)):
-		# matfile = maskfiles[matidx]
+	# fps = 30
+	# for matidx, matfile in enumerate(maskfiles):
+	for	matidx in range(5,len(maskfiles)):
+		matfile = maskfiles[matidx]
 		if userPCA:
-			try:  #for matfile <-v7.3
-				mask_tensor = loadmat(matfile)
-			except:  #for matfile -v7.3
-				h5pymatfile = h5py.File(matfile,'r').items()[0]
-				# variableName = h5pymatfile[0]
-				variableData = h5pymatfile[1]
-				mask_tensor = variableData.value
+			# try:  #for matfile <-v7.3
+			# 	mask_tensor = loadmat(matfile)
+			# except:  #for matfile -v7.3
+			h5pymatfile = h5py.File(matfile,'r').items()[0]
+			# variableName = h5pymatfile[0]
+			variableData = h5pymatfile[1]
+			mask_tensor = variableData.value
 		else:
 			mask_tensor_sparse = pickle.load(open(matfile,'rb'))
 			mask_tensor = []
@@ -95,25 +89,30 @@ if __name__ == '__main__':
 
 			
 		trunclen  = Parameterobj.trunclen
-		subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
+		subSampRate = int(fps/Parameterobj.targetFPS)
+		subSampRate_matlab = int(30/Parameterobj.targetFPS)  ##IT'S JUST 6
+
 		blobLabelMtxList = []
 		blobCenterList   = []
 		Nrows  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 		Ncols  = DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 		"""in the incPCP code, mask file is saved as a mtx with width=fps/5*600"""
-		MaskMatfileShape=int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/5)*trunclen)
+		# MaskMatfileShape=int((fps/5)*trunclen)
+		MaskMatfileShape=int((30/5)*trunclen)
 
 		
 		frame_idx = 0
-		global_frame_idx = int(mask_tensor.shape[0]*(offset+matidx)+frame_idx*subSampRate)
-		while frame_idx*subSampRate <mask_tensor.shape[0]:
-			print "frame_idx: ", global_frame_idx
+		global_frame_idx = int(mask_tensor.shape[0]*(offset+matidx)+frame_idx*subSampRate_matlab)
+		while frame_idx*subSampRate_matlab <mask_tensor.shape[0]:
+			print "frame_idx: ", frame_idx
+			print "global_frame_idx: ", global_frame_idx
+
 			# ori_img = cv2.imread(ori_list[(fkltrame_idx*subSampRate)/choice_Interval])
 			# mask    = cv2.imread(mask_list[(frame_idx*subSampRate)/choice_Interval])
 			if userPCA:
-				ImgSlice = (mask_tensor[frame_idx*subSampRate,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
+				ImgSlice = (mask_tensor[frame_idx*subSampRate_matlab,:].reshape((Ncols,Nrows))).transpose() #Careful!! Warning! It's transposed!
 			else:
-				ImgSlice = mask_tensor[frame_idx*subSampRate,:].reshape((Nrows,Ncols))
+				ImgSlice = mask_tensor[frame_idx*subSampRate_matlab,:].reshape((Nrows,Ncols))
 
 			maskgray = ImgSlice
 
@@ -123,8 +122,10 @@ if __name__ == '__main__':
 			# plt.draw()
 			# plt.pause(0.0001)
 
-			# """visualization"""
-			# frame = readVideo(cap,subSampRate)
+			"""visualization"""
+			# # frame = readVideo(DataPathobj.cap,subSampRate)
+			# frame = readVideo(DataPathobj.cap,subSampRate)
+
 			# frame2 = frame
 			# # # frame2[:,:,1] = frame[:,:,1]+(maskgray*100)
 			# # # foreground = (np.array(frame2[:,:,1])*[np.array(maskgray==1)])[0,:,:]
@@ -154,7 +155,7 @@ if __name__ == '__main__':
 
 			# if global_frame_idx<1800:
 			# 	continue
-			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate==mask_tensor.shape[0]):
+			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate_matlab==mask_tensor.shape[0]):
 				print "Save the blob index tensor into a pickle file:"
 				# savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
 				# index = global_frame_idx/(trunclen*subSampRate)
