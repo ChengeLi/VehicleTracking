@@ -43,11 +43,10 @@ class DataPath(object):
 				self.videoTime = self.video[47:-4]
 
 			if dataSource == 'DoT':
-				if os.getcwd()[-3:] == 'AIG':  # on CUSP compute
-					self.sysPathHeader = '../CanalVideos/Canal@Baxter/'
-					self.videoPath = os.path.join(self.sysPathHeader,'avi/')
-					self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-					self.videoTime = self.video[28:-4] ## fix this
+				if os.getcwd()[:10] == '/scratch/':  # on HPC
+					self.sysPathHeader = '/scratch/cl2840/CUSP/'
+					self.videoPath  = '/home/cl2840/CUSP/CanalBaxter/'
+					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 				else:# on badminton linux
 					## the 5th ave video
 					# self.sysPathHeader = '/media/My Book/DOT Video/FifthAve/'

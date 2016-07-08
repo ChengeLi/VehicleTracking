@@ -65,11 +65,12 @@ if __name__ == '__main__':
 	"""this frame count is not the same with what Matlab detected! bug in opencv"""
 	# nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 	fps = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)))
-	assert fps==30, "fps=%d" %fps
+	# assert fps==30, "fps=%d" %fps
 
 	# fps = 30
-	# for matidx, matfile in enumerate(maskfiles):
-	for	matidx in range(5,len(maskfiles)):
+	for matidx, matfile in enumerate(maskfiles):
+	# for	matidx in range(4,len(maskfiles)):
+	# for	matidx in range(15,16,1):
 		matfile = maskfiles[matidx]
 		if userPCA:
 			# try:  #for matfile <-v7.3
@@ -123,7 +124,6 @@ if __name__ == '__main__':
 			# plt.pause(0.0001)
 
 			"""visualization"""
-			# # frame = readVideo(DataPathobj.cap,subSampRate)
 			# frame = readVideo(DataPathobj.cap,subSampRate)
 
 			# frame2 = frame
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
 			# if global_frame_idx<1800:
 			# 	continue
-			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate_matlab==mask_tensor.shape[0]):
+			if ((frame_idx>0) and (np.mod(frame_idx,trunclen)==0)) or (frame_idx*subSampRate_matlab>=mask_tensor.shape[0]):
 				print "Save the blob index tensor into a pickle file:"
 				# savename = os.path.join(DataPathobj.blobPath,'blobLabelList'+str(matidx+1+offset).zfill(3)+'.p')
 				# index = global_frame_idx/(trunclen*subSampRate)
