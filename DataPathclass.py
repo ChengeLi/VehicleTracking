@@ -45,7 +45,7 @@ class DataPath(object):
 			if dataSource == 'DoT':
 				if os.getcwd()[:10] == '/scratch/':  # on HPC
 					self.sysPathHeader = '/scratch/cl2840/CUSP/'
-					self.videoPath  = '/home/cl2840/CUSP/CanalBaxter/'
+					self.videoPath  = '/scratch/cl2840/CUSP/CanalBaxter/'
 					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 				else:# on badminton linux
 					## the 5th ave video

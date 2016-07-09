@@ -68,9 +68,9 @@ if __name__ == '__main__':
 	# assert fps==30, "fps=%d" %fps
 
 	# fps = 30
-	# for matidx, matfile in enumerate(maskfiles):
-	# for	matidx in range(16,len(maskfiles),1):
-	for	matidx in range(0,5,1):
+	for matidx, matfile in enumerate(maskfiles):
+	# for	matidx in range(len(maskfiles)-1,len(maskfiles),1):
+	# for	matidx in range(0,5,1):
 		matfile = maskfiles[matidx]
 		if userPCA:
 			# try:  #for matfile <-v7.3

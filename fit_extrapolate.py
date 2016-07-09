@@ -271,8 +271,6 @@ def getSmoothMtx(x,y,t):
 			x_time_smooth_mtx[kk,:][t[kk,:]!=stuffer]=x_time_smooth
 			y_time_smooth_mtx[kk,:][t[kk,:]!=stuffer]=y_time_smooth
 
-
-
 	xspd_smooth_mtx = getSpdMtx(x_time_smooth_mtx)
 	yspd_smooth_mtx = getSpdMtx(y_time_smooth_mtx)
 	x_time_smooth_mtx[np.isnan(x_time_smooth_mtx)]=0  # change nan back to zero for sparsity
