@@ -86,7 +86,9 @@ if __name__ == '__main__':
         #    raise Exception("video not opened!")
 
         nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+        # fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+        """hard code!!!!!!"""
+        fps = 30 
         print 'fps',fps
 
         print 'reading buffer...'
