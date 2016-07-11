@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	dataSource = 'DoT'
 	# VideoIndex = np.int(sys.argv[1])
 	# VideoIndex = 48
-	for VideoIndex in range(52,60,1):
+	for VideoIndex in [57,58,59,60]:
 		print 'VideoIndex ', VideoIndex
 		wholeProcess(dataSource,VideoIndex)
 

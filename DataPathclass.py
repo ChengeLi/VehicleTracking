@@ -43,10 +43,15 @@ class DataPath(object):
 				self.videoTime = self.video[47:-4]
 
 			if dataSource == 'DoT':
-				if os.getcwd()[:10] == '/scratch/':  # on HPC
+				if os.getcwd()[:9] == '/scratch/':  # on HPC
 					self.sysPathHeader = '/scratch/cl2840/CUSP/'
-					self.videoPath  = '/scratch/cl2840/CUSP/CanalBaxter/'
-					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
+					# self.videoPath  = '/scratch/cl2840/CUSP/CanalBaxter/'
+					# self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
+					# self.video = self.videoList[VideoIndex]
+					existingDirList = sorted(glob.glob('/scratch/cl2840/CUSP/2015-06*'))
+					self.video = existingDirList[VideoIndex]
+					self.videoTime = self.video[-14:]
+
 				else:# on badminton linux
 					## the 5th ave video
 					# self.sysPathHeader = '/media/My Book/DOT Video/FifthAve/'
@@ -60,8 +65,8 @@ class DataPath(object):
 					# self.sysPathHeader = '/media/My Book/DOT Video/'
 					# self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter_avi/')
 					# self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-				self.video = self.videoList[VideoIndex]
-				self.videoTime = self.video[-31:-17]
+					# self.video = self.videoList[VideoIndex]
+					# self.videoTime = self.video[-31:-17]
 			
 			if dataSource == 'laurier':
 				self.sysPathHeader = '/media/My Book/Saunier/'
