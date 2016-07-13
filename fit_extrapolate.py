@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
 from warpTrj2parallel import loadWarpMtx  
+import statsmodels.api as sm
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
@@ -66,38 +67,13 @@ def filteringCriterion(xk,yk,xspd,yspd):
 
 
 
-def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx,t):
-	badTrj  = []
-	goodTrj = []
+def polyFitTrj(x,y,t,goodTrj):
 	p3      = [] #polynomial coefficients, order 3
-	for kk in range(x.shape[0]):
-		# xk = x[kk,:][x[kk,:]!=0]
-		# yk = y[kk,:][y[kk,:]!=0]
-		stuffer=np.max(t)
-		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
-		yk = y[kk,:][t[kk,:]!=stuffer]
-
-		
-		# xaccelerate = np.diff(xspd)
-		# yaccelerate = np.diff(yspd)
-
-		# xspd = xspd_mtx[kk,:][x[kk,:]!=0][1:]
-		# yspd = yspd_mtx[kk,:][y[kk,:]!=0][1:]
-		xspd = xspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
-		yspd = yspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
-		# print sum(xspd)
-		# print sum(accelerate)
-		satisfyCriterion = filteringCriterion(xk,yk,xspd,yspd)
-		if not satisfyCriterion:
-			badTrj.append(kk)
-			# plt.plot(x[kk,:][x[kk,:]!=0],y[kk,:][y[kk,:]!=0])
-			# pdb.set_trace()
-		else:
-			goodTrj.append(kk)
-			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
-			#### p3.append(np.polyfit( y[kk,:][y[kk,:]!=0], x[kk,:][x[kk,:]!=0],3))
-			# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
-			p3.append(np.polyfit(x[kk,:][t[kk,:]!=stuffer], y[kk,:][t[kk,:]!=stuffer], 2))
+	for kk in goodTrj:
+		# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 3))  # fit a poly line to the last K points
+		#### p3.append(np.polyfit( y[kk,:][y[kk,:]!=0], x[kk,:][x[kk,:]!=0],3))
+		# p3.append(np.polyfit(x[kk,:][x[kk,:]!=0], y[kk,:][y[kk,:]!=0], 2))
+		p3.append(np.polyfit(x[kk,:][t[kk,:]!=stuffer], y[kk,:][t[kk,:]!=stuffer], 2))
 
 	outlierID =[]
 	p3 = np.array(p3)
@@ -121,7 +97,29 @@ def polyFitTrj_filtering(x,y,xspd_mtx,yspd_mtx,t):
 	# TFid[outlierID] = False
 	# goodTrj = goodTrj[TFid]
 	# p3      = p3[TFid]
-	return np.array(p3),np.array(goodTrj)
+	return np.array(p3)
+
+def filtering(x,y,xspd_mtx,yspd_mtx,t):
+	badTrj  = []
+	goodTrj = []
+	for kk in range(x.shape[0]):
+		stuffer=np.max(t)
+		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
+		yk = y[kk,:][t[kk,:]!=stuffer]
+		# xaccelerate = np.diff(xspd)
+		# yaccelerate = np.diff(yspd)
+		xspd = xspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
+		yspd = yspd_mtx[kk,:][t[kk,:]!=stuffer][1:]
+		# print sum(xspd)
+		# print sum(accelerate)
+		satisfyCriterion = filteringCriterion(xk,yk,xspd,yspd)
+		if not satisfyCriterion:
+			badTrj.append(kk)
+			# plt.plot(x[kk,:][x[kk,:]!=0],y[kk,:][y[kk,:]!=0])
+		else:
+			goodTrj.append(kk)
+	return np.array(goodTrj)
+
 
 
 # extrapolate original trj
@@ -204,7 +202,6 @@ def readData(matfile):
 
 
 def lowessSmooth(xk,yk):
-	import statsmodels.api as sm
 	## fit (x,y)  # use smooth() func to do spatial smooth
 	# lowessXY = sm.nonparametric.lowess(yk, xk, frac=0.1)
 	# plt.figure()
@@ -248,6 +245,7 @@ def getSmoothMtx(x,y,t):
 	y_time_smooth_mtx = np.ones(y.shape)*np.nan
 
 	for kk in range(0,x.shape[0],1):
+		# print 'processing', kk, 'th trj'
 		# xk = x[kk,:][x[kk,:]!=0]
 		# yk = y[kk,:][y[kk,:]!=0]
 		stuffer=np.max(t)
@@ -256,9 +254,14 @@ def getSmoothMtx(x,y,t):
 		if len(xk)>Parameterobj.livelong_thresh and (min(xk.max()-xk.min(), yk.max()-yk.min())>Parameterobj.loc_change): # range span >=2 pixels  # loger than 5, otherwise all zero out
 			if len(xk)!=len(yk):
 				pdb.set_trace()
+			
+			"""since trjs are too many, pre-filter out bad ones first before smoothing!!"""
+			"""prefiltering using not very precise speed before smooth"""
+			if not filteringCriterion(xk,yk,np.diff(xk),np.diff(yk)):
+				continue
+
 			x_spatial_smooth, y_spatial_smooth = smooth(xk, yk)
 			x_time_smooth, y_time_smooth = lowessSmooth(xk, yk)
-
 			# x_spatial_smooth_mtx[kk,:][x[kk,:]!=0]=x_spatial_smooth
 			# y_spatial_smooth_mtx[kk,:][y[kk,:]!=0]=y_spatial_smooth
 
@@ -320,9 +323,9 @@ def plotTrj(x,y,t,p3=[],Trjchoice=[]):
 	pdb.set_trace()
 
 
-def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile):
+def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,goodTrj,ptstrj,matfile,p3 = None):
 	print "saving smooth new trj:", matfile
-	'only keep the goodTrj, delete all bad ones'
+	"""only keep the goodTrj, delete all bad ones"""
 	ptstrjNew = {}
 	goodTrj.astype(int)
 
@@ -361,29 +364,31 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	# ax1 = plt.subplot2grid((1,3),(0, 0))
 	# ax2 = plt.subplot2grid((1,3),(0, 1))
 	# ax3 = plt.subplot2grid((1,3),(0, 2))
+	"""visualize before and after warping"""
+	# if Parameterobj.useWarpped:
+	# 	# bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
+	# 	# im = plt.imshow(bkg[:,:,::-1])
+	# 	for ii in range(len(goodTrj)):
+	# 		print ii
+	# 		xraw = x_smooth_mtx[goodTrj,:][ii,:]
+	# 		yraw = y_smooth_mtx[goodTrj,:][ii,:]
+	# 		start = min(np.min(np.where(xraw!=0)[0]),np.min(np.where(yraw!=0)[0]))
+	# 		end = max(np.max(np.where(xraw!=0)[0]),np.max(np.where(yraw!=0)[0]))
+	# 		xraw = xraw[start:end+1]
+	# 		yraw = yraw[start:end+1]
+	# 		xnew = warpped_x_mtx[ii,:][start:end+1]
+	# 		ynew = warpped_y_mtx[ii,:][start:end+1]
+	# 		plt.subplot(121)
+	# 		plt.axis('off')
+	# 		plt.plot(xraw,yraw,color = 'red',linewidth=2)
+	# 		plt.title('tracklets before perspective transformation', fontsize=10)
+	# 		plt.subplot(122)
+	# 		plt.ylim(700,0) ## flip the Y axis
+	# 		plt.plot(xnew,ynew,color = 'black',linewidth=2)
+	# 		plt.title('tracklets after perspective transformation', fontsize=10)
+	# 		plt.draw()
+	# 		plt.axis('off')
 
-	if Parameterobj.useWarpped:
-		# bkg = cv2.imread('/media/My Book/DOT Video/2015-06-20_08h/frames2/00000000.jpg')
-		# im = plt.imshow(bkg[:,:,::-1])
-		for ii in range(len(goodTrj)):
-			xraw = x_smooth_mtx[goodTrj,:][ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
-			yraw = y_smooth_mtx[goodTrj,:][ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
-			xnew = warpped_x_mtx[ii,:][x_smooth_mtx[goodTrj,:][ii,:]!=0]
-			ynew = warpped_y_mtx[ii,:][y_smooth_mtx[goodTrj,:][ii,:]!=0]
-			# plt.subplot(121)
-
-			# plt.axis('off')
-			# pdb.set_trace()
-			# plt.plot(xraw,yraw,color = 'red',linewidth=2)
-			# plt.title('tracklets before perspective transformation', fontsize=10)
-			# plt.subplot(122)
-			# plt.ylim(700,0) ## flip the Y axis
-			# plt.plot(xnew,ynew,color = 'black',linewidth=2)
-			# plt.title('tracklets after perspective transformation', fontsize=10)
-			# plt.draw()
-			# plt.axis('off')
-
-		# pdb.set_trace()
 	# parentPath = os.path.dirname(matfile)
 	# smoothPath = os.path.join(parentPath,'smooth/')
 	# if not os.path.exists(smoothPath):
@@ -393,17 +398,6 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,g
 	savename = os.path.join(DataPathobj.smoothpath,onlyFileName)
 	savemat(savename,ptstrjNew)
 
-
-def main(matfile):
-	# "if consecutive points are similar to each other, merge them, using one to represent"
-	# didn't do this, smooth and resample instead
-	x,y,t,ptstrj = readData(matfile)	
-	x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
-	# plotTrj(x_smooth_mtx,y_smooth_mtx)
-	p3,goodTrj = polyFitTrj_filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,t)
-	# kmeansPolyCoeff(p3)
-	# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,t,p3,goodTrj)
-	saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,p3,goodTrj,ptstrj,matfile)
 
 
 
@@ -427,7 +421,32 @@ if __name__ == '__main__':
 	matfiles       = matfiles[start_position:]
 
 	for matidx,matfile in enumerate(matfiles):
-		main(matfile)
+		
+		# "if consecutive points are similar to each other, merge them, using one to represent"
+		# didn't do this, smooth and resample instead
+		print "reading data"
+		x,y,t,ptstrj = readData(matfile)	
+		print "get spatial and temporal smooth matrix"
+		x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
+		"""delete all-zero rows"""
+		good_index_before_filtering = np.where(np.sum(x_spatial_smooth_mtx,1)!=0)
+		x_spatial_smooth_mtx = x_spatial_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		y_spatial_smooth_mtx = y_spatial_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		x_time_smooth_mtx    = x_time_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		y_time_smooth_mtx    = y_time_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		xspd_smooth_mtx      = xspd_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		yspd_smooth_mtx      = yspd_smooth_mtx[good_index_before_filtering,:][0,:,:]
+		t = t[good_index_before_filtering,:][0,:,:]
+		# plotTrj(x_smooth_mtx,y_smooth_mtx)
+		
+		print "filtering out bad trajectories"
+		goodTrj = filtering(x_spatial_smooth_mtx,y_spatial_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,t)
+
+		# kmeansPolyCoeff(p3)
+		# plotTrj(x_spatial_smooth_mtx,y_spatial_smooth_mtx,t,Trjchoice = goodTrj)
+		print "saving=======!!"
+		saveSmoothMat(x_time_smooth_mtx,y_time_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,goodTrj,ptstrj,matfile)
+
 
 
 

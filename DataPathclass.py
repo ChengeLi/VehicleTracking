@@ -65,8 +65,9 @@ class DataPath(object):
 					# self.sysPathHeader = '/media/My Book/DOT Video/'
 					# self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter_avi/')
 					# self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
-					# self.video = self.videoList[VideoIndex]
-					# self.videoTime = self.video[-31:-17]
+					
+					self.video = self.videoList[VideoIndex]
+					self.videoTime = self.video[-31:-17]
 			
 			if dataSource == 'laurier':
 				self.sysPathHeader = '/media/My Book/Saunier/'
