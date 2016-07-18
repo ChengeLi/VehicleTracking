@@ -585,9 +585,6 @@ def diff_feature_on_one_car(dataForKernel,feature_diff_tensor, trjID):
     # interesting_fulladj_part = ((fully_adj+fully_adj.T)[np.array(FeatureMtxLoc[ii]),:][:,np.array(FeatureMtxLoc[ii])]>0).astype(int)
 
 
-
-
-
     # pickle.dump(FeatureMtxLoc,open(os.path.join(DataPathobj.adjpath,'veryZigWhiteCar_FeatureMtxLoc'),'wb'))
     np.max(dist_one_car.values())
     np.max(vxdist_one_car.values())

@@ -339,7 +339,7 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,good
 		ptstrjNew['fg_blob_index']    = ptstrj['fg_blob_index'][goodTrj,:] 
 		ptstrjNew['fg_blob_center_X'] = ptstrj['fg_blob_center_X'][goodTrj,:]
 		ptstrjNew['fg_blob_center_Y'] = ptstrj['fg_blob_center_Y'][goodTrj,:] 
-	ptstrjNew['polyfitCoef'] = p3
+	# ptstrjNew['polyfitCoef'] = p3
 	ptstrjNew['xspd'] = csr_matrix(xspd_smooth_mtx[goodTrj,:])
 	ptstrjNew['yspd'] = csr_matrix(yspd_smooth_mtx[goodTrj,:])
 
@@ -421,7 +421,8 @@ if __name__ == '__main__':
 	matfiles       = matfiles[start_position:]
 
 	for matidx,matfile in enumerate(matfiles):
-		
+	# for matidx in range(1,len(matfiles)):
+		# matfile = matfiles[matidx]
 		# "if consecutive points are similar to each other, merge them, using one to represent"
 		# didn't do this, smooth and resample instead
 		print "reading data"

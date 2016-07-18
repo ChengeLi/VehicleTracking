@@ -13,14 +13,15 @@ from DataPathclass import *
 
 def wholeProcess(dataSource,VideoIndex):
 	DataPathobj = DataPath(dataSource,VideoIndex)
-	assert 2*len(sorted(glob.glob(DataPathobj.blobPath+'/*.mat'))) == len(sorted(glob.glob(DataPathobj.blobPath+'/*.p')))
 	# execfile('foreground_blob.py')
+	# assert 2*len(sorted(glob.glob(DataPathobj.blobPath+'/*.mat'))) == len(sorted(glob.glob(DataPathobj.blobPath+'/*.p')))
+	assert len(sorted(glob.glob(DataPathobj.smoothpath+'/*.mat')))>0
 
-	print("running KLT...")
-	t0 = time.time()
-	execfile('klt_func.py')
-	t1 = time.time() - t0
-	print t1
+	# print("running KLT...")
+	# t0 = time.time()
+	# execfile('klt_func.py')
+	# t1 = time.time() - t0
+	# print t1
 
 	# print("filter the trjs...")
 	# t0 = time.time()
@@ -28,12 +29,12 @@ def wholeProcess(dataSource,VideoIndex):
 	# t2 = time.time() - t0  # t2 = 2460.27871799469
 	# print t2  
 
-	# print("running trjcluster...")
-	# t0 = time.time()
-	# execfile('trjcluster_func_SBS.py')
-	# t3 = time.time() - t0
-	# print 't3 = ',t3
-	# print t3
+	print("running trjcluster...")
+	t0 = time.time()
+	execfile('trjcluster_func_SBS.py')
+	t3 = time.time() - t0
+	print 't3 = ',t3
+	print t3
 
 	# print("running subspace_cluster...")
 	# t0 = time.time()
