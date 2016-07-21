@@ -421,8 +421,8 @@ if __name__ == '__main__':
 	matfiles       = matfiles[start_position:]
 
 	for matidx,matfile in enumerate(matfiles):
-	# for matidx in range(1,len(matfiles)):
-		# matfile = matfiles[matidx]
+	#for matidx in range(8,len(matfiles)):
+	#	matfile = matfiles[matidx]
 		# "if consecutive points are similar to each other, merge them, using one to represent"
 		# didn't do this, smooth and resample instead
 		print "reading data"

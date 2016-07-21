@@ -382,7 +382,7 @@ def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj
 def prepare_input_data():
     global savePath
     if Parameterobj.useWarpped:      
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped_*25*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped*.mat')))
     else:
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))

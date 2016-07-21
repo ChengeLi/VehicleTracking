@@ -31,6 +31,7 @@ def wholeProcess(dataSource,VideoIndex):
 
 	print("running trjcluster...")
 	t0 = time.time()
+	print VideoIndex
 	execfile('trjcluster_func_SBS.py')
 	t3 = time.time() - t0
 	print 't3 = ',t3
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 	dataSource = 'DoT'
 	# VideoIndex = np.int(sys.argv[1])
 	# VideoIndex = 48
-	for VideoIndex in [57,58,59,60]:
+	for VideoIndex in [0,1,3,4,12,13,14,15,]:
 		print 'VideoIndex ', VideoIndex
 		wholeProcess(dataSource,VideoIndex)
 

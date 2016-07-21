@@ -530,9 +530,7 @@ def prepare_input_data():
     #     matfiles = sorted(glob.glob(matfilepath + 'len*.mat'))
     
     savePath = DataPathobj.adjpath
-    start_position_offset = 0
-    matfiles = matfiles[start_position_offset:]
-    return matfiles,savePath, start_position_offset
+    return matfiles,savePath
 
 def get_spd_dis_diff(xspd_i,xspd_j,yspd_i,yspd_j,xi,xj,yi,yj):
     """use mean of the spd diff"""
@@ -614,8 +612,13 @@ def diff_feature_on_one_car(dataForKernel,feature_diff_tensor, trjID):
 
 
 if __name__ == '__main__':
+    from DataPathclass import *
+    DataPathobj = DataPath(dataSource,VideoIndex)
+    from parameterClass import *
+    Parameterobj = parameter(dataSource,VideoIndex)
+    
     isVisualize = False
-    matfiles,savePath,start_position_offset = prepare_input_data()
+    matfiles,savePath = prepare_input_data()
     # adj_methods = np.nan
     # adj_methods = "Thresholding"
     adj_methods = "Gaussian"
@@ -627,9 +630,8 @@ if __name__ == '__main__':
     	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
-    # for matidx in range(5,len(matfiles)):
-    # for matidx in range(3,4,1):
-        # matfile = matfiles[matidx]
+    #for matidx in range(4,len(matfiles)):
+     #   matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)
         ptstrj = loadmat(matfile)
@@ -721,26 +723,26 @@ if __name__ == '__main__':
             num = np.arange(fnum)
 
             if adj_methods =="Gaussian":
-                if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                if len(sorted(glob.glob(savePath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1).zfill(3))))>0:
                     print "mean_std_ForKernel and extremeValue already stored, load..."
-                    mean_std_ForKernel = pickle.load(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-                    extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                    mean_std_ForKernel = pickle.load(open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1).zfill(3),'rb'))
+                    extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1).zfill(3),'rb'))
                 else:              
                     mean_std_ForKernel,extremeValue = getMuSigma(dataForKernel)
-                    pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
-                    pickle.dump(extremeValue,open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                    pickle.dump(mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+DirName[dirii]+str(matidx+1).zfill(3),'wb'))
+                    pickle.dump(extremeValue,open(DataPathobj.adjpath+'extremeValue'+DirName[dirii]+str(matidx+1).zfill(3),'wb'))
 
 
 
             # SBS = np.zeros([NumGoodsampleSameDir,NumGoodsampleSameDir])
             """store all pair feature distances"""
             """Nsample*Nsample* 5 distance features"""
-            if len(sorted(glob.glob(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+            if len(sorted(glob.glob(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1).zfill(3))))>0:
                 print "normalized distance diff already stored, load..."
-                normalized_feature_diff_tensor = pickle.load(open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
-            if len(sorted(glob.glob(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3))))>0:
+                normalized_feature_diff_tensor = pickle.load(open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1).zfill(3),'rb'))
+            if len(sorted(glob.glob(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1).zfill(3))))>0:
                 print "distance diff already stored, load..."
-                feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'rb'))
+                feature_diff_tensor = pickle.load(open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1).zfill(3),'rb'))
             else:
                 # normalized_feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
                 feature_diff_tensor = np.ones([NumGoodsampleSameDir,NumGoodsampleSameDir,5])*np.nan
@@ -803,7 +805,7 @@ if __name__ == '__main__':
 
 
                 # pickle.dump(normalized_feature_diff_tensor,open(savePath+'normalized_feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
-                pickle.dump(feature_diff_tensor,open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1+start_position_offset).zfill(3),'wb'))
+                pickle.dump(feature_diff_tensor,open(savePath+'feature_diff_tensor'+DirName[dirii]+str(matidx+1).zfill(3),'wb'))
 
 
 
@@ -884,18 +886,18 @@ if __name__ == '__main__':
         # result['trjID'] = ptsidx
 
         if Parameterobj.useWarpped:
-            # savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'usewarpped_'+adj_methods+'_April26_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = 'usewarpped_'+adj_methods+'_Adj_300_5_5_'+str(matidx+1).zfill(3)
+            savename = 'usewarpped_'+adj_methods+'_April26_'+str(matidx+1).zfill(3)
 
         else:
-            # savename = adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            # savename = adj_methods+'_diff_dir_'+str(matidx+1).zfill(3)
             # savename = 'spa_velo_hard_thresholded_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = '20knn_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = '20knn&thresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'onlyBlobThresh'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'SpaSpdBlobthresh_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
             # savename = 'thresholding_adj_spatial_'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
-            savename = 'May14'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
+            savename = 'May14'+adj_methods+'_diff_dir_'+str(matidx+1).zfill(3)
             # savename = 'baseline_thresholding_adj_all'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
 
 
