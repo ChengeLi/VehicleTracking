@@ -43,7 +43,6 @@ def unify_label(matfiles,savename,label_choice):
                 M1 = M2
 
             # L2 = loadmat(matfiles[matidx+1])['labels_DPGMMupup'][0]
-            pdb.set_trace()
             L2 = loadmat(matfiles[matidx+1])[LabelName][0]
             L2 = L2+1
             M2 = loadmat(matfiles[matidx+1])[IDName][0]
@@ -122,7 +121,7 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = False
+    useCC = True
     # global useRawSmooth
     # useRawSmooth = True
 
@@ -144,7 +143,7 @@ if __name__ == '__main__':
         matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
 
     if Parameterobj.useWarpped:
-        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*26*.mat'))    
+        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
 
     numTrunc = len(matfilesAll)
     savename = ''

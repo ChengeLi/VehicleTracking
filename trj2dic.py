@@ -24,9 +24,6 @@ Parameterobj = parameter(dataSource,VideoIndex)
 
 
 
-sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
-from k_center import *
-
 
 def Virctr(x,y):
     '''
@@ -184,8 +181,8 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             matidx = np.int(np.floor(subsample_frmIdx/trunclen))
 
             # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*May14*.mat'))
-            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
-            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))
+            # adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*thresholding_adj_all_G*.mat'))
+            adjFiles = sorted(glob.glob(DataPathobj.adjpath +'*usewarpped_*.mat'))
             """bc only generate several files instead of all of the them just for testing"""
             if useCC:
                 if matidx>=len(adjFiles):
@@ -210,7 +207,6 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
             
             """as we deleted small isolated connected component trjs in trjcluster"""
             adjFile = loadmat(adjFiles[matidx])
-            pdb.set_trace()
             non_isolatedCC = adjFile['non_isolatedCCupup']
             xtrj = xtrj[non_isolatedCC[0,:],:]
             ytrj = ytrj[non_isolatedCC[0,:],:]
@@ -289,22 +285,24 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
         # ===
         """try k-center algo to see whether output is similar with initial groups"""
 
-        points = []
-        for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
-            xx = xtrj[mm,subsample_frmIdx%trunclen]
-            yy = ytrj[mm,subsample_frmIdx%trunclen]
-            points = points+[Point(xx, yy)]
+        # points = []
+        # for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
+        #     xx = xtrj[mm,subsample_frmIdx%trunclen]
+        #     yy = ytrj[mm,subsample_frmIdx%trunclen]
+        #     points = points+[Point(xx, yy)]
+        
         # k_center = KCenter(points)
-        k_center = KCenter_by_threshold(points)
+        # k_center = KCenter_by_threshold(points)
 
         # locations = k_center.furtherst_first(10, start_location=points[0])
         # print locations
         # k_center.chenge_plot_point(locations)
 
-        threshold = 50
-        locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
-        k_center.chenge_plot_point(locations2,axL)
+        # threshold = 50
+        # locations2 = k_center.chenge_given_threshold(threshold, start_location=points[0])
+        # k_center.chenge_plot_point(locations2,axL)
         # ===
+
 
         # print "labinf: ",labinf
         for k in np.unique(labinf):
@@ -540,7 +538,7 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_input_data(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
-    matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+    matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'*.mat')))
     """to visulize raw klt"""
     # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
     
@@ -573,9 +571,9 @@ def prepare_input_data(isVideo,isClustered):
 if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = True
+    isClustered      = False
     isVisualize      = True
-    useVirtualCenter = False
+    useVirtualCenter = True
     isSave           = False
     global createGT
     createGT = False
@@ -585,6 +583,11 @@ if __name__ == '__main__':
 
     global useCC
     useCC = True
+
+    useKcenter = False
+    if useKcenter:
+        sys.path.insert(-1,'/Users/Chenge/Desktop/k-center-problem-master/k_center')
+        from k_center import *
 
 
     matfiles,dataPath,clustered_result, savePath,result_file_Ind = prepare_input_data(isVideo,isClustered)

@@ -630,7 +630,7 @@ if __name__ == '__main__':
     	ax     = plt.subplot(1,1,1)
 
     for matidx,matfile in enumerate(matfiles):
-    #for matidx in range(4,len(matfiles)):
+    #for matidx in range(3,len(matfiles)):
      #   matfile = matfiles[matidx]
         result = {} #for the save in the end
         print "Processing truncation...", str(matidx+1)

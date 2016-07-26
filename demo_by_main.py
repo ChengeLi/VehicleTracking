@@ -29,13 +29,13 @@ def wholeProcess(dataSource,VideoIndex):
 	# t2 = time.time() - t0  # t2 = 2460.27871799469
 	# print t2  
 
-	print("running trjcluster...")
-	t0 = time.time()
-	print VideoIndex
-	execfile('trjcluster_func_SBS.py')
-	t3 = time.time() - t0
-	print 't3 = ',t3
-	print t3
+	# print("running trjcluster...")
+	# t0 = time.time()
+	# print VideoIndex
+	# execfile('trjcluster_func_SBS.py')
+	# t3 = time.time() - t0
+	# print 't3 = ',t3
+	# print t3
 
 	# print("running subspace_cluster...")
 	# t0 = time.time()
@@ -49,11 +49,11 @@ def wholeProcess(dataSource,VideoIndex):
 	# t5 = time.time() - t0
 	# print t5
 
-	# print "save the final result to dic format" 
-	# t0 = time.time()
-	# execfile('trj2dic.py')
-	# t6 = time.time() - t0
-	# print t6  # 172.96072793    
+	print "save the final result to dic format" 
+	t0 = time.time()
+	execfile('trj2dic.py')
+	t6 = time.time() - t0
+	print t6  # 172.96072793    
 
 	# print "get trj pairs" 
 	# t0 = time.time()
