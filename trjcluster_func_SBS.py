@@ -378,6 +378,7 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True
 
 
     if afterNormalize:
+        pdb.set_trace()
         # """spatial distance"""
         # adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj/(extremeValue[5]-extremeValue[4])*1)
         # """velocities"""
@@ -405,6 +406,7 @@ def get_gaussian_adj(adj,feature_diff_tensor,sameDirTrjID, afterNormalize = True
 
 
     else:
+        pdb.set_trace()
         """Hard thresholding adj based on spatial distance"""
         adj = adj*(feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj)
 

@@ -58,13 +58,13 @@ class DataPath(object):
 					# self.videoPath = '/home/chengeli/CUSP/AIG/DoT/ASF_files/'
 					# self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))  
 					"""use .asf folder"""
-					self.sysPathHeader = '/media/My Book/DOT Video/'
-					self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
-					self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
-					"""use .avi folder"""
 					# self.sysPathHeader = '/media/My Book/DOT Video/'
-					# self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter_avi/')
-					# self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
+					# self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter/')
+					# self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
+					"""use .avi folder"""
+					self.sysPathHeader = '/media/My Book/DOT Video/'
+					self.videoPath = os.path.join(self.sysPathHeader,'Canal@Baxter_avi/')
+					self.videoList = sorted(glob.glob(self.videoPath+'*.avi'))
 					
 					self.video = self.videoList[VideoIndex]
 					self.videoTime = self.video[-31:-17]

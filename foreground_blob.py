@@ -144,7 +144,6 @@ if __name__ == '__main__':
 
 
 			"""use ndimage.measurements"""
-
 			blobLabelMatrix, BlobCenters = blobImg2blobmatrix(maskgray)
 			sparse_slice = csr_matrix(blobLabelMatrix)
 			blobLabelMtxList.append(sparse_slice)

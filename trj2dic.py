@@ -22,7 +22,14 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+# from klt_func import readVideo
 
+def readVideo(cap,subSampRate):
+    """when read video in a loop, every subSampRate frames"""
+    status, frame = cap.read()  
+    for ii in range(subSampRate-1):
+        status, frameskip = cap.read()
+    return frame
 
 
 def Virctr(x,y):
@@ -359,12 +366,16 @@ def get_XYT_inDic(matfiles,start_frame_idx, isClustered, clustered_result, trunc
                 trueLoc = (trunclen*matidx+(subsample_frmIdx%trunclen))*subSampRate
                 """trueLoc!=frame_idx if not starting from 0??? why"""
                 """change set to loopy read!!"""
-                cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
+                # cap.set (cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_idx)
 
                 if trueLoc!=frame_idx:
                     pdb.set_trace()
 
-                status, frame = cap.read()
+                # status, frame = cap.read()
+
+
+                frame = readVideo(cap,subSampRate)
+
             else:
                 frame = cv2.imread(image_list[frame_idx])
             # visualize_trj(fig,axL,im,np.unique(labinf)[1:],vcxtrj,vcytrj,frame,color,frame_idx)
@@ -538,9 +549,10 @@ def visualize_trj(fig,axL,im, labinf,vcxtrj, vcytrj,frame, color,frame_idx):
 def prepare_input_data(isVideo,isClustered):
     global subSampRate
     subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
+    # subSampRate = 1
     matfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'*.mat')))
     """to visulize raw klt"""
-    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'klt*.mat')))
+    # matfiles = sorted(glob.glob(os.path.join(DataPathobj.kltpath,'*.mat')))
     
     clustereFileName = '*'
     """to visulize the connected component"""
@@ -571,7 +583,7 @@ def prepare_input_data(isVideo,isClustered):
 if __name__ == '__main__':
     isVideo = True
     trunclen         = Parameterobj.trunclen
-    isClustered      = False
+    isClustered      = True
     isVisualize      = True
     useVirtualCenter = True
     isSave           = False
@@ -582,7 +594,7 @@ if __name__ == '__main__':
         useVirtualCenter = False
 
     global useCC
-    useCC = True
+    useCC = False
 
     useKcenter = False
     if useKcenter:

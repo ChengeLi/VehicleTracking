@@ -35,7 +35,7 @@ if __name__ == '__main__':
         dataPath = DataPathobj.imagePath
     savePath = DataPathobj.kltpath
     useBlobCenter = Parameterobj.useSBS
-    isVisualize   = True
+    isVisualize   = False
 
     # -- utilities
     if isVisualize: 
@@ -116,6 +116,9 @@ if __name__ == '__main__':
 
     trunclen = Parameterobj.trunclen
     subSampRate = fps/Parameterobj.targetFPS
+    """hard code!!!!!"""
+    # subSampRate = 1
+
 
     # subSampRate = 1 # for people counter
     if len(previousLastFiles)>0:
