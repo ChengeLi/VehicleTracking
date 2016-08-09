@@ -385,13 +385,11 @@ def prepare_input_data():
         adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped*.mat')))
     else:
         # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*.mat')))
-        # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*knn&*.mat')))
-        # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'*SpaSpdBlob*.mat')))
-        # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'normalize_thresholding_adj_all*.mat')))
-        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'May14*.mat')))
+        adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'normalize_thresholding_adj_all*.mat')))
+        # adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'May14*.mat')))
 
     savePath = DataPathobj.sscpath
-    trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'klt*.mat')))
+    trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'*.mat')))
 
     adjmatfiles = adjmatfiles[0:]
     trjmatfiles = trjmatfiles[0:]
