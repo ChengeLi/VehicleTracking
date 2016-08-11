@@ -8,6 +8,10 @@ class Visualization():
         self.color = np.array([np.random.randint(0,255) \
                            for _ in range(3*int(colorNum))])\
                            .reshape(int(colorNum),3)
+
+
+        # color = np.array([np.random.randint(0,255) for _ in range(3*int(NumGoodsampleSameDir))]).reshape(NumGoodsampleSameDir,3)
+        
         self.nrows = int(np.size(firstfrm,0))
         self.ncols = int(np.size(firstfrm,1))
         self.fig = plt.figure('vis')

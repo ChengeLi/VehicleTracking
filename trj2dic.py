@@ -54,8 +54,6 @@ class fakeGTfromAnnotation():
         self.annotation_file = open(DataPathobj.DataPath+'/'+str(matidx).zfill(3)+'annotation_file.txt','wb')
         self.global_annolist = []
 
-
-
         annotation_file.write('frame:')
         annotation_file.write(str(frame_idx))
         annotation_file.write('\n')
