@@ -5,79 +5,23 @@ import pdb
 import pickle
 import numpy as np
 import glob as glob
+import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
+
+from utilities.inspectAdj import knn_graph
+from sklearn.preprocessing import StandardScaler, Imputer
+from trjComparison import get_spd_dis_diff, get_hue_diff, sameBlobScore
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
-from trjComparison import get_spd_dis_diff, get_hue_diff, sameBlobScore
-
-
 isVisualize = False
 # adj_methods = "Thresholding"
 adj_methods = "Gaussian"
-
-useNormalizedFea = True
-
-def getMuSigma_Gaussian(self):
-    """fit Gaussian to find mu and sigma"""
-    mu_xspd_diff,sigma_xspd_diff = fitGaussian(sxdiffAll)
-    mu_yspd_diff,sigma_yspd_diff = fitGaussian(sydiffAll)
-    mu_spatial_distance,sigma_spatial_distance = fitGaussian(mdisAll)
-    try:
-        mu_hue_distance,sigma_hue_distance = fitGaussian(huedisAll)
-        mu_center_distance,sigma_center_distance = fitGaussian(centerDisAll)
-    except: #if empty
-        (mu_hue_distance,sigma_hue_distance) = (np.nan, np.nan)
-        (mu_center_distance,sigma_center_distance) = (np.nan, np.nan)
-
-    mean_std_ForKernel = np.array([mu_xspd_diff,sigma_xspd_diff,mu_yspd_diff,sigma_yspd_diff,mu_spatial_distance,sigma_spatial_distance,mu_hue_distance,sigma_hue_distance,mu_center_distance,sigma_center_distance])
-    
-
-
-
-def standard_scaler_normalization(data_feature_mtx):
-    """normalize across all samples for each feature"""
-    scaler = StandardScaler().fit(data_feature_mtx)
-    # pickle.dump(scaler,open('./clf/scaler','wb'))
-    data_feature_mtx = scaler.transform(data_feature_mtx)
-
-    """normalize across all features for each sample"""
-    # scaler = StandardScaler().fit(data_feature_mtx.T)
-    # pickle.dump(scaler,open('./clf/scaler_across_all_fea','wb'))
-    # data_feature_mtx = scaler.transform(data_feature_mtx.T).T
-    return data_feature_mtx
-
-
-
-def knn_graph(knn = 8):
-    """construct KNN graph from the fully connected graph"""
-    # knn_adj = np.zeros_like(fully_adj)
-    knn_adj = []
-    if knn < fully_adj.shape[0]:
-        for i in range(0, len(fully_adj)):
-            knn_adj.append([])
-            row = fully_adj[i][:]
-            row = sorted(row,reverse=True)
-            row = row[:knn]
-            for j in range(0, len(fully_adj[i])):
-                if fully_adj[i][j] in row:
-                    knn_adj[i].append(fully_adj[i][j])
-                else:
-                    knn_adj[i].append(0)
-    else:
-        knn_adj = fully_adj
-    return np.array(knn_adj)
-
-
-
-
 
 class adjacencyMatrix(object):
     """construct adjcency matrix for each truncation"""
@@ -130,9 +74,6 @@ class adjacencyMatrix(object):
         self.Numsample = self.ptstrj['xtracks'].shape[0]
         self.fnum      = self.ptstrj['xtracks'].shape[1]
         
-
-
-
     def directionGroup(self ):
         """pre group based on directions"""
         upup = ((self.Xdir>=0)*(self.Ydir>=0))[0]
@@ -197,7 +138,7 @@ class adjacencyMatrix(object):
                     else:
                         centerDis=0
                     # print 'centerDis',centerDis
-                    
+
                     dataForKernel_ele = [sxdiff,sydiff,mdis,huedis,centerDis]
                     """counting the sharing blob numbers of two trjs"""
                     # if Parameterobj.useSBS:
@@ -242,9 +183,6 @@ class adjacencyMatrix(object):
 
         """store all pair feature distances"""
         """Nsample*Nsample* 5 distance features"""
-        # if useNormalizedFea:
-        #     feaName = 'normalized_feature_diff_tensor'
-        # else:
         feaName = 'feature_diff_tensor'
 
         if len(sorted(glob.glob(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3))))>0:
@@ -264,18 +202,16 @@ class adjacencyMatrix(object):
 
         if adj_methods =="Gaussian":
             self.get_gaussian_adj()
-            adj,fully_adj=self.adj, self.fully_adj
 
         # SBS = SBS + SBS.transpose()  #add diag twice
         # np.fill_diagonal(SBS, np.diagonal(SBS)/2)
 
-        
         # np.fill_diagonal(adj, 1)
         """diagonal actually doesn't matter in Spectral Clustering"""
-        np.fill_diagonal(adj, 0)
+        np.fill_diagonal(self.adj, 0)
 
         """save each same direction adj"""
-        temp = (adj>0).astype(int)
+        temp = (self.adj>0).astype(int)
         s,c = connected_components(temp) #s is the total CComponent, c is the label
         
         """delete trjs that formed isolated very small CC"""
@@ -284,8 +220,7 @@ class adjacencyMatrix(object):
             if len(np.where(c==CClabel)[0])>=3:
                 self.non_isolatedCC+=list(np.where(c==CClabel)[0])
 
-
-        self.adj = adj[self.non_isolatedCC,:][:,self.non_isolatedCC]
+        self.adj = self.adj[self.non_isolatedCC,:][:,self.non_isolatedCC]
         self.c = c[self.non_isolatedCC]
         self.sameDirTrjID = sameDirTrjID[self.non_isolatedCC]
         
@@ -295,7 +230,7 @@ class adjacencyMatrix(object):
         self.result['trjID_'+self.DirName[directionInd]] = self.sameDirTrjID
         self.result['non_isolatedCC'+self.DirName[directionInd]] = self.non_isolatedCC
 
-        # ss,cc = connected_components((adj>0).astype(int)) #s is the total CComponent, c is the label
+        # ss,cc = connected_components((self.adj>0).astype(int)) #s is the total CComponent, c is the label
         # if ss>1:
         #     pdb.set_trace()
 
@@ -413,6 +348,25 @@ class adjacencyMatrix(object):
         return [sxdiff_normalized,sydiff_normalized,mdis_normalized,huedis_normalized,centerDis_normalized]
 
 
+    def standard_scaler_normalization(self):
+        """normalize across all samples for each feature"""
+        for ii in range(5):
+            data_feature_mtx = self.feature_diff_tensor[:,:,ii]
+            """fillin in the NaN with axis mean"""
+            imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+            data_feature_mtx = imp.fit_transform(data_feature_mtx)
+            pdb.set_trace()
+            scaler = StandardScaler().fit(data_feature_mtx)
+            # pickle.dump(scaler,open('./clf/scaler','wb'))
+            data_feature_mtx = scaler.transform(data_feature_mtx)
+            "but.... there will be negative values, since assume mu=0"
+
+            """normalize across all features for each sample"""
+            # scaler = StandardScaler().fit(data_feature_mtx.T)
+            # pickle.dump(scaler,open('./clf/scaler_across_all_fea','wb'))
+            # data_feature_mtx = scaler.transform(data_feature_mtx.T).T
+        
+
     def get_gaussian_adj(self):
         self.adj = np.zeros([self.NumGoodsampleSameDir,self.NumGoodsampleSameDir])
 
@@ -488,14 +442,9 @@ class adjacencyMatrix(object):
         plt.show()
 
 
-
-
-
 if __name__ == '__main__':
     adjObj = adjacencyMatrix()
-    for matidx,matfile in enumerate(adjObj.matfiles):
-    # for matidx in range(3,len(adjObj.matfiles)):
-        # matfile = adjObj.matfiles[matidx]
+    for matidx in range(len(adjObj.matfiles)):
         print "building adj mtx ....", matidx
         adjObj.prepare_input_data(matidx)
         """First cluster using just direction Information"""
