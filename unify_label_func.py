@@ -9,6 +9,13 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
+ 
+useCC = True
+# global useRawSmooth
+# useRawSmooth = True
+
+# if useRawSmooth:
+#     matfilePath = DataPathobj.smoothpath
 
 def unify_label(matfiles,savename,label_choice):
     DirName = ['upup','updown','downup','downdown']
@@ -118,31 +125,21 @@ def unify_label(matfiles,savename,label_choice):
 
 
 if __name__ == '__main__':
-    # 
-    """to visulize the connected component"""
-    global useCC
-    useCC = True
-    # global useRawSmooth
-    # useRawSmooth = True
-
-
-    # if useRawSmooth:
-    #     matfilePath = DataPathobj.smoothpath
-    if useCC:
-        matfilePath = DataPathobj.adjpath
-    else:
-        matfilePath = DataPathobj.sscpath
-
     label_choice = Parameterobj.clustering_choice
-    if useCC:
-        # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
-        # matfilesAll = sorted(glob.glob(matfilePath +'baseline*.mat')) 
-        matfilesAll = sorted(glob.glob(matfilePath +'Aug10*.mat')) 
-    else:
-        matfilesAll = sorted(glob.glob(matfilePath +'Aug12*.mat'))
 
     if Parameterobj.useWarpped:
-        matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
+        filePrefix = 'usewarpped_'
+    else:
+        filePrefix = ''
+
+    if useCC:
+        # matfilesAll = sorted(glob.glob(DataPathobj.adjpath +'*knn&thresh*.mat'))
+        # matfilesAll = sorted(glob.glob(DataPathobj.adjpath +'Aug10*.mat')) 
+        matfilesAll = sorted(glob.glob(DataPathobj.adjpath +filePrefix+'Aug12*.mat')) 
+    else:
+        matfilesAll = sorted(glob.glob(DataPathobj.sscpath +filePrefix+'*.mat'))
+
+ 
 
     numTrunc = len(matfilesAll)
     savename = ''

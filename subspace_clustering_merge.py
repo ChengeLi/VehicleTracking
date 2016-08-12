@@ -16,15 +16,15 @@ from ssc_with_Adj import ssc_with_Adj_CC  #, sscConstructedAdj_CC, sscAdj_inNeig
 
 isSave      = True
 isVisualize = False
-
+Nameprefix = 'Aug12'
 
 class trjClusteringFromAdj:
     """With constructed adjacency matrix """
     def __init__(self):
         if Parameterobj.useWarpped:      
-            self.adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped*.mat')))
+            self.adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'usewarpped*'+Nameprefix+'*.mat')))
         else:
-            self.adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,'Aug10*.mat')))
+            self.adjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.adjpath,Nameprefix+'*.mat')))
 
         self.savePath = DataPathobj.sscpath
         self.trjmatfiles = sorted(glob.glob(os.path.join(DataPathobj.smoothpath,'*.mat')))
@@ -43,7 +43,7 @@ class trjClusteringFromAdj:
             except:
                 continue
             """ andy's method, not real sparse sc, just spectral clustering"""
-            self.labels_DPGMM,self.labels_spectral,self.small_CC_oneCls = ssc_with_Adj_CC(self.trjAdj,self.CClabel,self.trjID,Parameterobj)
+            self.labels_DPGMM,self.labels_spectral, self.labels_affini_prop, self.small_CC_oneCls = ssc_with_Adj_CC(self.trjAdj,self.CClabel,self.trjID,Parameterobj)
             """ construct adj use ssc"""
             # self.trjID,labels, adj = sscConstructedAdj_CC(adjfile)
             """ construct adj use ssc, with Neighbour adj as constraint"""
@@ -51,6 +51,8 @@ class trjClusteringFromAdj:
 
             self.labelsave['labels_DPGMM_'+self.DirName[dirii]] = self.labels_DPGMM
             self.labelsave['labels_spectral_'+self.DirName[dirii]] = self.labels_spectral
+            self.labelsave['labels_affinity_'+self.DirName[dirii]] = self.labels_affini_prop
+
             self.labelsave['trjID_'+self.DirName[dirii]] = self.trjID
 
     def saveLabel(self,matidx):

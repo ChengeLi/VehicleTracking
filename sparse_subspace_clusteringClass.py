@@ -9,6 +9,8 @@ from scipy.sparse import *
 from sklearn import mixture
 from sklearn.cluster import *
 from sklearn.manifold import *
+from sklearn.cluster import AffinityPropagation
+
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -63,7 +65,7 @@ class sparse_subspace_clustering:
         random_state = check_random_state(self.random_state)
 
         """if provide adj"""
-        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
+        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, affinity ='precomputed', n_components=self.n_dimension, eigen_solver='arpack',
                                              random_state=random_state) * 1000  
         
         """use the graph laplacian to calculate embedding"""
@@ -90,6 +92,14 @@ class sparse_subspace_clustering:
         self.label = model.predict(self.embedding_)
         # pdb.set_trace()
         return self.label
+
+
+    def clustering_Affini_prpoga(self):
+        af = AffinityPropagation(preference=-50, affinity ='precomputed').fit(self.adjacency)
+        cluster_centers_indices = af.cluster_centers_indices_
+        labels = af.labels_
+        return labels
+
 
     def get_adjacency(self, adjacency):
         self.adjacency = adjacency

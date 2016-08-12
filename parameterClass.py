@@ -2,15 +2,24 @@ import os
 import platform
 import glob as glob
 import cv2
+from ConfigParser import SafeConfigParser
+
+
 class parameter(object):
 
 	def __init__(self,dataSource,VideoIndex):  # different VideoIndex for different videos
 
 		self.trunclen  = 600
 		self.targetFPS = 5 #subsampRate = FPS/targetFPS
-		
 		"""for KLT tracker"""
 		self.klt_detect_interval = 5
+
+		"""parameters from parameter.ini"""
+		configfile = './parameter.ini'
+		parser = SafeConfigParser()
+		parser.read(configfile)
+
+
 		if dataSource == 'Johnson':
 			self.useSBS = True
 			self.useWarpped = False
@@ -30,12 +39,8 @@ class parameter(object):
 
 			# self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
 			# #a car len: ~=100 to 200
-			# self.nullXspd_for_adj_norm = 0.1
-			# self.nullYspd_for_adj_norm = 0.1
 
 			self.nullDist_for_adj = 20
-			# self.nullXspd_for_adj_norm = 0.05
-			# self.nullYspd_for_adj_norm = 0.05
 			self.nullXspd_for_adj = 10
 			self.nullYspd_for_adj = 10
 			self.nullBlob_for_adj = 40
@@ -76,19 +81,22 @@ class parameter(object):
 
 			"""for adj SBS"""
 			self.trjoverlap_len_thresh = 2 
-			self.nullDist_for_adj = 50#if dis>= this value, adj[i,j] will be set to 0 
-			self.nullXspd_for_adj = 3
-			self.nullYspd_for_adj = 3
-			self.nullBlob_for_adj = 300
 
+			self.nullDist_for_adj = parser.getint('nullAdj_DoT', 'nullDist_for_adj')
+			self.nullXspd_for_adj = parser.getint('nullAdj_DoT', 'nullXspd_for_adj')
+			self.nullYspd_for_adj = parser.getint('nullAdj_DoT', 'nullYspd_for_adj')
+			self.nullBlob_for_adj = parser.getint('nullAdj_DoT', 'nullBlob_for_adj')
 
 			"""for spectral embedding, DPGMM in subspace_clutering_merge.py"""
 			self.embedding_projection_factor = 10
 			self.DPGMM_num_component_shirink_factor = 100
 			self.DPGMM_alpha = 1e-10
 			self.spectral_num_component_shirink_factor = 8
+			self.smallclssize = parser.getfloat('nullAdj_DoT', 'smallclssize')  ## adj size smaller than this won't be slipt
 
 			self.adj_weight = [10,2,2,0,1]
+
+
 
 		if dataSource == 'laurier':
 			self.useSBS = True
@@ -154,7 +162,7 @@ class parameter(object):
 			self.DPGMM_num_component_shirink_factor = 1.1
 			self.DPGMM_alpha = 1e10
 			self.spectral_num_component_shirink_factor = 8
-
+			self.smallclssize = 10
 			self.useMask = False
 
 			# self.adj_weight = [2,1,1,0,1]

@@ -217,7 +217,8 @@ class adjacencyMatrix(object):
         """delete trjs that formed isolated very small CC"""
         self.non_isolatedCC = []
         for CClabel in np.unique(c):
-            if len(np.where(c==CClabel)[0])>=3:
+            # if len(np.where(c==CClabel)[0])>=3:
+            if len(np.where(c==CClabel)[0])>=0:
                 self.non_isolatedCC+=list(np.where(c==CClabel)[0])
 
         self.adj = self.adj[self.non_isolatedCC,:][:,self.non_isolatedCC]
@@ -409,7 +410,7 @@ class adjacencyMatrix(object):
             savename = 'usewarpped_'
         else:
             savename = ''        
-        savename = savename+'Aug10_objoriented'+adj_methods+str(matidx+1).zfill(3)
+        savename = savename+'Aug12_objoriented'+adj_methods+str(matidx+1).zfill(3)
         # savename = savename+'baseline_thresholding_adj_all'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
         savename = os.path.join(self.savePath,savename)
         savemat(savename,self.result)

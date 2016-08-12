@@ -82,6 +82,7 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
     small_CC_oneCls = []
     labels_DPGMM = np.ones(CClabel.size)*(-222)
     labels_spectral = np.ones(CClabel.size)*(-222)
+    labels_affini_prop = np.ones(CClabel.size)*(-222)
 
     print 'connected component number:',len(np.unique(CClabel))
 
@@ -90,17 +91,18 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
     # FeatureMtx = pickle.load(open('./Johnson00115_FeatureMtx', 'rb'))
     # FeatureMtx[np.isnan(FeatureMtx)] = 0
     
-    color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(CClabel.size))]).reshape(int(CClabel.size), 3)
-    for i in np.unique(CClabel):
-        color = ((color_choice[i].T) / 255.)
-        # print "connected component No. " ,str(i)
+    # color_choice = np.array([np.random.randint(0, 255) for _ in range(3 * int(np.unique(CClabel).size))]).reshape(int(np.unique(CClabel).size), 3)
+    # for i in np.unique(CClabel):
+    for ind in range(len(np.unique(CClabel))):
+        i = np.unique(CClabel)[ind]
+        # color = ((color_choice[ind].T) / 255.)
         sub_index = np.where(CClabel == i)[1]  # noted, after saving to Mat, got appened zeros, should use [1] instead of [0]
         sub_adjMtx = trjAdj[sub_index][:, sub_index]
         # sub_FeatureMtx = FeatureMtx[sub_index,:]
         sub_FeatureMtx = []
 
         """there are some very big CCs, what happend inside??"""
-        if sub_index.size > 10:
+        if sub_index.size > Parameterobj.smallclssize:
             # project_dimension = int(np.floor(sub_index.size/Parameterobj.embedding_projection_factor) + 1)
             project_dimension = 10
 
@@ -113,17 +115,21 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
             ssc.get_adjacency(sub_adjMtx)
             ssc.manifold()
 
+            ###################################################################################
             """DPGMM"""
             # n_components_DPGMM = int(np.floor(sub_index.size/Parameterobj.DPGMM_num_component_shirink_factor))
             # n_components_DPGMM = max(1,n_components_DPGMM)
             n_components_DPGMM = sub_index.size
             sub_labels_DPGMM = ssc.clustering_DPGMM(n_components=n_components_DPGMM, alpha=Parameterobj.DPGMM_alpha)
-            
-            # num_cluster_prior = len(np.unique(sub_labels_DPGMM))
-            num_cluster_prior = n_components_DPGMM
+
             # visulize(ssc.embedding_,sub_labels,model,color)
+            ###################################################################################
             """k-means"""
+            # num_cluster_prior = len(np.unique(sub_labels_DPGMM))
+            # num_cluster_prior = n_components_DPGMM
             # sub_labels_k_means = ssc.clustering_kmeans(num_cluster_prior)
+
+            ###################################################################################
             """N cut spectral"""
             # n_components_spectral = int(np.floor(sub_index.size/Parameterobj.spectral_num_component_shirink_factor))
             # n_components_spectral = max(2,n_components_spectral)
@@ -132,22 +138,32 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
             print 'spectral clustering num_cluster is', n_components_spectral
             sub_labels_spectral = ssc.clustering_spectral(n_components_spectral)
             
+
+            ###################################################################################
+            """affinity propogation"""
+            sub_labels_affinity = ssc.clustering_Affini_prpoga()
+
+
             """vis rearrangement of the adj"""
             # visAdj_rearrange(sub_adjMtx,sub_labels_DPGMM)
             # visAdj_rearrange(sub_adjMtx,sub_labels_spectral)
 
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
+            labels_affini_prop[sub_index] = max(np.max(labels_affini_prop),0) + (sub_labels_affinity + 1)
+
         else:  ## if size small, treat as one group
             sub_labels = np.ones(sub_index.size)
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + sub_labels
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + sub_labels
+            labels_affini_prop[sub_index] = max(np.max(labels_affini_prop),0) + sub_labels
+
             small_CC_oneCls.append(sub_index)
         
     labels_DPGMM = uniqulizeLabel(labels_DPGMM)
     labels_spectral = uniqulizeLabel(labels_spectral)
-
-    return labels_DPGMM, labels_spectral, small_CC_oneCls
+    labels_affini_prop = uniqulizeLabel(labels_affini_prop)
+    return labels_DPGMM, labels_spectral, labels_affini_prop, small_CC_oneCls
 
 
 

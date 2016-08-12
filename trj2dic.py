@@ -23,9 +23,9 @@ DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
-from VCclass import VirtualCenter
-from videoReading import videoReading
-from VisualizationClass import Visualization
+from utilities.VCclass import VirtualCenter
+from utilities.videoReading import videoReading
+from utilities.VisualizationClass import Visualization
 
 
 """global parameters"""
@@ -33,16 +33,16 @@ isVideo = True
 trunclen         = Parameterobj.trunclen
 isClustered      = True
 isVisualize      = True
-useVirtualCenter = False
+useVirtualCenter = True
 isSave           = False
 createGT = False
 if createGT:
     isClustered = False
     useVirtualCenter = False
 
-useCC = False
+useCC = True
 useKcenter = False
-subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
+subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
 
 start_frame_idx = 0*subSampRate
 print "start_frame_idx: ",start_frame_idx
