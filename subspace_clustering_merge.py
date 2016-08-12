@@ -118,9 +118,6 @@ class trjClusteringFromAdj:
 
 
 
-
-
-
 if __name__ == '__main__':
 
     clsObj = trjClusteringFromAdj()

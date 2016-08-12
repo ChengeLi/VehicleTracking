@@ -33,7 +33,7 @@ isVideo = True
 trunclen         = Parameterobj.trunclen
 isClustered      = True
 isVisualize      = True
-useVirtualCenter = True
+useVirtualCenter = False
 isSave           = False
 createGT = False
 if createGT:
@@ -43,7 +43,6 @@ if createGT:
 useCC = False
 useKcenter = False
 subSampRate = np.int(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS)
-# subSampRate = 1
 
 start_frame_idx = 0*subSampRate
 print "start_frame_idx: ",start_frame_idx
@@ -301,8 +300,6 @@ class trj2dic(object):
                 #     print "k=",k
                 #     print "vctime2[k]", vctime2[k]
                 #     print "vcxtrj[k]", vcxtrj[k]
-                #     pdb.set_trace()
-
                 if isClustered:
                     self.clusterSize[k].extend([len(x)])
 
@@ -319,8 +316,6 @@ class trj2dic(object):
                 firstframe = cv2.imread(image_list[0])            
             
             visualizationObj = Visualization(max(self.mlabels),firstframe)
-
-
 
         """initialize """
         while frame_idx < np.int(self.matfiles[-1][-7:-4])*subSampRate*trunclen:

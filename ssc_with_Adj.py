@@ -22,8 +22,6 @@ def uniqulizeLabel(labels):
         j = j + 1
     return labels_new
 
-
-
 def visulize(data, labels, clf, colors):
     color_iter =itertools.cycle(['r', 'g', 'b', 'c', 'm'])
     for i, (mean, covar, color) in enumerate(zip(clf.means_, clf._get_covars(), color_iter)):
@@ -138,7 +136,6 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
             # visAdj_rearrange(sub_adjMtx,sub_labels_DPGMM)
             # visAdj_rearrange(sub_adjMtx,sub_labels_spectral)
 
-
             labels_DPGMM[sub_index] = max(np.max(labels_DPGMM),0) + (sub_labels_DPGMM + 1)
             labels_spectral[sub_index] = max(np.max(labels_spectral),0) + (sub_labels_spectral + 1)
         else:  ## if size small, treat as one group
@@ -155,14 +152,25 @@ def ssc_with_Adj_CC(trjAdj,CClabel,trjID,Parameterobj):
 
 
 
-def sscConstructedAdj_CC(file):  # use ssc to construct adj, use any samples except the sample itself
-    xtrj = file['x_re']
+def sscConstructedAdj_CC(DataPathobj):  # use ssc to construct adj, use concatenated raw data????
+    """fix me....??? :/"""
+    # if len(sorted(glob.glob(DataPathobj.adjpath+'extremeValue'+self.DirName[directionInd]+str(matidx+1).zfill(3))))>0:
+    #     print "mean_std_ForKernel(ignore) and extremeValue already stored, load..."
+    #     self.extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+self.DirName[directionInd]+str(matidx+1).zfill(3),'rb'))
+
+
+    if len(sorted(glob.glob(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3))))>0:
+        print "distance diff already stored, load..."
+        self.feature_diff_tensor = pickle.load(open(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3),'rb'))
+
+
+
+    xtrj = self.feature_diff_tensor[:,:,0]
     ytrj = file['y_re']
     xspd = file['xspd']
     yspd = file['yspd']
     trjID = file['trjID']
     dataFeature = np.concatenate((xtrj, xspd, ytrj, yspd), axis=1)
-    # dataFeature       = np.concatenate((xtrj,ytrj), axis = 1)
     project_dimension = int(np.floor(dataFeature.shape[0] / 10) + 1)  # assume per group has max 10 trjs????
     ssc = sparse_subspace_clustering(lambd=2000, dataset=dataFeature, n_dimension=project_dimension)
     ssc.construct_adjacency()
@@ -173,6 +181,8 @@ def sscConstructedAdj_CC(file):  # use ssc to construct adj, use any samples exc
 
 
 def sscAdj_inNeighbour(file):  ## use neighbour adj as prior, limiting ssc's adj choice to be within neighbours
+    """fixe me..... :/"""
+
     xtrj = file['x_re']
     ytrj = file['y_re']
     xspd = file['xspd']

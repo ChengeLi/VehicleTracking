@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # 
     """to visulize the connected component"""
     global useCC
-    useCC = False
+    useCC = True
     # global useRawSmooth
     # useRawSmooth = True
 
@@ -137,10 +137,9 @@ if __name__ == '__main__':
     if useCC:
         # matfilesAll = sorted(glob.glob(matfilePath +'*knn&thresh*.mat'))
         # matfilesAll = sorted(glob.glob(matfilePath +'baseline*.mat')) 
-        matfilesAll = sorted(glob.glob(matfilePath +'May14*.mat')) 
-
+        matfilesAll = sorted(glob.glob(matfilePath +'Aug10*.mat')) 
     else:
-        matfilesAll = sorted(glob.glob(matfilePath +'*.mat'))
+        matfilesAll = sorted(glob.glob(matfilePath +'Aug12*.mat'))
 
     if Parameterobj.useWarpped:
         matfilesAll = sorted(glob.glob(matfilePath +'usewarpped_*.mat'))    
