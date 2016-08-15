@@ -10,137 +10,74 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
  
-useCC = False
-# global useRawSmooth
-# useRawSmooth = True
+useCC = True
+if Parameterobj.useWarpped:
+    filePrefix = 'usewarpped_Aug12'
+else:
+    # filePrefix = 'Aug12'
+    filePrefix = 'Aug10'
 
-# if useRawSmooth:
-#     matfilePath = DataPathobj.smoothpath
+def unify_newLabel_to_existing(matfiles, LabelName, IDName):
+    flab     = [] #final labels
+    ftrjID   = [] #final trjID
+
+    for matidx in range(len(matfiles)): 
+        L1 = loadmat(matfiles[matidx])[LabelName][0]
+        # L1 = L1+1 # class label starts from 1 instead of 0
+        M1 = loadmat(matfiles[matidx])[IDName][0]
+
+        if len(flab)>0:
+            Labelnowmax = max(flab)
+            L1 = L1+Labelnowmax+1
+            commonidx = np.intersect1d(M1,ftrjID)  #trajectories existing in both 2 trucations
+
+            print('flab : {0}, new labels : {1} ,common term : {2}').format(len(np.unique(flab)),len(np.unique(L1)),len(commonidx))
+            for i in commonidx:
+                labelnew = L1[M1==i][0]
+                labelnow = np.array(flab)[ftrjID==i][0]
+                idx1  = np.where(L1==labelnew)[0]
+                L1[idx1] = labelnow  ## keep the first appearing label
+
+        flab[:]   = flab +list(L1)
+        ftrjID[:] = ftrjID + list(M1)
+    
+    ftrjID, indices= np.unique(ftrjID,return_index=True)
+    flab = np.array(flab)[indices] 
+
+    return flab, ftrjID
+
 
 def unify_label(matfiles,savename,label_choice):
     DirName = ['upup','updown','downup','downdown']
-    for dirii in range(4):
-        atmp     = []
-        flab     = [] #final labels
-        ftrjID   = [] #final trjID
+    for dirii in range(len(DirName)):
+
         LabelName = label_choice+DirName[dirii]
         IDName = 'trjID_'+DirName[dirii]
         if useCC:
             LabelName = 'c_'+DirName[dirii]
             IDName = 'trjID_'+DirName[dirii]
-        
         try:
             M1 = loadmat(matfiles[0])[IDName][0]
         except: ## if no this direction, key error, continue
             continue
-        for matidx in range(len(matfiles)-1): 
-            if matidx == 0:
-                # L1 = loadmat(matfiles[matidx])[label_choice][0]
-                # L1 = L1+1 # class label starts from 1 instead of 0
-                # M1 = loadmat(matfiles[matidx])['trjID'][0]
-                L1 = loadmat(matfiles[matidx])[LabelName][0]
-                L1 = L1+1 # class label starts from 1 instead of 0
-                M1 = loadmat(matfiles[matidx])[IDName][0]
 
-                # L1 = loadmat(matfiles[matidx])['newlabel'][0]
-                # L1 = L1+1
-                # M1 = loadmat(matfiles[matidx])['newtrjID'][0]
-            else:
-                L1 = L2
-                M1 = M2
-
-            # L2 = loadmat(matfiles[matidx+1])['labels_DPGMMupup'][0]
-            L2 = loadmat(matfiles[matidx+1])[LabelName][0]
-            L2 = L2+1
-            M2 = loadmat(matfiles[matidx+1])[IDName][0]
-            # L2 = loadmat(matfiles[matidx+1])['newlabel'][0]
-            # L2 = L2+1
-            # M2 = loadmat(matfiles[matidx+1])['newtrjID'][0]
-
-            L1max = max(L1)  ## not duplicate
-            L2[:] = L2 + L1max + 1 # to make sure there're no duplicate labels
-
-            commonidx = np.intersect1d(M1,M2)  #trajectories existing in both 2 trucations
-
-
-            # interesting_trjID =  [  77,  104,  295,  330,  367,  445,  518,  606,  723,  840,  855,
-            # 865,  891, 1138, 1362, 1724, 1745]
-
-            # interesting_trjID = [2887, 2896, 3000, 3399, 3609,       2714, 2735, 2755, 2764, 2844, 2976, 3192, 4004]
-
-            # for mm in interesting_trjID:
-            #     print L1[M1==mm]
-            # pdb.set_trace()
-
-            
-            print('L1 : {0}, L2 : {1} ,common term : {2}').format(len(np.unique(L1)),len(np.unique(L2)),len(commonidx))
-       
-            for i in commonidx:
-                if i not in atmp:
-                    # label1    = L1[np.where((M1 == i)!=0)[0][0]]  # use np.arange(len(M1))[M1 == i]
-                    # label2    = L2[np.where((M2 == i)!=0)[0][0]]
-                    label1 = L1[M1==i][0]
-                    label2 = L2[M2==i][0]
-                    if label2<=L1max: # already been united with a previous chunk label1
-                        # print "previous split, now as one."
-                        L1[M1==i] = label2
-                        continue
-
-                    idx1  = np.where(L1==label1)
-                    idx2  = np.where(L2==label2)
-                    tmp1  = np.intersect1d(M1[idx1],commonidx) # appear in both trunks and label is label1 
-                    tmp2  = np.intersect1d(M2[idx2],commonidx)
-                    L1idx =list(idx1[0])
-                    L2idx =list(idx2[0])
-                    # diff1     = np.setdiff1d(tmp1,tmp2)  # this difference only accounts for elements in tmp1
-                    # diff      = np.union1d(np.setdiff1d(tmp1,np.intersect1d(tmp1,tmp2)) , np.setdiff1d(tmp2,np.intersect1d(tmp1,tmp2) ))
-                    atmp      = np.unique(np.hstack((tmp1,tmp2)))
-                    L1[L1idx] = label1  ## keep the first appearing label
-                    L2[L2idx] = label1   
-
-            if matidx == 0 :
-                flab[:]   = flab + list(L1) 
-                ftrjID[:] = ftrjID + list(M1)
-            flab[:]   = flab +list(L2)
-            ftrjID[:] = ftrjID + list(M2)
-
-        #== eliminate duplicate part == 
-           
-        data      = np.vstack((ftrjID,flab))
-        result    = data[:,data[0].argsort()]
-        labels    = list(result[1])
-        savetrjID = list(result[0])
-        dpidx     = np.where(np.diff(sorted(savetrjID)) == 0)[0]  #find duplicate ID in trjID
-        
-
-        for k in dpidx[::-1]:
-            labels.pop(k)
-            savetrjID.pop(k)
+        flab, ftrjID = unify_newLabel_to_existing(matfiles, LabelName, IDName)
 
         result          = {}
-        result['label'] = labels
-        result['trjID'] = savetrjID
+        result['label'] = flab
+        result['trjID'] = ftrjID
         savename = os.path.join(DataPathobj.unifiedLabelpath,savename+label_choice)
         savemat(savename,result)
 
 
 if __name__ == '__main__':
     label_choice = Parameterobj.clustering_choice
-
-    if Parameterobj.useWarpped:
-        filePrefix = 'usewarpped_'
-    else:
-        filePrefix = ''
-
     if useCC:
-        # matfilesAll = sorted(glob.glob(DataPathobj.adjpath +'*knn&thresh*.mat'))
-        # matfilesAll = sorted(glob.glob(DataPathobj.adjpath +'Aug10*.mat')) 
-        matfilesAll = sorted(glob.glob(DataPathobj.adjpath +filePrefix+'Aug12*.mat')) 
+        matfilesAll = sorted(glob.glob(DataPathobj.adjpath +filePrefix+'*.mat')) 
     else:
-        matfilesAll = sorted(glob.glob(DataPathobj.sscpath +filePrefix+'Aug12*.mat'))
+        matfilesAll = sorted(glob.glob(DataPathobj.sscpath +filePrefix+'*.mat'))
 
  
-
     numTrunc = len(matfilesAll)
     savename = ''
     if numTrunc<=200:
