@@ -16,7 +16,8 @@ from ssc_with_Adj import ssc_with_Adj_CC  #, sscConstructedAdj_CC, sscAdj_inNeig
 
 isSave      = True
 isVisualize = False
-Nameprefix = 'Aug12'
+# Nameprefix = 'Aug12'
+Nameprefix = 'Aug10'
 
 class trjClusteringFromAdj:
     """With constructed adjacency matrix """

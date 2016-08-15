@@ -40,7 +40,7 @@ if createGT:
     isClustered = False
     useVirtualCenter = False
 
-useCC = True
+useCC = False
 useKcenter = False
 subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
 

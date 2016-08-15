@@ -10,7 +10,7 @@ from sklearn import mixture
 from sklearn.cluster import *
 from sklearn.manifold import *
 from sklearn.cluster import AffinityPropagation
-
+import pdb
 
 class sparse_subspace_clustering:
     def __init__(self, lambd=10, dataset=np.random.randn(100), n_dimension=100, random_state=None):
@@ -65,7 +65,7 @@ class sparse_subspace_clustering:
         random_state = check_random_state(self.random_state)
 
         """if provide adj"""
-        self.embedding_ = sklearn.manifold.spectral_embedding(self.adjacency, affinity ='precomputed', n_components=self.n_dimension, eigen_solver='arpack',
+        self.embedding_ = sklearn.manifold.spectral_embedding(adjacency = self.adjacency, n_components=self.n_dimension, eigen_solver='arpack',
                                              random_state=random_state) * 1000  
         
         """use the graph laplacian to calculate embedding"""
@@ -76,8 +76,11 @@ class sparse_subspace_clustering:
         # # np.allclose(self.embedding_,eigVc[:,:2])
         # self.embedding_  = eigVc[:,:self.n_dimension]
 
+        """use the newer version of SpectralEmbedding"""
+        # model = sklearn.manifold.SpectralEmbedding(n_components=self.n_dimension, affinity ='precomputed', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
+        # self.embedding_ = model.fit_transform(self.adjacency)
+
         """if provide the raw data"""
-        # model = sklearn.manifold.SpectralEmbedding(n_components=2, affinity='rbf', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
         # model = sklearn.manifold.SpectralEmbedding(n_components=50, affinity='nearest_neighbors', gamma=None, random_state=None, eigen_solver=None, n_neighbors=None)
         # self.embedding_ = model.fit_transform(data_sampl_*feature_)
 
@@ -95,7 +98,8 @@ class sparse_subspace_clustering:
 
 
     def clustering_Affini_prpoga(self):
-        af = AffinityPropagation(preference=-50, affinity ='precomputed').fit(self.adjacency)
+        # af = AffinityPropagation(preference=-50, affinity ='precomputed').fit(self.adjacency)
+        af = AffinityPropagation(affinity ='precomputed').fit(self.adjacency)
         cluster_centers_indices = af.cluster_centers_indices_
         labels = af.labels_
         return labels

@@ -10,7 +10,7 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
  
-useCC = True
+useCC = False
 # global useRawSmooth
 # useRawSmooth = True
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         # matfilesAll = sorted(glob.glob(DataPathobj.adjpath +'Aug10*.mat')) 
         matfilesAll = sorted(glob.glob(DataPathobj.adjpath +filePrefix+'Aug12*.mat')) 
     else:
-        matfilesAll = sorted(glob.glob(DataPathobj.sscpath +filePrefix+'*.mat'))
+        matfilesAll = sorted(glob.glob(DataPathobj.sscpath +filePrefix+'Aug12*.mat'))
 
  
 

@@ -179,8 +179,6 @@ def sscConstructedAdj_CC(DataPathobj):  # use ssc to construct adj, use concaten
         print "distance diff already stored, load..."
         self.feature_diff_tensor = pickle.load(open(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3),'rb'))
 
-
-
     xtrj = self.feature_diff_tensor[:,:,0]
     ytrj = file['y_re']
     xspd = file['xspd']

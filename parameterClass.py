@@ -175,8 +175,9 @@ class parameter(object):
 			# self.adj_weight = [0,0,0,0,1]
 
 
-		self.clustering_choice = 'labels_DPGMM_'
+		# self.clustering_choice = 'labels_DPGMM_'
 		# self.clustering_choice = 'labels_spectral_'
+		self.clustering_choice = 'labels_affinity_'
 
 
 
