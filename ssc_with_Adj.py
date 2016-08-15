@@ -5,6 +5,8 @@ import pdb
 
 import itertools
 from scipy.sparse import csr_matrix
+
+import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 
