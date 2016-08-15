@@ -92,9 +92,8 @@ class sparse_subspace_clustering:
     def clustering_DPGMM(self, n_components, alpha):
         model = mixture.DPGMM(n_components=n_components, alpha=alpha, n_iter=1000)
         model.fit(self.embedding_)
-        self.label = model.predict(self.embedding_)
-        # pdb.set_trace()
-        return self.label
+        label = model.predict(self.embedding_)
+        return label
 
 
     def clustering_Affini_prpoga(self):
@@ -105,6 +104,13 @@ class sparse_subspace_clustering:
         return labels
 
 
+    def clustering_spectral(self, num_cluster):  #Ncut chenge
+        model = sklearn.cluster.SpectralClustering(n_clusters=num_cluster,affinity='precomputed')
+        label = model.fit_predict(self.adjacency)  # no embedding
+        # knnmodel = KMeans(num_cluster)
+        # label2 = knnmodel.fit_predict(self.embedding_)
+        return label
+
     def get_adjacency(self, adjacency):
         self.adjacency = adjacency
 
@@ -114,17 +120,8 @@ class sparse_subspace_clustering:
     def clustering_kmeans(self, num_cluster):
         model = KMeans(num_cluster)
         model.fit(self.embedding_)
-        # self.label = model.predict(self.embedding_)
         label = model.predict(self.embedding_)
         return label
 
 
-    def clustering_spectral(self, num_cluster):  #Ncut chenge
-        model = sklearn.cluster.SpectralClustering(n_clusters=num_cluster,affinity='precomputed')
-        # self.label = model.fit_predict(self.adjacency)  # no embedding
-        label = model.fit_predict(self.adjacency)  # no embedding
-
-        # knnmodel = KMeans(num_cluster)
-        # label2 = knnmodel.fit_predict(self.embedding_)
-        return label
 

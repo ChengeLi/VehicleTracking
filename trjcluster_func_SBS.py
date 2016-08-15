@@ -368,6 +368,23 @@ class adjacencyMatrix(object):
             # data_feature_mtx = scaler.transform(data_feature_mtx.T).T
         
 
+    def hard_thresholding_Adj(self):
+        """based on spatial distance"""
+        self.adj = self.adj*(self.feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj)
+
+        """based on velocities"""
+        self.adj = self.adj*(self.feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj)
+        self.adj = self.adj*(self.feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj)
+
+        """based on blob center dist"""
+        # self.adj = self.adj*(self.feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
+
+        """based on hue dist"""
+        """Hue info is very very weak, even with 0.001, still almost fully connected"""
+        # self.adj = self.adj*(self.feature_diff_tensor[:,:,3]< 0.001)
+        self.adj = self.adj + self.adj.transpose() 
+
+
     def get_gaussian_adj(self):
         self.adj = np.zeros([self.NumGoodsampleSameDir,self.NumGoodsampleSameDir])
 
@@ -387,21 +404,8 @@ class adjacencyMatrix(object):
         self.adj = self.fully_adj.copy()
 
         """2. Hard thresholding adj"""
-        """based on spatial distance"""
-        self.adj = self.adj*(self.feature_diff_tensor[:,:,2]< Parameterobj.nullDist_for_adj)
+        self.hard_thresholding_Adj()
 
-        """based on velocities"""
-        self.adj = self.adj*(self.feature_diff_tensor[:,:,0]< Parameterobj.nullXspd_for_adj)
-        self.adj = self.adj*(self.feature_diff_tensor[:,:,1]< Parameterobj.nullYspd_for_adj)
-
-        """based on blob center dist"""
-        # self.adj = self.adj*(self.feature_diff_tensor[:,:,4]< Parameterobj.nullBlob_for_adj)
-
-        """based on hue dist"""
-        """Hue info is very very weak, even with 0.001, still almost fully connected"""
-        # self.adj = self.adj*(self.feature_diff_tensor[:,:,3]< 0.001)
-
-        self.adj = self.adj + self.adj.transpose() 
         assert np.sum(self.adj==self.adj.T)==self.adj.shape[0]*self.adj.shape[1]
 
 

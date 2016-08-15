@@ -7,6 +7,12 @@ import pickle as pickle
 from scipy.sparse import csr_matrix
 
 import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
+
+dataSource = 'NGSIM'
+VideoIndex = 0
+
+
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
 from parameterClass import *
@@ -18,6 +24,8 @@ isSave      = True
 isVisualize = False
 # Nameprefix = 'Aug12'
 Nameprefix = 'Aug10'
+SaveNameprefix = 'Aug15'
+
 
 class trjClusteringFromAdj:
     """With constructed adjacency matrix """
@@ -44,15 +52,18 @@ class trjClusteringFromAdj:
             except:
                 continue
             """ andy's method, not real sparse sc, just spectral clustering"""
-            self.labels_DPGMM,self.labels_spectral, self.labels_affini_prop, self.small_CC_oneCls = ssc_with_Adj_CC(self.trjAdj,self.CClabel,self.trjID,Parameterobj)
+            self.labels, self.small_CC_oneCls = ssc_with_Adj_CC(self.trjAdj,self.CClabel,self.trjID,Parameterobj)
             """ construct adj use ssc"""
             # self.trjID,labels, adj = sscConstructedAdj_CC(adjfile)
             """ construct adj use ssc, with Neighbour adj as constraint"""
             # trjID,labels = sscAdj_inNeighbour(adjfile)
 
-            self.labelsave['labels_DPGMM_'+self.DirName[dirii]] = self.labels_DPGMM
-            self.labelsave['labels_spectral_'+self.DirName[dirii]] = self.labels_spectral
-            self.labelsave['labels_affinity_'+self.DirName[dirii]] = self.labels_affini_prop
+            if Parameterobj.clustering_choice == 'labels_DPGMM_':
+                self.labelsave['labels_DPGMM_'+self.DirName[dirii]] = self.labels
+            elif Parameterobj.clustering_choice == 'labels_spectral_':
+                self.labelsave['labels_spectral_'+self.DirName[dirii]] = self.labels
+            elif Parameterobj.clustering_choice == 'labels_affinity_':
+                self.labelsave['labels_affinity_'+self.DirName[dirii]] = self.labels
 
             self.labelsave['trjID_'+self.DirName[dirii]] = self.trjID
 
@@ -61,13 +72,11 @@ class trjClusteringFromAdj:
         if Parameterobj.useWarpped:
             savename = os.path.join(self.savePath,'usewarpped_'+str(matidx+1).zfill(3))
         else:
-            savename = os.path.join(self.savePath,'Aug12'+str(matidx+1).zfill(3))
+            savename = os.path.join(self.savePath,SaveNameprefix+str(matidx+1).zfill(3))
         savemat(savename, self.labelsave)
 
 
     def visLabel(self,matidx):
-        labels = labels_DPGMM
-        # labels = labels_spectral
         # visualize different classes for each Connected Component
         """use the x_re and y_re from adj mat files  """
         trjfile = loadmat(trjmatfiles[matidx])
@@ -116,8 +125,6 @@ class trjClusteringFromAdj:
 
             # plt.imshow(one_class_adj,cmap = 'jet')
             # plt.draw()
-        pickle.dump(label_id,open(os.path.join(savePath,'label_id_'+str(matidx+1).zfill(3)),'wb'))
-
 
 
 

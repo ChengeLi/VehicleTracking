@@ -10,12 +10,13 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
  
-useCC = True
+useCC = False
 if Parameterobj.useWarpped:
     filePrefix = 'usewarpped_Aug12'
 else:
     # filePrefix = 'Aug12'
-    filePrefix = 'Aug10'
+    # filePrefix = 'Aug10'
+    filePrefix = 'Aug15'
 
 def unify_newLabel_to_existing(matfiles, LabelName, IDName):
     flab     = [] #final labels
