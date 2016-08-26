@@ -11,7 +11,8 @@ matplotlib.use('TkAgg')
 
 dataSource = 'NGSIM'
 VideoIndex = 0
-
+# dataSource = 'DoT'
+# VideoIndex = 5
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
