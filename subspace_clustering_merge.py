@@ -6,13 +6,14 @@ import glob
 import pickle as pickle
 from scipy.sparse import csr_matrix
 
+import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 
-dataSource = 'NGSIM'
-VideoIndex = 0
-# dataSource = 'DoT'
-# VideoIndex = 5
+# dataSource = 'NGSIM'
+# VideoIndex = 0
+dataSource = 'DoT'
+VideoIndex = 5
 
 from DataPathclass import *
 DataPathobj = DataPath(dataSource,VideoIndex)
@@ -23,8 +24,8 @@ from ssc_with_Adj import ssc_with_Adj_CC  #, sscConstructedAdj_CC, sscAdj_inNeig
 
 isSave      = True
 isVisualize = False
-# Nameprefix = 'Aug12'
-Nameprefix = 'Aug10'
+Nameprefix = 'Aug12'
+# Nameprefix = 'Aug10'
 SaveNameprefix = 'Aug15'
 
 
@@ -71,7 +72,7 @@ class trjClusteringFromAdj:
     def saveLabel(self,matidx):
         print "saving the labels..."
         if Parameterobj.useWarpped:
-            savename = os.path.join(self.savePath,'usewarpped_'+str(matidx+1).zfill(3))
+            savename = os.path.join(self.savePath,'usewarpped_'+SaveNameprefix+str(matidx+1).zfill(3))
         else:
             savename = os.path.join(self.savePath,SaveNameprefix+str(matidx+1).zfill(3))
         savemat(savename, self.labelsave)
@@ -141,17 +142,3 @@ if __name__ == '__main__':
             clsObj.saveLabel(matidx)
         if isVisualize:
             clsObj.visLabel(matidx)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

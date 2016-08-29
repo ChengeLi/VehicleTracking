@@ -33,7 +33,7 @@ isVideo = True
 trunclen         = Parameterobj.trunclen
 isClustered      = True
 isVisualize      = True
-useVirtualCenter = True
+useVirtualCenter = False
 isSave           = False
 createGT = False
 if createGT:
@@ -44,7 +44,8 @@ useCC = False
 useKcenter = False
 subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
 
-start_frame_idx = 0*subSampRate
+# start_frame_idx = 0*subSampRate
+start_frame_idx = 3600
 print "start_frame_idx: ",start_frame_idx
 
 class fakeGTfromAnnotation():
@@ -311,6 +312,9 @@ class trj2dic(object):
             if isVideo:
                 firstframe = videoReadingObj.getFrame_loopy()
                 videoReadingObj.reset(DataPathobj.video) ##after reading the first frm, reset to index 0
+
+                #read the buffer till start_frame_idx
+                videoReadingObj.readBuffer(start_frame_idx)
             else:
                 image_list = sorted(glob.glob(dataPath + '*.jpg'))
                 firstframe = cv2.imread(image_list[0])            
