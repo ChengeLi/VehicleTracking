@@ -1,5 +1,6 @@
 # find blobs in the incPCP foreground mask and code different blobs using different colors
 import os
+import sys
 import cv2
 import pdb
 import pickle
@@ -35,7 +36,9 @@ def blobImg2blobmatrix(maskgray):
 def readData(userPCA):
 	if userPCA:
 		maskfiles = sorted(glob.glob(DataPathobj.blobPath + '*.mat'))
-		# matfiles = sorted(glob.glob('/Users/Chenge/Desktop/testMask/incPCPmask/' + '*.mat'))
+		if len(glob.glob(DataPathobj.blobPath + '*.p'))>0:
+			print "already processed"
+			return None, None
 	else:
 		maskfiles = sorted(glob.glob(DataPathobj.blobPath + '*running_bgsub_mask_tensor*.p'))
 
@@ -58,16 +61,18 @@ def readVideo(cap,subSampRate):
 	return frame
 
 
-
 if __name__ == '__main__':
 	userPCA = True
 	maskfiles, offset = readData(userPCA)
+	if maskfiles is None and offset is None:
+		print 'exit!!!'
+		sys.exit()
 	"""this frame count is not the same with what Matlab detected! bug in opencv"""
 	# nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-	fps = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+	# fps = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)))
 	# assert fps==30, "fps=%d" %fps
 
-	# fps = 30
+	fps = 30
 	for matidx, matfile in enumerate(maskfiles):
 	# for	matidx in range(len(maskfiles)-1,len(maskfiles),1):
 	# for	matidx in range(0,5,1):
@@ -88,7 +93,8 @@ if __name__ == '__main__':
 			mask_tensor = np.array(mask_tensor)
 
 
-			
+		print 'mask_tensor.shape',mask_tensor.shape
+
 		trunclen  = Parameterobj.trunclen
 		subSampRate = int(fps/Parameterobj.targetFPS)
 		subSampRate_matlab = int(30/Parameterobj.targetFPS)  ##IT'S JUST 6

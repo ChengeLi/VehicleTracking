@@ -22,7 +22,7 @@ def readVideo(cap,subSampRate):
     status, frame = cap.read()  
     for ii in range(subSampRate-1):
         status, frameskip = cap.read()
-    return frame
+    return status,frame
 
 
 if __name__ == '__main__':
@@ -85,8 +85,8 @@ if __name__ == '__main__':
         # if not cap.isOpened():
         #    raise Exception("video not opened!")
 
-        nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        # fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS)))
+        # nframe = np.int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) # nframe is calculated from the 'wrong' fps
+        # fps    = int(np.round(cap.get(cv2.cv.CV_CAP_PROP_FPS))) 
         """hard code!!!!!!"""
         fps = 30 
         print 'fps',fps
@@ -169,7 +169,8 @@ if __name__ == '__main__':
     # -- set low number of frames for testing
     # nframe = 1801
     cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
-    while (frame_idx < nframe):
+    # while (frame_idx < nframe):
+    while status:
         if useBlobCenter and ((subsample_frmIdx % trunclen) == 0):
             print "load foreground blob index matrix file...."
             blobIndLists       = []
@@ -188,11 +189,11 @@ if __name__ == '__main__':
                 # cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
                 # status, frame[:,:,:] = cap.read()
                
-                frame[:,:,:] = readVideo(cap,subSampRate)
+                status,frame[:,:,:] = readVideo(cap,subSampRate)
 
             except:
                 print "exception!!"
-                frame_idx = nframe
+                # frame_idx = nframe
                 continue
 
         if useBlobCenter:
@@ -339,7 +340,8 @@ if __name__ == '__main__':
 
         # dump trajectories to file
         # trunclen = min(trunclen,frame_idx - frame_idx/trunclen*600) #the very last truncation length may be less than original trunclen 
-        if  ((frame_idx>0) & (subsample_frmIdx % trunclen == 0)) or (frame_idx==nframe):
+        # if  ((frame_idx>0) & (subsample_frmIdx % trunclen == 0)) or (frame_idx==nframe):
+        if  ((frame_idx>0) & (subsample_frmIdx % trunclen == 0)) or (not status):
             print "saving===!!!"   
             # print('{0} - {1}'.format(frame_idx,len(tracksdic)))         
             Xtracks = np.zeros([len(tracksdic),trunclen])
