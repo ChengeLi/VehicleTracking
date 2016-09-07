@@ -8,6 +8,11 @@ class videoReading(object):
         self.cap = cv2.VideoCapture(videoName)
         self.subSampRate = subSampRate
 
+
+    def readBuffer(self, startOffset):
+        for ii in range(startOffset):
+            ret, frame = self.cap.read()
+
     def reset(self,videoName):
         self.cap = cv2.VideoCapture(videoName) #reset to the 0 index
 
