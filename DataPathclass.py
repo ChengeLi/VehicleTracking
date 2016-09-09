@@ -45,12 +45,13 @@ class DataPath(object):
 			if dataSource == 'DoT':
 				if os.getcwd()[:9] == '/scratch/':  # on HPC
 					self.sysPathHeader = '/scratch/cl2840/CUSP/'
-					# self.videoPath  = '/scratch/cl2840/CUSP/CanalBaxter/'
+					self.videoPath  = '/scratch/cl2840/CUSP/CanalBaxter/'
 					# self.videoList = sorted(glob.glob(self.videoPath+'*.asf'))
 					# self.video = self.videoList[VideoIndex]
 					existingDirList = sorted(glob.glob('/scratch/cl2840/CUSP/2015-06*'))
-					self.video = existingDirList[VideoIndex]
-					self.videoTime = self.video[-14:]
+					self.videoTime = existingDirList[VideoIndex][-14:]
+					self.video = glob.glob(self.videoPath+'*'+self.videoTime+'*.asf')[0] #for HPC klt
+					# self.video = existingDirList[VideoIndex]
 
 				else:# on badminton linux
 					## the 5th ave video

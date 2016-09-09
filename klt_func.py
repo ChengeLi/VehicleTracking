@@ -16,12 +16,18 @@ from parameterClass import *
 Parameterobj = parameter(dataSource,VideoIndex)
 
 
+def readBuffer(startOffset, cap):
+    for ii in range(startOffset):
+        ret, frame = cap.read()
+    return cap
+
+
 """thre's bug in cap.set, try loopy reading instead"""
 def readVideo(cap,subSampRate):
     """when read video in a loop, every subSampRate frames"""
     status, frame = cap.read()  
     for ii in range(subSampRate-1):
-        status, frameskip = cap.read()
+        status_1, frameskip = cap.read()
     return status,frame
 
 
@@ -92,7 +98,8 @@ if __name__ == '__main__':
         print 'fps',fps
 
         print 'reading buffer...'
-        cap.set ( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
+        # cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,start_position))
+        cap = readBuffer(start_position, cap)
         status, frame = cap.read()
         nrows,ncols = frame.shape[:2]
         frameL        = np.zeros_like(frame[:,:,0]) #just initilize, will be set in the while loop
@@ -166,19 +173,19 @@ if __name__ == '__main__':
     else:
         masktouse = 255*np.ones_like(frameL)
 
-    # -- set low number of frames for testing
-    # nframe = 1801
-    cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
+    ## set is buggy
+    # cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
+    cap = readBuffer(max(0,subsample_frmIdx*subSampRate)-start_position, cap)    
     # while (frame_idx < nframe):
     while status:
         if useBlobCenter and ((subsample_frmIdx % trunclen) == 0):
-            print "load foreground blob index matrix file...."
+            print "load foreground blob index matrix file....",subsample_frmIdx/trunclen
             blobIndLists       = []
-            blobIndListfile    = blob_ind_sparse_matrices[subsample_frmIdx % trunclen]
+            blobIndListfile    = blob_ind_sparse_matrices[subsample_frmIdx/trunclen]
             blobIndLists       = pickle.load( open( blobIndListfile, "rb" ) )
             
             blobCenterLists    = []
-            blobCenterListfile = blob_center_sparse_lists[subsample_frmIdx % trunclen]
+            blobCenterListfile = blob_center_sparse_lists[subsample_frmIdx/trunclen]
             blobCenterLists    = pickle.load( open( blobCenterListfile, "rb" ) )
 
         if not isVideo:
@@ -188,17 +195,14 @@ if __name__ == '__main__':
                 """set has bug"""
                 # cap.set( cv2.cv.CV_CAP_PROP_POS_FRAMES , max(0,subsample_frmIdx*subSampRate))
                 # status, frame[:,:,:] = cap.read()
-               
                 status,frame[:,:,:] = readVideo(cap,subSampRate)
-
             except:
                 print "exception!!"
-                # frame_idx = nframe
+                print "directly save"    
                 continue
-
         if useBlobCenter:
-            BlobIndMatrixCurFrm = (blobIndLists[np.mod(subsample_frmIdx,trunclen)]).todense()
-            BlobCenterCurFrm    = blobCenterLists[np.mod(subsample_frmIdx,trunclen)]
+            BlobIndMatrixCurFrm = (blobIndLists[np.mod(subsample_frmIdx,min(len(blobIndLists),trunclen))]).todense()
+            BlobCenterCurFrm    = blobCenterLists[np.mod(subsample_frmIdx,min(len(blobIndLists),trunclen))]
             if len(BlobCenterCurFrm)<1: #is empty
                 BlobCenterCurFrm=[(0,0)]
 
@@ -309,7 +313,7 @@ if __name__ == '__main__':
                     tracksdic[dicidx] = [] 
                     start[dicidx]     = frame_idx
                     end[dicidx]       = -1
-                    hue = np.nanmedian(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
+                    hue = np.median(frame_hsv[max(0,y-1):min(y+2,nrows),max(0,x-1):min(x+2,ncols),0])
                     if np.isnan(hue):
                         hue = frame_hsv[y,x,0]
 
