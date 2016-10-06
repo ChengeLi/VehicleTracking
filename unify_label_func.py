@@ -4,19 +4,6 @@ import glob as glob
 import cPickle as pickle
 import numpy as np
 from scipy.io import loadmat,savemat
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
-
- 
-useCC = False
-if Parameterobj.useWarpped:
-    filePrefix = 'usewarpped_Aug15'
-else:
-    # filePrefix = 'Aug12'
-    # filePrefix = 'Aug10'
-    filePrefix = 'Aug15'
 
 def unify_newLabel_to_existing(matfiles, LabelName, IDName):
     flab     = [] #final labels
@@ -71,7 +58,24 @@ def unify_label(matfiles,savename,label_choice):
         savemat(savename,result)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def unify_main(dataSource,VideoIndex):
+    import DataPathclass 
+    global DataPathobj
+    DataPathobj = DataPathclass.DataPath(dataSource,VideoIndex)
+    import parameterClass 
+    global Parameterobj
+    Parameterobj = parameterClass.parameter(dataSource,VideoIndex)
+
+    global useCC
+    useCC = False
+    if Parameterobj.useWarpped:
+        filePrefix = 'usewarpped'
+    else:
+        # filePrefix = 'Aug12'
+        # filePrefix = 'Aug10'
+        filePrefix = 'Aug15'
+
     label_choice = Parameterobj.clustering_choice
     if useCC:
         matfilesAll = sorted(glob.glob(DataPathobj.adjpath +filePrefix+'*.mat')) 

@@ -18,10 +18,12 @@ from scipy.io import loadmat,savemat
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
+# from DataPathclass import *
+# DataPathobj = DataPath(dataSource,VideoIndex)
+# from parameterClass import *
+# Parameterobj = parameter(dataSource,VideoIndex)
+
+
 
 from utilities.VCclass import VirtualCenter
 from utilities.videoReading import videoReading
@@ -30,11 +32,10 @@ from utilities.VisualizationClass import Visualization
 
 """global parameters"""
 isVideo = True
-trunclen         = Parameterobj.trunclen
 isClustered      = True
-isVisualize      = True
-useVirtualCenter = False
-isSave           = False
+isVisualize      = False
+useVirtualCenter = True
+isSave           = True
 createGT = False
 if createGT:
     isClustered = False
@@ -42,11 +43,8 @@ if createGT:
 
 useCC = False
 useKcenter = False
-subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
 
-# start_frame_idx = 0*subSampRate
-start_frame_idx = 3600
-print "start_frame_idx: ",start_frame_idx
+
 
 class fakeGTfromAnnotation():
     """record the annotations, any information from that????"""
@@ -81,9 +79,10 @@ class trjEachTrunc(object):
         """get vcxtrj, vcytrj, vctime in dictionary format"""
         self.trunkTrjFile = loadmat(trj2dicObj.matfiles[matidx])
         if len(self.trunkTrjFile['trjID'])==0: ##encounter empty file, move on
-            # subsample_frmIdx = subsample_frmIdx+trunclen
+            # subsample_frmIdx = subsample_frmIdx+Parameterobj.trunclen
             # continue
-            pdb.set_trace()
+            # pdb.set_trace()
+            print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!error'
 
         trj2dicObj.checkFileExist(matidx)
 
@@ -202,15 +201,16 @@ class trj2dic(object):
         from k_center import *
         points = []
         for mm in np.array(range(xtrj.shape[0]))[PtsInCurFrm]:
-            xx = xtrj[mm,subsample_frmIdx%trunclen]
-            yy = ytrj[mm,subsample_frmIdx%trunclen]
+            xx = xtrj[mm,subsample_frmIdx%Parameterobj.trunclen]
+            yy = ytrj[mm,subsample_frmIdx%Parameterobj.trunclen]
             points = points+[Point(xx, yy)]
         
         k_center = KCenter(points)
         k_center = KCenter_by_threshold(points)
 
         locations = k_center.furtherst_first(10, start_location=points[0])
-        print locations
+        if isVisualize:
+            print locations
         k_center.chenge_plot_point(locations)
 
         threshold = 50
@@ -259,15 +259,15 @@ class trj2dic(object):
     def getVCtrjs(self, frame_idx, trjEachTruncObj,VCobj):
         # self.getVCtime()
         subsample_frmIdx = np.int(np.floor(frame_idx/subSampRate))
-        PtsInCurFrm = trjEachTruncObj.xtrj[:,subsample_frmIdx%trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0 
-        # PtsInCurFrm = trjEachTruncObj.xtrj[:,floor(float(subsample_frmIdx)/trunclen)]!=0  ## this is wrong!
+        PtsInCurFrm = trjEachTruncObj.xtrj[:,subsample_frmIdx%Parameterobj.trunclen]!=0 # in True or False, PtsInCurFrm appear in this frame,i.e. X!=0 
+        # PtsInCurFrm = trjEachTruncObj.xtrj[:,floor(float(subsample_frmIdx)/Parameterobj.trunclen)]!=0  ## this is wrong!
         IDinCurFrm  = trjEachTruncObj.IDintrunk[PtsInCurFrm] #select IDs in this frame
         self.labinf      = self.mlabels[IDinCurFrm] # label in current frame
         # print "labinf: ",self.labinf
         for k in np.unique(self.labinf):
             if k != -1:
-                x = trjEachTruncObj.xtrj[PtsInCurFrm,subsample_frmIdx%trunclen][self.labinf==k]
-                y = trjEachTruncObj.ytrj[PtsInCurFrm,subsample_frmIdx%trunclen][self.labinf==k]
+                x = trjEachTruncObj.xtrj[PtsInCurFrm,subsample_frmIdx%Parameterobj.trunclen][self.labinf==k]
+                y = trjEachTruncObj.ytrj[PtsInCurFrm,subsample_frmIdx%Parameterobj.trunclen][self.labinf==k]
                 if useVirtualCenter:
                     VCobj.getVC(x[x!=0],y[y!=0])
                     vx,vy =  VCobj.vcx, VCobj.vcy# find virtual center; exist zero points.. don't know why
@@ -304,7 +304,7 @@ class trj2dic(object):
                 if isClustered:
                     self.clusterSize[k].extend([len(x)])
 
-    def get_XYT_inDic(self,start_frame_idx,videoReadingObj):  # get the time dictionary, such as vctime
+    def get_XYT_inDic(self,start_frame_idx,videoReadingObj,VCobj):  # get the time dictionary, such as vctime
         frame_idx = start_frame_idx
         subsample_frmIdx = np.int(np.floor(frame_idx/subSampRate))
         
@@ -322,11 +322,11 @@ class trj2dic(object):
             visualizationObj = Visualization(max(self.mlabels),firstframe)
 
         """initialize """
-        while frame_idx < np.int(self.matfiles[-1][-7:-4])*subSampRate*trunclen:
+        while frame_idx < np.int(self.matfiles[-1][-7:-4])*subSampRate*Parameterobj.trunclen:
             print("frame {0}\r".format(frame_idx))
             sys.stdout.flush()
 
-            matidx = np.int(np.floor(subsample_frmIdx/trunclen))
+            matidx = np.int(np.floor(subsample_frmIdx/Parameterobj.trunclen))
             trjEachTruncObj = trjEachTrunc(matidx, self)
             self.getVCtrjs(frame_idx,trjEachTruncObj,VCobj)
             """visualize trj here"""
@@ -338,20 +338,34 @@ class trj2dic(object):
                 visualizationObj.visualize_trj(np.unique(self.labinf)[:],self.vcxtrj, self.vcytrj,frame,frame_idx,DataPathobj,VCobj,useVirtualCenter)
 
             """saving"""
-            if subsample_frmIdx>=599 and ((subsample_frmIdx+1) % trunclen == 0):
-                if isSave:
-                    if not isClustered:
-                        self.saveTrjDict_nonClustered()
-                    else:
-                        self.saveTrjDict()
+            if isSave and not isClustered:
+                if subsample_frmIdx>=599 and ((subsample_frmIdx+1) % Parameterobj.trunclen == 0):
+                    self.saveTrjDict_nonClustered(trjEachTruncObj,matidx)
+                    self.clean_after_save()
+
+            if isSave and isClustered:
+                # if frame_idx == np.int(self.matfiles[-1][-7:-4])*subSampRate*Parameterobj.trunclen - subSampRate: #to the end
+                if subsample_frmIdx>=599 and ((subsample_frmIdx+1) % Parameterobj.trunclen == 0):
+                    print 'frame_idx ',frame_idx,' subsample_frmIdx ',subsample_frmIdx
+                    print "finished all files... save all!"
+                    self.saveTrjDict(matidx)
+                    self.clean_after_save()
+
             subsample_frmIdx += 1
             frame_idx = subsample_frmIdx*subSampRate
+
+
                 
-    def saveTrjDict_nonClustered(self, trjEachTruncObj):
-        savenameT = os.path.join(self.savePath,'vctime_'+str(subsample_frmIdx/trunclen).zfill(3))+'.p'
-        savenameX = os.path.join(self.savePath,'vcxtrj_'+str(subsample_frmIdx/trunclen).zfill(3))+'.p'
-        savenameY = os.path.join(self.savePath,'vcytrj_'+str(subsample_frmIdx/trunclen).zfill(3))+'.p'
-        print "Save the dictionary into a pickle file, trunk:", str(subsample_frmIdx/trunclen)
+    def clean_after_save(self):
+        print "!===========cleaning, re-initialization ==========!"
+        self.__init__()
+
+
+    def saveTrjDict_nonClustered(self, trjEachTruncObj,matidx):
+        savenameT = os.path.join(self.savePath,'vctime_'+str(matidx).zfill(3))+'.p'
+        savenameX = os.path.join(self.savePath,'vcxtrj_'+str(matidx).zfill(3))+'.p'
+        savenameY = os.path.join(self.savePath,'vcytrj_'+str(matidx).zfill(3))+'.p'
+        print "Save the dictionary into a pickle file, trunk:", str(matidx)
         save_vctime = {}
         save_vcxtrj = {}
         save_vcytrj = {}
@@ -366,12 +380,12 @@ class trj2dic(object):
         pickle.dump( save_vctime, open( savenameT, "wb" ) )
         pickle.dump( save_vcxtrj, open( savenameX, "wb" ) )
         pickle.dump( save_vcytrj, open( savenameY, "wb" ) )
-        pickle.dump( save_vctime2, open(os.path.join(self.savePath,'vctime_consecutive_frame'+str(subsample_frmIdx/trunclen).zfill(3)+'.p'),'wb'))
+        pickle.dump( save_vctime2, open(os.path.join(self.savePath,'vctime_consecutive_frame'+str(matidx).zfill(3)+'.p'),'wb'))
 
-    def saveTrjDict(self):
+    def saveTrjDict(self,matidx):
         """must save the virtual center, since the class size is changing"""
-        print "notconnectedLabel:",notconnectedLabel
-        print "CrossingClassLbel:",CrossingClassLbel
+        print "notconnectedLabel:",self.notconnectedLabel
+        print "CrossingClassLbel:",self.CrossingClassLbel
 
         if useCC:
             """ save CC_ connected component"""
@@ -382,39 +396,72 @@ class trj2dic(object):
             savenameT_consecutive = os.path.join(self.savePath,'CC_final_vctime_consecutive_frame.p')
             savename_cross = os.path.join(self.savePath,'CC_CrossingClassLbel.p')
         else:
-            savenameT = os.path.join(self.savePath,'final_vctime.p')
-            savenameX = os.path.join(self.savePath,'final_vcxtrj.p')
-            savenameY = os.path.join(self.savePath,'final_vcytrj.p')
-            savenameclusterSize = os.path.join(self.savePath,'final_clusterSize.p')
-            savenameT_consecutive = os.path.join(self.savePath,'final_vctime_consecutive_frame.p')
-            savename_cross = os.path.join(self.savePath,'CrossingClassLbel.p')
+            # savenameT = os.path.join(self.savePath,'final_vctime.p')
+            # savenameX = os.path.join(self.savePath,'final_vcxtrj.p')
+            # savenameY = os.path.join(self.savePath,'final_vcytrj.p')
+            # savenameclusterSize = os.path.join(self.savePath,'final_clusterSize.p')
+            # savenameT_consecutive = os.path.join(self.savePath,'final_vctime_consecutive_frame.p')
+            # savename_cross = os.path.join(self.savePath,'CrossingClassLbel.p')
+            ## too large to save all, still save in truncations
+            savenameT = os.path.join(self.savePath,'final_vctime'+str(matidx).zfill(3)+'.p')
+            savenameX = os.path.join(self.savePath,'final_vcxtrj'+str(matidx).zfill(3)+'.p')
+            savenameY = os.path.join(self.savePath,'final_vcytrj'+str(matidx).zfill(3)+'.p')
+            savenameclusterSize = os.path.join(self.savePath,'final_clusterSize'+str(matidx).zfill(3)+'.p')
+            savenameT_consecutive = os.path.join(self.savePath,'final_vctime_consecutive_frame'+str(matidx).zfill(3)+'.p')
+            savename_cross = os.path.join(self.savePath,'CrossingClassLbel'+str(matidx).zfill(3)+'.p')
+
         if isClustered: # is clustered
             save_vctime = {}
             save_vcxtrj = {}
             save_vcytrj = {}
             save_clusterSize = {}            
-            clean_vctime = {key: value for key, value in vctime.items() if key not in notconnectedLabel and key!=-1}
-            clean_vcxtrj = {key: value for key, value in vcxtrj.items() if key not in notconnectedLabel and key!=-1}
-            clean_vcytrj = {key: value for key, value in vcytrj.items() if key not in notconnectedLabel and key!=-1}
-            clean_clusterSize = {key: value for key, value in clusterSize.items() if key not in notconnectedLabel and key!=-1}
+            clean_vctime = {key: value for key, value in self.vctime.items() if key not in self.notconnectedLabel and key!=-1}
+            clean_vcxtrj = {key: value for key, value in self.vcxtrj.items() if key not in self.notconnectedLabel and key!=-1}
+            clean_vcytrj = {key: value for key, value in self.vcytrj.items() if key not in self.notconnectedLabel and key!=-1}
+            clean_clusterSize = {key: value for key, value in self.clusterSize.items() if key not in self.notconnectedLabel and key!=-1}
             
             clean_vctime2 = {}
             """is the same with clean_vctime"""
             # clean_vctime2 = {key: [min(value),max(value)] for key, value in vctime2.items() if key!=-1}
-            clean_vctime2 = {key: value for key, value in vctime2.items() if key not in notconnectedLabel and key!=-1}
+            clean_vctime2 = {key: value for key, value in self.vctime2.items() if key not in self.notconnectedLabel and key!=-1}
             pickle.dump( clean_vctime, open(savenameT,"wb"))
             pickle.dump( clean_vctime2, open(savenameT_consecutive,'wb'))
-            pickle.dump(CrossingClassLbel, open(savename_cross,'wb'))
+            pickle.dump(self.CrossingClassLbel, open(savename_cross,'wb'))
             pickle.dump( clean_vcxtrj, open(savenameX,"wb"))
             pickle.dump( clean_vcytrj, open(savenameY,"wb"))
             pickle.dump( clean_clusterSize, open(savenameclusterSize,"wb"))
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def dic_main(dataSource,VideoIndex):
+    import DataPathclass 
+    global DataPathobj
+    DataPathobj = DataPathclass.DataPath(dataSource,VideoIndex)
+    import parameterClass 
+    global Parameterobj
+    Parameterobj = parameterClass.parameter(dataSource,VideoIndex)
+    global subSampRate
+    # subSampRate = int(np.round(DataPathobj.cap.get(cv2.cv.CV_CAP_PROP_FPS)/Parameterobj.targetFPS))
+    subSampRate = int(30.0/Parameterobj.targetFPS)
+
+
+    existingFiles = sorted(glob.glob(DataPathobj.dicpath+'*final_vcxtrj*.p'))
+    existingFileNames = []
+    for jj in range(len(existingFiles)):
+        existingFileNames.append(int(existingFiles[jj][-5:-2])) # files starts from 0
+    
+    if len(existingFileNames)>0:
+        print "alredy processed from 0 to ", str( max(existingFileNames))
+        start_frame_idx = max(existingFileNames)*3600+3600
+        # print "processing", str(15)
+        # start_frame_idx = (15-1)*3600+3600
+    else:
+        start_frame_idx = 0
+    print "start_frame_idx: ",start_frame_idx
+
     trj2dicObj = trj2dic()
-    trj2dicObj.prepare_input_data()
     VCobj = VirtualCenter()
     videoReadingObj = videoReading(DataPathobj.video,subSampRate)
-    trj2dicObj.get_XYT_inDic(start_frame_idx,videoReadingObj)
+    trj2dicObj.get_XYT_inDic(start_frame_idx,videoReadingObj,VCobj)
 
 
 

@@ -36,7 +36,7 @@ def blobImg2blobmatrix(maskgray):
 def readData(userPCA):
 	if userPCA:
 		maskfiles = sorted(glob.glob(DataPathobj.blobPath + '*.mat'))
-		if len(glob.glob(DataPathobj.blobPath + '*.p'))>0:
+		if len(glob.glob(DataPathobj.blobPath + '*.p'))==2*len(glob.glob(DataPathobj.blobPath + '*.mat')):
 			print "already processed"
 			return None, None
 	else:
@@ -73,9 +73,17 @@ if __name__ == '__main__':
 	# assert fps==30, "fps=%d" %fps
 
 	fps = 30
-	for matidx, matfile in enumerate(maskfiles):
-	# for	matidx in range(len(maskfiles)-1,len(maskfiles),1):
-	# for	matidx in range(0,5,1):
+	
+	existingFiles = sorted(glob.glob(DataPathobj.blobPath+'*.p'))
+	existingFileNames = []
+	for jj in range(len(existingFiles)):
+		existingFileNames.append(int(existingFiles[jj][-5:-2]))
+
+	# for matidx, matfile in enumerate(maskfiles):
+	for	matidx in range(len(maskfiles)):
+		if matidx  in existingFileNames:
+			print "alredy processed ", str(matidx)
+			continue
 		matfile = maskfiles[matidx]
 		if userPCA:
 			# try:  #for matfile <-v7.3

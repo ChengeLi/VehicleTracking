@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import math
 import pdb,glob
@@ -13,14 +14,15 @@ from mpl_toolkits.mplot3d import Axes3D
 from sets import Set
 from warpTrj2parallel import loadWarpMtx  
 import statsmodels.api as sm
+import cv2
+import pdb
+# from DataPathclass import *
+# DataPathobj = DataPath(dataSource,VideoIndex)
+# from parameterClass import *
+# Parameterobj = parameter(dataSource,VideoIndex)
 
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
 
-
-def warpTrj_using_Mtx(x_mtx,y_mtx,warpingMtx):
+def warpTrj_using_Mtx(x_mtx,y_mtx,warpingMtx,limitX,limitY):
 	'warp the trj and save to warpped'
 	xyTupleMtx = np.zeros((x_mtx.shape[0],x_mtx.shape[1],2))
 	xyTupleMtx[:,:,0] = np.array(x_mtx,dtype='float32')  #first dim is X!
@@ -247,7 +249,7 @@ def getSmoothMtx(x,y,t):
 	for kk in range(0,x.shape[0],1):
 		# print 'processing', kk, 'th trj'
 		# xk = x[kk,:][x[kk,:]!=0]
-		# yk = y[kk,:][y[kk,:]!=0]
+		# yk = y[kk,:][y[kk,:]!=0]d
 		stuffer=np.max(t)
 		xk = x[kk,:][t[kk,:]!=stuffer] #use t to indicate
 		yk = y[kk,:][t[kk,:]!=stuffer]
@@ -348,7 +350,8 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,good
 
 
 	if Parameterobj.useWarpped:
-		warpped_x_mtx,warpped_y_mtx = warpTrj_using_Mtx(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx)
+		_, _, warpingMtx, limitX, limitY = loadWarpMtx()
+		warpped_x_mtx,warpped_y_mtx = warpTrj_using_Mtx(x_smooth_mtx[goodTrj,:],y_smooth_mtx[goodTrj,:],warpingMtx,limitX, limitY)
 		ptstrjNew['xtracks_warpped'] = csr_matrix(warpped_x_mtx)
 		ptstrjNew['ytracks_warpped'] = csr_matrix(warpped_y_mtx)
 		warpped_xspd_mtx = getSpdMtx(warpped_x_mtx)
@@ -401,17 +404,24 @@ def saveSmoothMat(x_smooth_mtx,y_smooth_mtx,xspd_smooth_mtx,yspd_smooth_mtx,good
 
 
 
-if __name__ == '__main__':		
+# if __name__ == '__main__':	
+def fit_extrapolate_main(dataSource,VideoIndex):		
 	# define start and end regions
 	#Canal video's dimensions:
-	"""(528, 704, 3)
-	start :<=100,
-	end: >=500,"""
+	# """(528, 704, 3)
+	# start :<=100,
+	# end: >=500,"""
+
+	import DataPathclass 
+	global DataPathobj
+	DataPathobj = DataPathclass.DataPath(dataSource,VideoIndex)
+	import parameterClass 
+	global Parameterobj
+	Parameterobj = parameterClass.parameter(dataSource,VideoIndex)
 
 	start_Y = 100;
 	end_Y   = 500;
 	
-	_, _, warpingMtx, limitX, limitY = loadWarpMtx()
 	# matfilepath    = '/Users/Chenge/Desktop/testklt/'
 	matfilepath = DataPathobj.kltpath
 	matfiles       = sorted(glob.glob(matfilepath + '*.mat'))
@@ -420,13 +430,21 @@ if __name__ == '__main__':
 	start_position =  0
 	matfiles       = matfiles[start_position:]
 
+	existingFiles = sorted(glob.glob(DataPathobj.smoothpath+'*.mat'))
+	existingFileNames = []
+	for jj in range(len(existingFiles)):
+		existingFileNames.append(int(existingFiles[jj][-7:-4]))
+	
 	# for matidx,matfile in enumerate(matfiles):
-	for matidx in range(1,len(matfiles)):
+	for matidx in range(len(matfiles)):
+		if (matidx+1)  in existingFileNames:
+			print "alredy processed ", str(matidx+1)
+			continue
 		matfile = matfiles[matidx]
 		# "if consecutive points are similar to each other, merge them, using one to represent"
 		# didn't do this, smooth and resample instead
-		print "reading data"
-		x,y,t,ptstrj = readData(matfile)	
+		print "reading data", matfile
+		x,y,t,ptstrj = readData(matfile)
 		print "get spatial and temporal smooth matrix"
 		x_spatial_smooth_mtx,y_spatial_smooth_mtx,x_time_smooth_mtx,y_time_smooth_mtx, xspd_smooth_mtx,yspd_smooth_mtx = getSmoothMtx(x,y,t)
 		"""delete all-zero rows"""
