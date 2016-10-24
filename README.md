@@ -14,7 +14,7 @@ Given a traffic video or a sequence of frame figures as input.
 	Using KLT tracking algorithm to extract feature points and get
 	their corresponding trajectory infomation.
 	Save the trajectory info as .Mat file.
-
+	
 	The KLT tracking parameters are tunable. 
 
 ###### 2
@@ -24,10 +24,10 @@ Given a traffic video or a sequence of frame figures as input.
 	2) the maximum speed, (low speed trjs will be eliminated). 
 	Low speed trajectories can come from stationary feature points from 
 	the background such as buildings or streets, or from the walking pedestrians. 
-
+	
 	As normally there exists multiple feature point trajectories on one 
 	vehicle, we group those who are very close and merge them.
-
+	
 	Construct an adjacent matrix:
 	Trajectories who share similar horizontal speed and vertical speed 
 	will be treated as nearby, and be grouped together.
@@ -49,11 +49,15 @@ Given a traffic video or a sequence of frame figures as input.
 
 
 ## Credits
-An-ti Chiang, New York University,	dawnandyknight@gmail.com 
-
 Chenge Li, New York University,	   cl2840@nyu.edu
 
-Greg Dobler, New York University,  greg.dobler@nyu.edu 
+An-ti Chiang, New York University,	dawnandyknight@gmail.com 
+
+**Supervisors**:
+
+Prof. Yao Wang, New York University,	 yw523@nyu.edu
+
+Dr. Greg Dobler, New York University,  greg.dobler@nyu.edu 
 
 ## Information
 If you have any questions or need more detailed explanations, 
