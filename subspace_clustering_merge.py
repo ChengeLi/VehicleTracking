@@ -12,21 +12,21 @@ matplotlib.use('TkAgg')
 
 # dataSource = 'NGSIM'
 # VideoIndex = 0
-dataSource = 'DoT'
-VideoIndex = 5
+# dataSource = 'DoT'
+# VideoIndex = 5
 
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
+# from DataPathclass import *
+# DataPathobj = DataPath(dataSource,VideoIndex)
+# from parameterClass import *
+# Parameterobj = parameter(dataSource,VideoIndex)
 
 from ssc_with_Adj import ssc_with_Adj_CC  #, sscConstructedAdj_CC, sscAdj_inNeighbour
 
 isSave      = True
 isVisualize = False
-Nameprefix = 'Aug12'
-# Nameprefix = 'Aug10'
-SaveNameprefix = 'Aug15'
+# Nameprefix = 'Aug12'
+Nameprefix = ''
+SaveNameprefix = ''
 
 
 class trjClusteringFromAdj:
@@ -130,15 +130,32 @@ class trjClusteringFromAdj:
 
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def ssc_main(dataSource,VideoIndex):
+    import DataPathclass 
+    global DataPathobj
+    DataPathobj = DataPathclass.DataPath(dataSource,VideoIndex)
+    import parameterClass 
+    global Parameterobj
+    Parameterobj = parameterClass.parameter(dataSource,VideoIndex)
 
     clsObj = trjClusteringFromAdj()
 
-    for matidx in range(len(clsObj.adjmatfiles)):
-        print "clustering trj based on adj truncation ", matidx
-        clsObj.trjclustering(matidx)
 
-        if isSave:
-            clsObj.saveLabel(matidx)
-        if isVisualize:
-            clsObj.visLabel(matidx)
+    existingFiles = sorted(glob.glob(DataPathobj.sscpath+'*.mat'))
+    existingFileNames = []
+    for jj in range(len(existingFiles)):
+        existingFileNames.append(int(existingFiles[jj][-7:-4]))
+    
+    for matidx in range(len(clsObj.adjmatfiles)):
+        if (matidx+1)  in existingFileNames:
+            print "alredy processed ", str(matidx+1)
+            continue
+        else:   
+            print "clustering trj based on adj truncation ", matidx
+            clsObj.trjclustering(matidx)
+
+            if isSave:
+                clsObj.saveLabel(matidx)
+            if isVisualize:
+                clsObj.visLabel(matidx)

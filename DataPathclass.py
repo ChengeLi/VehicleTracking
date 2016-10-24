@@ -50,7 +50,12 @@ class DataPath(object):
 					# self.video = self.videoList[VideoIndex]
 					existingDirList = sorted(glob.glob('/scratch/cl2840/CUSP/2015-06*'))
 					self.videoTime = existingDirList[VideoIndex][-14:]
-					self.video = glob.glob(self.videoPath+'*'+self.videoTime+'*.asf')[0] #for HPC klt
+					self.video = glob.glob(self.videoPath+'*'+self.videoTime+'*.asf')
+					if len(self.video)>0:
+						self.video = self.video[0] #for HPC klt
+					else:
+						self.video = ''
+						print "this video not uploaded on HPC: ",self.videoTime
 					# self.video = existingDirList[VideoIndex]
 
 				else:# on badminton linux

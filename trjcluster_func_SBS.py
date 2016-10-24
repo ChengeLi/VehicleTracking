@@ -10,14 +10,14 @@ from scipy.sparse import csr_matrix
 from scipy.io import loadmat,savemat
 from scipy.sparse.csgraph import connected_components
 
-from utilities.inspectAdj import knn_graph
+# from utilities.inspectAdj import knn_graph
 from sklearn.preprocessing import StandardScaler, Imputer
 from trjComparison import get_spd_dis_diff, get_hue_diff, sameBlobScore
 
-from DataPathclass import *
-DataPathobj = DataPath(dataSource,VideoIndex)
-from parameterClass import *
-Parameterobj = parameter(dataSource,VideoIndex)
+# from DataPathclass import *
+# DataPathobj = DataPath(dataSource,VideoIndex)
+# from parameterClass import *
+# Parameterobj = parameter(dataSource,VideoIndex)
 
 isVisualize = False
 # adj_methods = "Thresholding"
@@ -147,7 +147,7 @@ class adjacencyMatrix(object):
                     self.feature_diff_tensor[i,j,:] = dataForKernel_ele
 
 
-    def adjConstruct(self):
+    def adjConstruct(self,matidx):
         cumNumSample =  0 
         for dirii in range(4):
             if cumNumSample==self.Numsample: ## already done on all samples, no need to try other directions
@@ -157,10 +157,10 @@ class adjacencyMatrix(object):
             cumNumSample += NumGoodsampleSameDir
             if NumGoodsampleSameDir==0:
                 continue
-            self.adjConstruct_EachDir(dirii)
+            self.adjConstruct_EachDir(dirii,matidx)
 
 
-    def adjConstruct_EachDir(self,directionInd):
+    def adjConstruct_EachDir(self,directionInd,matidx):
         """contruct adj for each direction group"""
         sameDirInd = self.DirInd[directionInd]
         sameDirTrjID = self.DirTrjID[directionInd]
@@ -176,7 +176,7 @@ class adjacencyMatrix(object):
                 self.extremeValue = pickle.load(open(DataPathobj.adjpath+'extremeValue'+self.DirName[directionInd]+str(matidx+1).zfill(3),'rb'))
             else:     
                 print "get extremeValue for normalization"         
-                self.getMuSigma(directionInd)
+                self.getMuSigma(directionInd,matidx)
 
         if Parameterobj.useSBS:
             SBS = np.zeros([self.NumGoodsampleSameDir,self.NumGoodsampleSameDir])
@@ -191,7 +191,7 @@ class adjacencyMatrix(object):
         else:
             print "construct feature_diff_tensor, save..."
             self.featureDiffTensorConstruct()
-            pickle.dump(self.feature_diff_tensor,open(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3),'wb'))
+            # pickle.dump(self.feature_diff_tensor,open(self.savePath+feaName+self.DirName[directionInd]+str(matidx+1).zfill(3),'wb'))
 
 
         """test only for one car, see different features' role in the adj"""
@@ -254,15 +254,15 @@ class adjacencyMatrix(object):
         # CCoverseg(matidx,adj,fully_adj,sameDirTrjID,x,y,non_isolatedCC)
 
 
-    def getMuSigma(self,directionInd):
+    def getMuSigma(self,directionInd,matidx):
         """loops! not efficient"""
         if len(self.dataForKernel)==7:
             [x,y,xspd,yspd,hue,fg_blob_center_X,fg_blob_center_Y] = self.dataForKernel
-        sxdiffAll    = []
-        sydiffAll    = []
-        mdisAll      = []
-        huedisAll    = []
-        centerDisAll = []
+            sxdiffAll    = []
+            sydiffAll    = []
+            mdisAll      = []
+            huedisAll    = []
+            centerDisAll = []
 
         for i in range(x.shape[0]):
             # print "i", i
@@ -313,7 +313,7 @@ class adjacencyMatrix(object):
         # self.mean_std_ForKernel = []
         # pickle.dump(self.mean_std_ForKernel,open(DataPathobj.adjpath+'mean_std_ForKernel'+self.DirName[directionInd]+str(matidx+1).zfill(3),'wb'))
         self.extremeValue = np.array([min(sxdiffAll[:]),max(sxdiffAll[:]), min(sydiffAll[:]),max(sydiffAll[:]),min(mdisAll[:]),max(mdisAll[:]),min(huedisAll[:]),max(huedisAll[:]),min(centerDisAll[:]),max(centerDisAll[:])])
-        pickle.dump(self.extremeValue,open(DataPathobj.adjpath+'extremeValue'+self.DirName[directionInd]+str(matidx+1).zfill(3),'wb'))
+        # pickle.dump(self.extremeValue,open(DataPathobj.adjpath+'extremeValue'+self.DirName[directionInd]+str(matidx+1).zfill(3),'wb'))
 
 
     def get_thresholding_adj(self):
@@ -414,7 +414,8 @@ class adjacencyMatrix(object):
             savename = 'usewarpped_'
         else:
             savename = ''        
-        savename = savename+'Aug12_objoriented'+adj_methods+str(matidx+1).zfill(3)
+        # savename = savename+'Aug12_objoriented'+adj_methods+str(matidx+1).zfill(3)
+        savename = savename+adj_methods+str(matidx+1).zfill(3)
         # savename = savename+'baseline_thresholding_adj_all'+adj_methods+'_diff_dir_'+str(matidx+1+start_position_offset).zfill(3)
         savename = os.path.join(self.savePath,savename)
         savemat(savename,self.result)
@@ -447,14 +448,34 @@ class adjacencyMatrix(object):
         plt.show()
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def trjcluster_func_SBS_main(dataSource,VideoIndex):
+    import DataPathclass 
+    global DataPathobj
+    DataPathobj = DataPathclass.DataPath(dataSource,VideoIndex)
+    import parameterClass 
+    global Parameterobj
+    Parameterobj = parameterClass.parameter(dataSource,VideoIndex)
+
     adjObj = adjacencyMatrix()
+
+
+    existingFiles = sorted(glob.glob(DataPathobj.adjpath+'*.mat'))
+    existingFileNames = []
+    for jj in range(len(existingFiles)):
+        existingFileNames.append(int(existingFiles[jj][-7:-4]))
+    
+    # pdb.set_trace()
     for matidx in range(len(adjObj.matfiles)):
+        if (matidx+1)  in existingFileNames:
+            print "alredy processed ", str(matidx+1)
+            continue
+
         print "building adj mtx ....", matidx
         adjObj.prepare_input_data(matidx)
         """First cluster using just direction Information"""
         adjObj.directionGroup()
-        adjObj.adjConstruct()
+        adjObj.adjConstruct(matidx)
 
 
         print "saving adj..."

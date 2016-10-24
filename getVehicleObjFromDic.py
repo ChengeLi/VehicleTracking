@@ -44,7 +44,6 @@ if __name__ == '__main__':
 	subSampRate = fps/Parameterobj.targetFPS
 	obj_pair = TrjObj(test_vcxtrj,test_vcytrj,test_vctime,subSampRate = subSampRate)
 	badkeys  = obj_pair.bad_IDs1+obj_pair.bad_IDs2
-	pdb.set_trace()
 
 	clean_vctime = {}
 	clean_vcxtrj = {}

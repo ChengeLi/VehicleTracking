@@ -99,9 +99,6 @@ class sparse_subspace_clustering:
     def clustering_Affini_prpoga(self):
         # af = AffinityPropagation(preference=-50, affinity ='precomputed').fit(self.adjacency)
         af = AffinityPropagation(affinity ='precomputed').fit(self.adjacency)
-        pdb.set_trace()
-        assert af.affinity_matrix_ == self.adjacency
-
         cluster_centers_indices = af.cluster_centers_indices_
         labels = af.labels_
         return labels
